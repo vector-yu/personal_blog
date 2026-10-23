@@ -175,6 +175,17 @@ const postFields: TinaField[] = [
     label: '封面图',
   },
   {
+    type: 'string',
+    name: 'series',
+    label: '所属系列',
+    description: '相同的系列名会自动生成 /series/[系列名] 聚合页；留空表示单篇。',
+  },
+  {
+    type: 'boolean',
+    name: 'featured',
+    label: '在「从这开始」中推荐',
+  },
+  {
     type: 'boolean',
     name: 'draft',
     label: '草稿（不在列表中展示）',
@@ -322,6 +333,34 @@ export default defineConfig({
                   { type: 'string', name: 'label', label: '标签', required: true },
                   { type: 'string', name: 'value', label: '内容' },
                 ],
+              },
+            ],
+          },
+          {
+            type: 'object',
+            name: 'socials',
+            label: '社交链接（页脚 / 关于页）',
+            description: '留空则不展示；图标只是视觉，链接支持 https、mailto 和站内路径。',
+            list: true,
+            ui: {
+              itemProps: (item) => ({
+                label: item?.label || item?.kind || '社交链接',
+              }),
+            },
+            fields: [
+              { type: 'string', name: 'label', label: '显示名称', required: true },
+              {
+                type: 'string',
+                name: 'url',
+                label: '链接',
+                required: true,
+                description: '例如 https://github.com/you 或 mailto:hi@example.com。',
+              },
+              {
+                type: 'string',
+                name: 'kind',
+                label: '图标',
+                options: ['github', 'email', 'x', 'bilibili', 'rss', 'link'],
               },
             ],
           },

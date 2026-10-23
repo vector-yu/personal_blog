@@ -1,9 +1,13 @@
 import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import PostClient from './post-client';
+import type { PostRef } from '@/components/posts/post-ref';
 import { client } from '@/lib/tina';
+import { getPosts } from '@/lib/posts';
 import { getHomeContent } from '@/lib/home';
-import { parseDate } from '@/lib/site';
+import { formatDate, parseDate, postSlug, siteUrl, type PostSummary } from '@/lib/site';
+import { postTags } from '@/lib/taxonomy';
+import { estimateReadingMinutes, extractHeadings } from '@/lib/toc';
 
 /**
  * Catch-all (`[...filename]`) rather than a single segment (`[filename]`), so posts in
@@ -31,6 +35,15 @@ function isPublished(node: { draft: boolean | null } | null | undefined) {
   return Boolean(node) && !node?.draft;
 }
 
+function toRef(post: PostSummary): PostRef {
+  return {
+    slug: postSlug(post),
+    title: post.title,
+    dateLabel: formatDate(post.date),
+    tags: postTags(post),
+  };
+}
+
 /**
  * Pre-render every published post as static HTML at build time.
  *
@@ -39,13 +52,10 @@ function isPublished(node: { draft: boolean | null } | null | undefined) {
  * only hiding it from lists.
  */
 export async function generateStaticParams(): Promise<Params[]> {
-  const { data } = await client.queries.postConnection();
-  return (data?.postConnection?.edges ?? [])
-    .map((edge) => edge?.node)
-    .filter((node): node is NonNullable<typeof node> => isPublished(node))
-    .map((node) => ({
-      filename: node._sys.relativePath.replace(/\.mdx?$/, '').split('/'),
-    }));
+  const posts = await getPosts();
+  return posts.map((post) => ({
+    filename: post.relativePath.replace(/\.mdx?$/, '').split('/'),
+  }));
 }
 
 export async function generateMetadata({ params }: { params: Promise<Params> }): Promise<Metadata> {
@@ -65,6 +75,7 @@ export async function generateMetadata({ params }: { params: Promise<Params> }):
 
     const post = data.post;
     const description = post.description ?? undefined;
+    const image = post.cover ?? '/opengraph-image';
 
     return {
       title: post.title,
@@ -82,13 +93,13 @@ export async function generateMetadata({ params }: { params: Promise<Params> }):
         description,
         url: `/posts/${filename.join('/')}`,
         publishedTime: parseDate(post.date)?.toISOString(),
-        images: post.cover ? [{ url: post.cover, alt: post.title }] : undefined,
+        images: [{ url: image, width: 1200, height: 630, alt: post.title }],
       },
       twitter: {
-        card: post.cover ? 'summary_large_image' : 'summary',
+        card: 'summary_large_image',
         title: post.title,
         description,
-        images: post.cover ? [post.cover] : undefined,
+        images: [image],
       },
     };
   } catch {
@@ -113,9 +124,81 @@ export default async function PostPage({ params }: { params: Promise<Params> }) 
 
   // A missing record resolves with a null post (errorPolicy: 'include'); a draft must not be
   // publicly reachable.
-  if (!isPublished(result.data?.post)) notFound();
+  const post = result.data?.post;
+  if (!post || post.draft) notFound();
+
+  const slug = postSlug({ relativePath: post._sys.relativePath });
+
+  const [posts, home] = await Promise.all([getPosts(), getHomeContent()]);
+
+  const index = posts.findIndex((entry) => postSlug(entry) === slug);
+  const prev = index > 0 ? posts[index - 1] : null;
+  const next = index >= 0 && index < posts.length - 1 ? posts[index + 1] : null;
+
+  const tags = postTags({ tags: post.tags });
+  const tagSet = new Set(tags);
+  const related = posts
+    .filter((entry) => postSlug(entry) !== slug)
+    .map((entry) => ({
+      post: entry,
+      score: postTags(entry).filter((tag) => tagSet.has(tag)).length,
+    }))
+    .filter((entry) => entry.score > 0)
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 3)
+    .map((entry) => toRef(entry.post));
+
+  const headings = extractHeadings(post.body);
+  const readingMinutes = estimateReadingMinutes(post.body);
+
+  const base = siteUrl();
+  const canonical = `${base}/posts/${post._sys.relativePath.replace(/\.mdx?$/, '')}`;
+  const published = parseDate(post.date)?.toISOString();
+  const image = post.cover ? new URL(post.cover, base).toString() : `${base}/opengraph-image`;
+
+  const jsonLd = {
+    '@context': 'https://schema.org',
+    '@type': 'BlogPosting',
+    headline: post.title,
+    description: post.description ?? undefined,
+    image,
+    inLanguage: 'zh-CN',
+    datePublished: published,
+    dateModified: published,
+    mainEntityOfPage: { '@type': 'WebPage', '@id': canonical },
+    author: {
+      '@type': 'Person',
+      name: home.profile.name,
+      url: `${base}/about`,
+    },
+    publisher: {
+      '@type': 'Person',
+      name: home.profile.name,
+    },
+    keywords: tags.join(', ') || undefined,
+  };
+  const jsonLdString = JSON.stringify(jsonLd).replace(/</g, '\\u003c');
 
   // Pass the generated query + variables alongside the data so the client page can
   // re-fetch and live-update inside the TinaCMS visual editor.
-  return <PostClient query={result.query} variables={result.variables} data={result.data} />;
+  return (
+    <>
+      <script
+        type="application/ld+json"
+        // Escape `<` so a title/description containing `</script>` cannot end the tag.
+        dangerouslySetInnerHTML={{ __html: jsonLdString }}
+      />
+      <PostClient
+        query={result.query}
+        variables={result.variables}
+        data={result.data}
+        headings={headings}
+        readingMinutes={readingMinutes}
+        tags={tags}
+        prev={prev ? toRef(prev) : null}
+        next={next ? toRef(next) : null}
+        related={related}
+      />
+    </>
+  );
 }

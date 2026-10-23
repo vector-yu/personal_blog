@@ -5,7 +5,8 @@ import { useState } from 'react';
 import { AnimatePresence, m } from 'framer-motion';
 import { EmptySearch } from '@/components/site/illustrations';
 import { useNoMotion } from '@/components/site/use-no-motion';
-import { TiltCard } from '@/components/site/tilt-card';
+import { PostCard, type PostListItem } from '@/components/posts/post-card';
+import { tagTone } from '@/components/posts/tag-tones';
 
 /**
  * The post list with tag filtering.
@@ -21,31 +22,6 @@ import { TiltCard } from '@/components/site/tilt-card';
  *   so this file never touches `relativePath` or the generated Tina client. A
  *   client bundle containing those strings fails `check:runtime`.
  */
-
-export type PostListItem = {
-  slug: string;
-  title: string;
-  /** Machine-readable ISO date, for the <time dateTime> attribute. */
-  dateIso: string;
-  /** Already formatted on the server, so this file needs no date helpers. */
-  dateLabel: string;
-  description: string | null;
-  tags: string[];
-};
-
-/**
- * Tag chips cycle through the four accent colours by position, and each chip's
- * hard shadow is the SAME hue as its border — a small detail that makes the row
- * read as a set of coloured stickers rather than four identical pills. The text
- * steps are the darker ones so every chip clears WCAG AA against its own tinted
- * background — see STYLE-DIRECTIONS.md §4.
- */
-const TAG_TONES = [
-  'border-iris/45 bg-iris/12 text-iris-text shadow-brutal-iris-xs dark:border-iris/40 dark:bg-iris/20 dark:text-indigo-200',
-  'border-blush/45 bg-blush/12 text-rose-700 shadow-brutal-blush-xs dark:border-blush/40 dark:bg-blush/20 dark:text-rose-200',
-  'border-sun/60 bg-sun/25 text-amber-800 shadow-brutal-sun-xs dark:border-sun/35 dark:bg-sun/15 dark:text-amber-200',
-  'border-mint/45 bg-mint/15 text-emerald-800 shadow-brutal-mint-xs dark:border-mint/35 dark:bg-mint/15 dark:text-emerald-200',
-] as const;
 
 const ALL = '\u0000all';
 
@@ -75,7 +51,7 @@ export function PostList({ posts, tags }: { posts: PostListItem[]; tags: string[
    * row and another in the card right below it. One post in the demo content
    * makes the orders coincide, which is why this stayed hidden.
    */
-  const toneFor = (tag: string) => TAG_TONES[Math.max(0, tags.indexOf(tag)) % TAG_TONES.length];
+  const toneFor = (tag: string) => tagTone(tag, tags);
 
   /*
    * The empty state needs BOTH controls to exist.
@@ -148,55 +124,7 @@ export function PostList({ posts, tags }: { posts: PostListItem[]; tags: string[
               exit={noMotion ? { opacity: 0 } : { opacity: 0, scale: 0.96 }}
               transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
             >
-              <TiltCard className="group relative overflow-hidden rounded-blob border-[3px] border-ink/85 bg-white/60 p-6 shadow-brutal backdrop-blur-xl backdrop-saturate-125 transition-shadow duration-300 hover:shadow-brutal-iris motion-reduce:transition-none dark:border-chalk/20 dark:bg-white/[0.04] dark:shadow-chalk dark:hover:shadow-chalk-lg">
-                {/* Gradient spine, revealed on hover. */}
-                <span
-                  aria-hidden
-                  className="absolute inset-y-0 left-0 w-1.5 bg-gradient-to-b from-iris via-blush to-sun opacity-0 transition-opacity duration-300 group-hover:opacity-100 motion-reduce:transition-none"
-                />
-                {/* Soft colour wash in the corner keeps the slab from reading flat. */}
-                <span
-                  aria-hidden
-                  className="pointer-events-none absolute -top-14 -right-10 h-32 w-32 rounded-full bg-[radial-gradient(circle_at_50%_50%,#6d5cff,transparent_70%)] opacity-25 blur-2xl transition-opacity duration-300 group-hover:opacity-45 motion-reduce:transition-none"
-                />
-
-                <div className="relative">
-                  <h2 className="text-title">
-                    <Link
-                      href={`/posts/${post.slug}`}
-                      className="decoration-iris decoration-2 underline-offset-4 hover:underline"
-                    >
-                      {post.title}
-                    </Link>
-                  </h2>
-
-                  <time
-                    dateTime={post.dateIso}
-                    className="mt-2.5 inline-flex items-center rounded-full border border-ink/15 bg-white/70 px-2.5 py-0.5 text-xs font-bold text-ink/75 dark:border-chalk/15 dark:bg-white/[0.06] dark:text-slate-300"
-                  >
-                    {post.dateLabel}
-                  </time>
-
-                  {post.description ? (
-                    <p className="mt-3 leading-relaxed text-ink/75 dark:text-slate-300">
-                      {post.description}
-                    </p>
-                  ) : null}
-
-                  {post.tags.length ? (
-                    <div className="mt-4 flex flex-wrap gap-2">
-                      {post.tags.map((tag) => (
-                        <span
-                          key={tag}
-                          className={`rounded-full border-2 px-2.5 py-0.5 text-xs font-bold motion-reduce:shadow-none dark:shadow-chalk-xs ${toneFor(tag)}`}
-                        >
-                          {tag}
-                        </span>
-                      ))}
-                    </div>
-                  ) : null}
-                </div>
-              </TiltCard>
+              <PostCard post={post} tags={tags} />
             </m.li>
           ))}
         </AnimatePresence>
@@ -217,6 +145,14 @@ export function PostList({ posts, tags }: { posts: PostListItem[]; tags: string[
             <p className="max-w-md leading-relaxed font-medium text-ink/70 dark:text-slate-300">
               {emptyMessage}
             </p>
+            {activeTag !== ALL && !needle ? (
+              <Link
+                href={`/tags/${encodeURIComponent(activeTag)}`}
+                className="rounded-full border-2 border-ink/25 bg-white/70 px-4 py-2 text-sm font-bold text-ink/70 transition-colors hover:border-ink/60 hover:text-ink dark:border-chalk/20 dark:bg-white/[0.05] dark:text-slate-300 dark:hover:border-chalk/40 dark:hover:text-white"
+              >
+                查看「{activeTag}」的全部文章
+              </Link>
+            ) : null}
           </m.div>
         ) : null}
       </AnimatePresence>

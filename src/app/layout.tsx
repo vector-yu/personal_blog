@@ -3,8 +3,9 @@ import Link from 'next/link';
 import { Backdrop } from '@/components/site/backdrop';
 import { MotionProvider } from '@/components/site/motion-provider';
 import { PageTransition } from '@/components/site/page-transition';
+import { SocialLinks } from '@/components/site/social-links';
 import { ThemeToggle } from '@/components/site/theme-toggle';
-import { getHomeContent } from '@/lib/home';
+import { getHomeContent, type HomeSocial } from '@/lib/home';
 import { metadataBaseUrl } from '@/lib/site-url';
 import './globals.css';
 
@@ -124,20 +125,111 @@ function SiteHeader({ siteName }: { siteName: string }) {
   );
 }
 
-function SiteFooter({ siteName }: { siteName: string }) {
+function FooterColumn({
+  title,
+  links,
+}: {
+  title: string;
+  links: { label: string; href: string }[];
+}) {
+  return (
+    <nav aria-label={title}>
+      <p className="text-xs font-black tracking-[0.18em] text-ink/45 uppercase dark:text-slate-500">
+        {title}
+      </p>
+      <ul className="mt-4 space-y-2.5 text-sm font-bold">
+        {links.map((link) => (
+          <li key={link.href}>
+            <Link
+              href={link.href}
+              className="inline-flex items-center gap-1.5 text-ink/65 underline decoration-transparent decoration-2 underline-offset-4 transition-colors duration-200 hover:text-ink hover:decoration-iris dark:text-slate-300 dark:hover:text-white dark:hover:decoration-iris"
+            >
+              {link.label}
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </nav>
+  );
+}
+
+function SiteFooter({
+  siteName,
+  tagline,
+  socials,
+}: {
+  siteName: string;
+  tagline: string;
+  socials: HomeSocial[];
+}) {
   return (
     <footer className="relative z-10 mt-20 print:hidden">
       <div className="border-t-2 border-ink/15 bg-white/55 backdrop-blur-xl dark:border-chalk/15 dark:bg-white/[0.03]">
-        <div className="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-8 text-sm text-ink/70 sm:flex-row sm:items-center sm:justify-between sm:px-6 dark:text-slate-300">
-          <p>
-            © {new Date().getFullYear()} {siteName} · Built with Next.js &amp; TinaCMS
-          </p>
-          {/* Decorative "sticker" row — the shape family used across the site. */}
-          <div aria-hidden className="flex items-center gap-2">
-            <span className="h-3.5 w-3.5 rounded-full border-2 border-ink bg-sun dark:border-chalk" />
-            <span className="h-3.5 w-3.5 rotate-12 rounded-[4px] border-2 border-ink bg-blush dark:border-chalk" />
-            <span className="h-3.5 w-3.5 rounded-full border-2 border-ink bg-mint dark:border-chalk" />
-            <span className="h-3.5 w-3.5 -rotate-12 rounded-[4px] border-2 border-ink bg-iris dark:border-chalk" />
+        <div className="mx-auto grid max-w-7xl gap-10 px-4 py-12 sm:px-6 lg:grid-cols-[1.5fr_1fr_1fr] lg:gap-16">
+          <div>
+            <Link href="/" className="inline-flex items-center gap-2.5">
+              <span
+                aria-hidden
+                className="grid h-9 w-9 place-items-center rounded-xl border-2 border-ink bg-gradient-to-br from-sun via-blush to-iris shadow-brutal-xs dark:border-chalk dark:shadow-chalk-xs"
+              >
+                <span className="h-3 w-3 rotate-45 rounded-[3px] bg-ink/90 dark:bg-midnight/90" />
+              </span>
+              <span className="text-lg font-black tracking-tight">{siteName}</span>
+            </Link>
+            <p className="mt-3 max-w-xs text-sm leading-relaxed font-medium text-ink/60 dark:text-slate-400">
+              {tagline}
+            </p>
+            <SocialLinks socials={socials} className="mt-5" />
+          </div>
+
+          <FooterColumn
+            title="浏览"
+            links={[
+              { label: '文章', href: '/posts' },
+              { label: '履历', href: '/resume' },
+              { label: '关于', href: '/about' },
+            ]}
+          />
+          <FooterColumn
+            title="内容"
+            links={[
+              { label: '标签', href: '/tags' },
+              { label: '归档', href: '/archive' },
+            ]}
+          />
+        </div>
+
+        <div className="border-t border-ink/10 dark:border-chalk/10">
+          <div className="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-6 text-sm text-ink/60 sm:flex-row sm:items-center sm:justify-between sm:px-6 dark:text-slate-400">
+            <p>
+              © {new Date().getFullYear()} {siteName} · Built with Next.js &amp; TinaCMS
+            </p>
+            <div className="flex items-center gap-4">
+              <Link
+                href="/rss.xml"
+                className="inline-flex items-center gap-2 rounded-full border-2 border-ink/20 bg-white/60 px-3 py-1.5 text-xs font-bold text-ink/70 backdrop-blur transition-all duration-200 hover:-translate-y-0.5 hover:border-ink/70 hover:text-ink motion-reduce:transition-none motion-reduce:hover:translate-y-0 dark:border-chalk/20 dark:bg-white/[0.05] dark:text-slate-300 dark:hover:border-chalk/50 dark:hover:text-white"
+              >
+                <svg
+                  aria-hidden
+                  viewBox="0 0 24 24"
+                  className="h-3.5 w-3.5"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                >
+                  <path d="M5 19a1 1 0 1 0 0-2 1 1 0 0 0 0 2ZM4 11a9 9 0 0 1 9 9M4 4a16 16 0 0 1 16 16" />
+                </svg>
+                RSS 订阅
+              </Link>
+              {/* Decorative "sticker" row — the shape family used across the site. */}
+              <div aria-hidden className="hidden items-center gap-2 sm:flex">
+                <span className="h-3.5 w-3.5 rounded-full border-2 border-ink bg-sun dark:border-chalk" />
+                <span className="h-3.5 w-3.5 rotate-12 rounded-[4px] border-2 border-ink bg-blush dark:border-chalk" />
+                <span className="h-3.5 w-3.5 rounded-full border-2 border-ink bg-mint dark:border-chalk" />
+                <span className="h-3.5 w-3.5 -rotate-12 rounded-[4px] border-2 border-ink bg-iris dark:border-chalk" />
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -146,7 +238,7 @@ function SiteFooter({ siteName }: { siteName: string }) {
 }
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  const { siteName } = await getHomeContent();
+  const { siteName, tagline, socials } = await getHomeContent();
 
   return (
     <html
@@ -192,7 +284,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           <div className="flex-1">
             <PageTransition>{children}</PageTransition>
           </div>
-          <SiteFooter siteName={siteName} />
+          <SiteFooter siteName={siteName} tagline={tagline} socials={socials} />
         </MotionProvider>
       </body>
     </html>

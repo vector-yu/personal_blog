@@ -1,19 +1,36 @@
 import type { MetadataRoute } from 'next';
-import { client } from '@/lib/tina';
-import { parseDate, postSlug, siteUrl, toPostSummaries } from '@/lib/site';
+import { getPosts } from '@/lib/posts';
+import { collectTags, tagPath } from '@/lib/taxonomy';
+import { pageCount, pagePath } from '@/lib/pagination';
+import { parseDate, postSlug, siteUrl } from '@/lib/site';
 
 export const revalidate = 60;
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const base = siteUrl();
-  const { data } = await client.queries.postConnection();
-  const posts = toPostSummaries(data?.postConnection?.edges);
+  const posts = await getPosts();
+  const tags = collectTags(posts);
+  const paged = Array.from({ length: pageCount(posts.length) }, (_, index) => index + 1)
+    .filter((page) => page > 1)
+    .map((page) => ({
+      url: `${base}${pagePath(page)}`,
+      changeFrequency: 'weekly' as const,
+      priority: 0.6,
+    }));
 
   return [
     { url: `${base}/`, changeFrequency: 'daily', priority: 1 },
     { url: `${base}/posts`, changeFrequency: 'daily', priority: 0.8 },
+    ...paged,
+    { url: `${base}/tags`, changeFrequency: 'weekly', priority: 0.5 },
+    { url: `${base}/archive`, changeFrequency: 'weekly', priority: 0.5 },
     { url: `${base}/resume`, changeFrequency: 'monthly', priority: 0.5 },
     { url: `${base}/about`, changeFrequency: 'monthly', priority: 0.4 },
+    ...tags.map((tag) => ({
+      url: `${base}${tagPath(tag.name)}`,
+      changeFrequency: 'weekly' as const,
+      priority: 0.4,
+    })),
     ...posts.map((post) => {
       // Only pass lastModified when the date actually parses: Next calls toISOString() on
       // it, so a single malformed frontmatter date (e.g. 2026-02-30) would otherwise fail

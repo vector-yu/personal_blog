@@ -34,6 +34,35 @@ export type HomeFact = {
   value: string;
 };
 
+export type HomeSocialKind = 'github' | 'email' | 'x' | 'bilibili' | 'rss' | 'link';
+
+export type HomeSocial = {
+  label: string;
+  url: string;
+  kind: HomeSocialKind;
+};
+
+const SOCIAL_KINDS: HomeSocialKind[] = [
+  'github',
+  'email',
+  'x',
+  'bilibili',
+  'rss',
+  'link',
+];
+
+function socialKind(value: unknown, url: string): HomeSocialKind {
+  if (typeof value === 'string' && SOCIAL_KINDS.includes(value as HomeSocialKind)) {
+    return value as HomeSocialKind;
+  }
+  if (/^mailto:/i.test(url)) return 'email';
+  if (/github\.com/i.test(url)) return 'github';
+  if (/(?:^|\.)(?:x\.com|twitter\.com)/i.test(url)) return 'x';
+  if (/bilibili\.com/i.test(url)) return 'bilibili';
+  if (/rss|feed/i.test(url)) return 'rss';
+  return 'link';
+}
+
 export type HomeProfile = {
   avatar: string | null;
   name: string;
@@ -57,6 +86,7 @@ export type HomeContent = {
   scrollHint: string;
   background: HomeBackground;
   profile: HomeProfile;
+  socials: HomeSocial[];
   timeline: HomeTimelineEntry[];
 };
 
@@ -92,6 +122,10 @@ export const DEFAULT_HOME: HomeContent = {
       { label: '邮箱', value: 'hello@example.com' },
     ],
   },
+  socials: [
+    { label: 'GitHub', url: 'https://github.com/yourname', kind: 'github' },
+    { label: 'Email', url: 'mailto:hello@example.com', kind: 'email' },
+  ],
   timeline: [
     {
       period: '2026 — 现在',
@@ -198,6 +232,22 @@ function normaliseProfile(value: unknown): HomeProfile {
   };
 }
 
+function normaliseSocials(value: unknown): HomeSocial[] {
+  if (!Array.isArray(value)) return DEFAULT_HOME.socials;
+  return value
+    .map((item) => {
+      const record = asRecord(item);
+      const url = asText(record.url);
+      const kind = socialKind(record.kind, url);
+      return {
+        label: asText(record.label, kind === 'link' ? '链接' : kind),
+        url,
+        kind,
+      };
+    })
+    .filter((social) => social.url.length > 0 && /^(?:https?:|mailto:|tel:|\/)/i.test(social.url));
+}
+
 function normaliseTimeline(value: unknown): HomeTimelineEntry[] {
   if (!Array.isArray(value)) return [];
   return value
@@ -225,6 +275,7 @@ export function normaliseHome(value: unknown): HomeContent {
     scrollHint: asText(record.scrollHint, DEFAULT_HOME.scrollHint),
     background: normaliseBackground(record.background),
     profile: normaliseProfile(record.profile),
+    socials: normaliseSocials(record.socials),
     // Same rule as `facts`: a saved empty timeline means "no entries yet" and
     // renders the empty state; only a missing field restores the sample data.
     timeline: Array.isArray(record.timeline)

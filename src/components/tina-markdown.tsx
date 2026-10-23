@@ -1,5 +1,6 @@
 'use client';
 
+import { isValidElement, type ReactNode } from 'react';
 import { tinaField } from 'tinacms/dist/react';
 import type { Components, TinaMarkdownContent } from 'tinacms/dist/rich-text';
 import { TinaMarkdown } from 'tinacms/dist/rich-text';
@@ -13,6 +14,54 @@ import { sanitizeUrl } from '@/components/mdx/sanitize-url';
 import { Tabs } from '@/components/mdx/tabs';
 import { VideoEmbed } from '@/components/mdx/video-embed';
 import { ZoomableImage } from '@/components/mdx/zoomable-image';
+import { slugifyHeading } from '@/lib/toc';
+
+/**
+ * Text of a rendered heading, used to build its anchor id.
+ *
+ * Tina passes the heading's children as a `<TinaMarkdown>` ELEMENT whose own
+ * `children` prop is still the raw AST (not rendered text), so a plain
+ * React-children walk is not enough: it also has to read `{ text }` nodes inside
+ * that element. This is what makes the rendered `<h2 id>` match the TOC href —
+ * without it every heading id collapsed to "section".
+ */
+function textFromNode(value: unknown): string {
+  if (typeof value === 'string' || typeof value === 'number') return String(value);
+  if (Array.isArray(value)) return value.map(textFromNode).join('');
+
+  if (typeof value === 'object' && value !== null) {
+    if (isValidElement<{ children?: ReactNode; content?: unknown }>(value)) {
+      // Tina's own h2/h3 output is `<TinaMarkdown content={...} />`, so the
+      // text lives in `props.content`, not in React children.
+      return textFromNode(value.props.content ?? value.props.children);
+    }
+    const record = value as { text?: unknown; children?: unknown };
+    if (typeof record.text === 'string') return record.text;
+    if (Array.isArray(record.children)) return textFromNode(record.children);
+  }
+
+  return '';
+}
+
+function textFromChildren(children: ReactNode): string {
+  return textFromNode(children);
+}
+
+/**
+ * Adds a stable id + scroll margin to h2/h3. The ids are built with the same
+ * `slugifyHeading` used by `extractHeadings`, so the right-hand TOC anchors line
+ * up exactly. `scroll-mt-28` clears the sticky header on anchor jumps.
+ */
+function MarkdownHeading({ level, children }: { level: 2 | 3; children?: ReactNode }) {
+  const Tag = level === 2 ? 'h2' : 'h3';
+  const id = slugifyHeading(textFromChildren(children));
+
+  return (
+    <Tag id={id} className="scroll-mt-28">
+      {children}
+    </Tag>
+  );
+}
 
 /**
  * Props as delivered by <TinaMarkdown>. The `Record<string, unknown>` extension is
@@ -110,6 +159,12 @@ const components = {
   ),
 
   // --- Built-in element overrides ---------------------------------------------
+  h2: (props: { children?: ReactNode }) => (
+    <MarkdownHeading level={2}>{props.children}</MarkdownHeading>
+  ),
+  h3: (props: { children?: ReactNode }) => (
+    <MarkdownHeading level={3}>{props.children}</MarkdownHeading>
+  ),
   code_block: (props: { value?: string; lang?: string; children?: React.ReactNode }) => {
     const code = typeof props.value === 'string' ? props.value : '';
     const tokens = highlightCode(code);

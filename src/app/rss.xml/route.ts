@@ -1,5 +1,6 @@
-import { client } from '@/lib/tina';
-import { parseDate, postSlug, siteUrl, toPostSummaries } from '@/lib/site';
+import { getHomeContent } from '@/lib/home';
+import { getPosts } from '@/lib/posts';
+import { parseDate, postSlug, siteUrl } from '@/lib/site';
 
 export const revalidate = 60;
 
@@ -14,8 +15,10 @@ function escapeXml(value: string) {
 
 export async function GET() {
   const base = siteUrl();
-  const { data } = await client.queries.postConnection();
-  const posts = toPostSummaries(data?.postConnection?.edges);
+  const [posts, home] = await Promise.all([getPosts(), getHomeContent()]);
+  const title = home.siteName;
+  const description =
+    home.tagline || '一个用 TinaCMS + Next.js 构建的静态个人博客';
 
   const items = posts
     .map((post) => {
@@ -36,9 +39,9 @@ ${published ? `      <pubDate>${published.toUTCString()}</pubDate>\n` : ''}${pos
 <?xml-stylesheet type="text/xsl" href="/rss.xsl"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>我的博客</title>
+    <title>${escapeXml(title)}</title>
     <link>${base}</link>
-    <description>一个用 TinaCMS + Next.js 构建的静态个人博客</description>
+    <description>${escapeXml(description)}</description>
     <language>zh-CN</language>
     <atom:link href="${base}/rss.xml" rel="self" type="application/rss+xml" />
 ${items}

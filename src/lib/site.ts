@@ -63,6 +63,8 @@ export type PostSummary = {
   date: string;
   description: string | null;
   tags: (string | null)[] | null;
+  series: string | null;
+  featured: boolean;
   filename: string;
   /** Path within the collection, e.g. "hello-tinacms.mdx" or "2026/nested.mdx". */
   relativePath: string;
@@ -74,6 +76,8 @@ type PostEdge = {
     date: string;
     description: string | null;
     tags: (string | null)[] | null;
+    series?: string | null;
+    featured?: boolean | null;
     draft: boolean | null;
     _sys: { filename: string; relativePath: string };
   } | null;
@@ -99,6 +103,8 @@ export function toPostSummaries(
       date: node.date,
       description: node.description,
       tags: node.tags,
+      series: node.series?.trim() || null,
+      featured: node.featured === true,
       filename: node._sys.filename,
       relativePath: node._sys.relativePath,
     }))

@@ -31,6 +31,18 @@
       }
     ]
   },
+  "socials": [
+    {
+      "label": "GitHub",
+      "url": "https://github.com/yourname",
+      "kind": "github"
+    },
+    {
+      "label": "Email",
+      "url": "mailto:hello@example.com",
+      "kind": "email"
+    }
+  ],
   "timeline": [
     {
       "period": "2026 — 现在",
