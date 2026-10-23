@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { Backdrop } from '@/components/site/backdrop';
 import { MotionProvider } from '@/components/site/motion-provider';
 import { PageTransition } from '@/components/site/page-transition';
+import { MobileNav } from '@/components/site/mobile-nav';
 import { SocialLinks } from '@/components/site/social-links';
 import { ThemeToggle } from '@/components/site/theme-toggle';
 import { getHomeContent, type HomeSocial } from '@/lib/home';
@@ -114,11 +115,17 @@ function SiteHeader({ siteName }: { siteName: string }) {
           </span>
         </Link>
 
-        <div className="flex items-center gap-0.5 text-sm sm:gap-1">
+        <div className="hidden items-center gap-0.5 text-sm sm:flex sm:gap-1">
           <NavLink href="/posts">文章</NavLink>
+          <NavLink href="/projects">项目</NavLink>
           <NavLink href="/resume">履历</NavLink>
           <NavLink href="/about">关于</NavLink>
           <ThemeToggle />
+        </div>
+
+        <div className="flex items-center gap-1.5 sm:hidden">
+          <ThemeToggle />
+          <MobileNav />
         </div>
       </nav>
     </header>
@@ -165,7 +172,7 @@ function SiteFooter({
   return (
     <footer className="relative z-10 mt-20 print:hidden">
       <div className="border-t-2 border-ink/15 bg-white/55 backdrop-blur-xl dark:border-chalk/15 dark:bg-white/[0.03]">
-        <div className="mx-auto grid max-w-7xl gap-10 px-4 py-12 sm:px-6 lg:grid-cols-[1.5fr_1fr_1fr] lg:gap-16">
+        <div className="mx-auto grid max-w-7xl gap-10 px-4 py-12 sm:grid-cols-2 sm:px-6 lg:grid-cols-[1.4fr_1fr_1fr_1fr] lg:gap-12">
           <div>
             <Link href="/" className="inline-flex items-center gap-2.5">
               <span
@@ -186,6 +193,7 @@ function SiteFooter({
             title="浏览"
             links={[
               { label: '文章', href: '/posts' },
+              { label: '项目', href: '/projects' },
               { label: '履历', href: '/resume' },
               { label: '关于', href: '/about' },
             ]}
@@ -195,6 +203,17 @@ function SiteFooter({
             links={[
               { label: '标签', href: '/tags' },
               { label: '归档', href: '/archive' },
+              { label: '笔记', href: '/notes' },
+              { label: '系列', href: '/series' },
+            ]}
+          />
+          <FooterColumn
+            title="更多"
+            links={[
+              { label: '从这开始', href: '/start-here' },
+              { label: 'Now', href: '/now' },
+              { label: '阅读', href: '/reading' },
+              { label: '工具', href: '/uses' },
             ]}
           />
         </div>

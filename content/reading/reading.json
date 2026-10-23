@@ -1,0 +1,32 @@
+{
+  "intro": "最近读过的书，以及在读和想读的清单。评分很主观，短评只记录当下最想留下的一句话。",
+  "books": [
+    {
+      "title": "Designing Data-Intensive Applications",
+      "author": "Martin Kleppmann",
+      "status": "reading",
+      "rating": 0,
+      "note": "慢读，边读边把概念往自己的项目里套。",
+      "cover": "",
+      "link": "https://dataintensive.net/"
+    },
+    {
+      "title": "The Design of Everyday Things",
+      "author": "Don Norman",
+      "status": "finished",
+      "rating": 5,
+      "note": "好的设计让正确的操作看起来理所当然。",
+      "cover": "",
+      "link": ""
+    },
+    {
+      "title": "Show Your Work!",
+      "author": "Austin Kleon",
+      "status": "wishlist",
+      "rating": 0,
+      "note": "想把「公开地做东西」这件事再想清楚一点。",
+      "cover": "",
+      "link": ""
+    }
+  ]
+}

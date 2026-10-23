@@ -434,11 +434,165 @@ export default defineConfig({
         fields: [
           { type: 'string', name: 'title', label: '标题', isTitle: true, required: true },
           {
+            type: 'datetime',
+            name: 'date',
+            label: '更新日期（可选）',
+            description: '用于 Now / Uses 这类需要显示「最后更新」的页面。',
+            ui: { dateFormat: 'YYYY-MM-DD' },
+          },
+          {
             type: 'rich-text',
             name: 'body',
             label: '正文',
             isBody: true,
             templates: richTextTemplates,
+          },
+        ],
+      },
+      {
+        /*
+         * Structured project index. One JSON document, like the homepage: a
+         * personal-brand site needs the cards to stay visually consistent, not a
+         * free-form page where every edit can break the layout.
+         */
+        name: 'project',
+        label: '项目',
+        path: 'content/projects',
+        format: 'json',
+        match: { include: 'projects' },
+        ui: { allowedActions: { create: false, delete: false } },
+        fields: [
+          {
+            type: 'string',
+            name: 'intro',
+            label: '页头介绍',
+            ui: { component: 'textarea' },
+          },
+          {
+            type: 'object',
+            name: 'items',
+            label: '项目列表',
+            list: true,
+            ui: {
+              itemProps: (item) => ({
+                label: [item?.title, item?.year].filter(Boolean).join(' · ') || '项目',
+              }),
+            },
+            fields: [
+              { type: 'string', name: 'title', label: '项目名', required: true },
+              { type: 'string', name: 'year', label: '年份' },
+              { type: 'string', name: 'role', label: '角色' },
+              {
+                type: 'string',
+                name: 'summary',
+                label: '一句话介绍',
+                ui: { component: 'textarea' },
+              },
+              { type: 'string', name: 'stack', label: '技术栈', list: true },
+              { type: 'image', name: 'image', label: '截图 / 封面' },
+              { type: 'string', name: 'link', label: '在线地址' },
+              { type: 'string', name: 'repo', label: '代码仓库' },
+              { type: 'boolean', name: 'featured', label: '精选项目' },
+            ],
+          },
+        ],
+      },
+      {
+        /*
+         * A short-note stream. One JSON document with a list, because notes are
+         * short and do not need their own URLs; the page renders them inline.
+         */
+        name: 'note',
+        label: '笔记 / 短记',
+        path: 'content/notes',
+        format: 'json',
+        match: { include: 'notes' },
+        ui: { allowedActions: { create: false, delete: false } },
+        fields: [
+          {
+            type: 'string',
+            name: 'intro',
+            label: '页头介绍',
+            ui: { component: 'textarea' },
+          },
+          {
+            type: 'object',
+            name: 'items',
+            label: '笔记列表',
+            list: true,
+            ui: {
+              itemProps: (item) => ({
+                label:
+                  [item?.date?.slice(0, 10), item?.title].filter(Boolean).join(' · ') || '笔记',
+              }),
+            },
+            fields: [
+              {
+                type: 'datetime',
+                name: 'date',
+                label: '日期',
+                required: true,
+                ui: { dateFormat: 'YYYY-MM-DD' },
+              },
+              { type: 'string', name: 'title', label: '标题（可选）' },
+              {
+                type: 'rich-text',
+                name: 'body',
+                label: '正文',
+                templates: richTextTemplates,
+              },
+              { type: 'string', name: 'tags', label: '标签', list: true },
+            ],
+          },
+        ],
+      },
+      {
+        /*
+         * Reading list is structured data, not prose: status, rating and notes are
+         * the fields that make the page useful.
+         */
+        name: 'reading',
+        label: '阅读',
+        path: 'content/reading',
+        format: 'json',
+        match: { include: 'reading' },
+        ui: { allowedActions: { create: false, delete: false } },
+        fields: [
+          {
+            type: 'string',
+            name: 'intro',
+            label: '页头介绍',
+            ui: { component: 'textarea' },
+          },
+          {
+            type: 'object',
+            name: 'books',
+            label: '书单',
+            list: true,
+            ui: {
+              itemProps: (item) => ({
+                label: [item?.title, item?.author].filter(Boolean).join(' · ') || '书',
+              }),
+            },
+            fields: [
+              { type: 'string', name: 'title', label: '书名', required: true },
+              { type: 'string', name: 'author', label: '作者' },
+              {
+                type: 'string',
+                name: 'status',
+                label: '状态',
+                options: ['reading', 'finished', 'wishlist'],
+              },
+              { type: 'number', name: 'rating', label: '评分（0–5）' },
+              {
+                type: 'string',
+                name: 'note',
+                label: '短评',
+                ui: { component: 'textarea' },
+              },
+              { type: 'image', name: 'cover', label: '封面' },
+              { type: 'string', name: 'link', label: '链接' },
+            ],
           },
         ],
       },

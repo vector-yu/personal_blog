@@ -27,6 +27,7 @@ export default function PostClient(props: {
   headings: TocHeading[];
   readingMinutes: number;
   tags: string[];
+  series: string | null;
   prev: PostRef | null;
   next: PostRef | null;
   related: PostRef[];
@@ -38,7 +39,7 @@ export default function PostClient(props: {
   });
 
   const post = data.post;
-  const { headings, readingMinutes, tags, prev, next, related } = props;
+  const { headings, readingMinutes, tags, series, prev, next, related } = props;
   const hasToc = headings.length > 1;
 
   // `useReducedMotion` is not cosmetic here: the spring is exactly the kind of
@@ -119,8 +120,22 @@ export default function PostClient(props: {
             <Body content={post.body} />
           </div>
 
-          {tags.length > 0 ? (
+          {series ? (
             <div className="mt-10 flex flex-wrap items-center gap-2">
+              <span className="text-[0.65rem] font-black tracking-[0.16em] text-ink/40 uppercase dark:text-slate-500">
+                系列
+              </span>
+              <Link
+                href={`/series/${encodeURIComponent(series)}`}
+                className="rounded-full border-2 border-iris/40 bg-iris/12 px-3 py-1 text-xs font-bold text-iris-text shadow-brutal-iris-xs transition-transform duration-200 hover:-translate-y-0.5 motion-reduce:shadow-none motion-reduce:transition-none motion-reduce:hover:translate-y-0 dark:border-iris/35 dark:bg-iris/20 dark:text-indigo-200"
+              >
+                {series} →
+              </Link>
+            </div>
+          ) : null}
+
+          {tags.length > 0 ? (
+            <div className="mt-6 flex flex-wrap items-center gap-2">
               <span className="text-[0.65rem] font-black tracking-[0.16em] text-ink/40 uppercase dark:text-slate-500">
                 标签
               </span>

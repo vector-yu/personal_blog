@@ -195,6 +195,7 @@ export default async function PostPage({ params }: { params: Promise<Params> }) 
         headings={headings}
         readingMinutes={readingMinutes}
         tags={tags}
+        series={post.series?.trim() || null}
         prev={prev ? toRef(prev) : null}
         next={next ? toRef(next) : null}
         related={related}

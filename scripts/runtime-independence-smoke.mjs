@@ -172,7 +172,23 @@ try {
       dynamic[postRoute] ? 'present in dynamicRoutes' : 'not dynamic'
     );
 
-    const staticRoutes = ['/', '/posts', '/resume', '/about', '/sitemap.xml', '/rss.xml'];
+    const staticRoutes = [
+      '/',
+      '/posts',
+      '/resume',
+      '/about',
+      '/tags',
+      '/archive',
+      '/projects',
+      '/notes',
+      '/now',
+      '/reading',
+      '/uses',
+      '/start-here',
+      '/series',
+      '/sitemap.xml',
+      '/rss.xml',
+    ];
     const missing = staticRoutes.filter((route) => !routes[route] && !dynamic[route]);
     check(
       'all static content routes are in the manifest',

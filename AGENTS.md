@@ -19,7 +19,7 @@
 | CMS | TinaCMS 3.13.0 + TinaCloud |
 | 线上域名 | https://yujingyao.com （也绑定在 TinaCloud Site URL 白名单里） |
 | 部署 | Vercel，构建命令 `npm run build`（**不要改成 `next build`**） |
-| 内容 | `content/posts/*.mdx`、`content/pages/*.mdx`，正文用 MDX；主页是 `content/home/home.json` |
+| 内容 | `content/posts/*.mdx`、`content/pages/*.mdx`，正文用 MDX；主页、项目、笔记、阅读分别是 `content/home`、`content/projects`、`content/notes`、`content/reading` 下的 JSON 单文档 |
 
 **铁律（产品要求，不要违反）**：正文渲染只用 Tina 官方的 `<TinaMarkdown>`。
 **不要**引入 `next-mdx-remote`、`@next/mdx` 或任何 MDX 编译管线。
@@ -34,6 +34,18 @@
 > 顶栏「履历」指向独立页 `src/app/resume/page.tsx`（`/resume`）：纯列表、无动画，
 > 与首页共用 `timeline` 数据；不要把它改回 `/#journey` 锚点。
 > 详见 `README.md` 的「个人主页」一节。
+
+> **个人品牌站的页面结构**：主入口是 `/posts`、`/projects`、`/resume`、`/about`；
+> 二级入口在页脚与文章页次级导航：`/tags`、`/tags/[tag]`、`/archive`、`/notes`、
+> `/series`、`/series/[series]`、`/start-here`、`/now`、`/reading`、`/uses`。
+> `project` / `note` / `reading` 是 JSON 单文档集合（禁用新建/删除）；`now`/`uses`/
+> `start-here` 是 `content/pages/*.mdx`。文章的 `series` / `featured` 字段分别驱动
+> 系列页和「从这开始」。
+> **笔记的 `body` 在 JSON 里是 Markdown 字符串**，不是 rich-text AST；手写 AST 会得到
+> `invalid_markdown`。
+> **移动端**：`sm` 以上顶栏显示 4 个主链接；`sm` 以下收进 `MobileNav`（360–390px 不能
+> 横向溢出）。**文章目录**在 `lg+` 固定在正文右侧；h2/h3 的 `id` 与 TOC 必须共用
+> `src/lib/toc.ts` 的 `slugifyHeading`。
 
 ---
 

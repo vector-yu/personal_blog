@@ -1,0 +1,25 @@
+{
+  "intro": "做过的一些东西。有些是长期维护的项目，有些是一次性的实验；共同点是都想把抽象的东西做得更清楚一点。",
+  "items": [
+    {
+      "title": "这个博客",
+      "year": "2026",
+      "role": "设计 / 开发",
+      "summary": "用 Next.js + TinaCMS 搭建的静态个人站：可编辑内容、拉链履历、磨砂玻璃和右侧目录。",
+      "stack": ["Next.js", "TinaCMS", "Tailwind CSS"],
+      "link": "/",
+      "repo": "https://github.com/yourname/personal-blog",
+      "featured": true
+    },
+    {
+      "title": "数据可视化实验",
+      "year": "2025",
+      "role": "前端 / 可视化",
+      "summary": "把抽象的数据结构做成可以拖拽、可以观察的图形。示例项目，等你的真实内容替换。",
+      "stack": ["TypeScript", "D3", "Canvas"],
+      "link": "",
+      "repo": "",
+      "featured": false
+    }
+  ]
+}

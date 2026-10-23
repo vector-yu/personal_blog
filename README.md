@@ -70,6 +70,7 @@ src/components/home/        主页区块（首屏 / 背景 / 关于 / 拉链履�
 | 首屏 | 网站名称 + 座右铭 | `siteName` / `tagline` |
 | 背景 | 默认沿用全站流动几何；可切换为图片或视频 | `background` |
 | 个人介绍 | 头像、姓名、学校、自我介绍、逐条信息（横向铺开） | `profile` |
+| 社交 | 页脚 / 关于页的图标链接 | `socials` |
 | 履历 | 整幅磨砂玻璃拉链 + 无边框铺开的履历 | `timeline` |
 
 以上全部来自 **一个** 文档：`content/home/home.json`，在 `/admin/index.html` 的
@@ -96,6 +97,42 @@ src/components/home/        主页区块（首屏 / 背景 / 关于 / 拉链履�
 >
 > 顶栏的「履历」是独立页 **`/resume`**：纯列表、无动画，和首页读取同一份 `timeline` 数据。
 > 首页的拉链履历负责表现，`/resume` 负责可扫读的完整清单。
+
+---
+
+## 页面与内容模型
+
+站点是「个人品牌页」而不是纯文章列表：主入口 4 个（文章 / 项目 / 履历 / 关于），
+其余内容在页脚和文章页内的次级导航。
+
+| 路由 | 作用 | 数据 |
+| --- | --- | --- |
+| `/` | 个人档案：首屏、介绍、拉链履历 | `content/home/home.json` |
+| `/posts` + `/posts/page/[page]` | 文章列表，每页 8 篇 | `content/posts` |
+| `/posts/[...filename]` | 文章详情：目录、上一篇/下一篇、相关阅读、标签、系列、阅读时长、JSON-LD | `content/posts` |
+| `/tags` + `/tags/[tag]` | 标签索引 / 标签聚合 | 从文章 tags 派生 |
+| `/archive` | 按年份归档 | 从文章日期派生 |
+| `/projects` | 项目卡片页 | `content/projects/projects.json` |
+| `/notes` | 短记流（正文用 Tina 富文本） | `content/notes/notes.json` |
+| `/series` + `/series/[series]` | 系列索引 / 系列聚合 | 文章的 `series` 字段 |
+| `/start-here` | 入门页 + 精选文章（`featured`） | `content/pages/start-here.mdx` + posts |
+| `/now` | 最近在做什么 | `content/pages/now.mdx` |
+| `/reading` | 阅读清单 | `content/reading/reading.json` |
+| `/uses` | 工具 / 硬件 | `content/pages/uses.mdx` |
+| `/about` | 长关于：个人介绍 + 正文 + 社交 | `content/pages/about.mdx` + home |
+| `/resume` | 纯列表履历 | `content/home/home.json` |
+| `/rss.xml` `/sitemap.xml` `/opengraph-image` | 订阅 / 站点地图 / 默认分享图 | — |
+
+- `project` / `note` / `reading` 都是**单文档 JSON 集合**（`match` + 禁用新建/删除），
+  在 `/admin` 的表单里编辑。
+- **笔记的 `body` 在 JSON 里存 Markdown 字符串**，不要手写 rich-text AST：Tina 的 JSON
+  富文本解析器会把它当字符串解析，手写 AST 会变成 `invalid_markdown`。
+- 顶栏在 `sm` 以上展示 4 个主链接；`sm` 以下收进 `MobileNav`，避免 360–390px 横向溢出。
+- 文章 h2/h3 的 `id` 与右侧 TOC 都走 `src/lib/toc.ts` 的 `slugifyHeading`；新增标题渲染
+  不要绕过它。
+- 默认分享图由 `src/app/opengraph-image.tsx` 生成（Latin hostname，`next/og` 默认字体不含
+  中文）；文章有 `cover` 时覆盖。
+- 页脚社交链接来自 `home.socials`；RSS 始终展示。
 
 ---
 
@@ -211,8 +248,12 @@ export const ALLOWED_IMAGE_HOSTS = ['assets.tina.io', '**.vercel.app', 'i.exampl
 
 `src/app/layout.tsx` 设置 `metadataBase`，文章页输出 **绝对 URL** 的 canonical、`og:url`、
 `og:image`、`twitter:image`。没有 `metadataBase` 时这些是相对路径（`/posts/x`），crawler 与社交平台
-无法使用，分享出去只是一条裸链接。文章有 `cover` 字段时自动作为 `og:image` 并切换为
+无法使用，分享出去只是一条裸链接。文章有 `cover` 字段时自动作为 `og:image`；没有封面时使用
+根级的 `/opengraph-image`（`src/app/opengraph-image.tsx`，`next/og` 生成），并始终使用
 `summary_large_image`。
+
+文章页同时输出 `BlogPosting` JSON-LD（headline / description / image / datePublished /
+author / keywords / mainEntityOfPage），作者来自 `home.profile.name`。
 
 > 注意：页面级 `openGraph` 会**整体替换**布局里的，不会深合并，所以文章页里显式重复了 `siteName`。
 

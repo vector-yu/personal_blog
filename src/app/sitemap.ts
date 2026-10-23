@@ -1,6 +1,6 @@
 import type { MetadataRoute } from 'next';
 import { getPosts } from '@/lib/posts';
-import { collectTags, tagPath } from '@/lib/taxonomy';
+import { collectSeries, collectTags, seriesPath, tagPath } from '@/lib/taxonomy';
 import { pageCount, pagePath } from '@/lib/pagination';
 import { parseDate, postSlug, siteUrl } from '@/lib/site';
 
@@ -10,6 +10,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const base = siteUrl();
   const posts = await getPosts();
   const tags = collectTags(posts);
+  const series = collectSeries(posts);
   const paged = Array.from({ length: pageCount(posts.length) }, (_, index) => index + 1)
     .filter((page) => page > 1)
     .map((page) => ({
@@ -24,10 +25,22 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...paged,
     { url: `${base}/tags`, changeFrequency: 'weekly', priority: 0.5 },
     { url: `${base}/archive`, changeFrequency: 'weekly', priority: 0.5 },
+    { url: `${base}/series`, changeFrequency: 'weekly', priority: 0.4 },
+    { url: `${base}/projects`, changeFrequency: 'monthly', priority: 0.7 },
+    { url: `${base}/notes`, changeFrequency: 'weekly', priority: 0.6 },
+    { url: `${base}/start-here`, changeFrequency: 'monthly', priority: 0.6 },
+    { url: `${base}/now`, changeFrequency: 'weekly', priority: 0.5 },
+    { url: `${base}/reading`, changeFrequency: 'monthly', priority: 0.4 },
+    { url: `${base}/uses`, changeFrequency: 'monthly', priority: 0.3 },
     { url: `${base}/resume`, changeFrequency: 'monthly', priority: 0.5 },
     { url: `${base}/about`, changeFrequency: 'monthly', priority: 0.4 },
     ...tags.map((tag) => ({
       url: `${base}${tagPath(tag.name)}`,
+      changeFrequency: 'weekly' as const,
+      priority: 0.4,
+    })),
+    ...series.map((item) => ({
+      url: `${base}${seriesPath(item.name)}`,
       changeFrequency: 'weekly' as const,
       priority: 0.4,
     })),

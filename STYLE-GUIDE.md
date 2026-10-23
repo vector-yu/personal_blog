@@ -124,6 +124,9 @@ class="animate-flow animate-tumble"
 | 顶层拉链玻璃必须只在「桌面 + JS」下渲染，不能成为履历可见性的前提 | `zip-timeline.tsx` | no-JS、手机、爬虫看到完整履历 |
 | 表格必须保持「外层 `overflow-hidden` 圆角 + 内层 `overflow-x-auto`」，且 `table` 的 margin 为 0 | `tina-markdown.tsx` | 否则表头/表尾出现空隙，圆角处露出方角 |
 | 代码块 token 颜色类必须是 `highlight-code.ts` 里的字面量 | `highlight-code.ts` | Tailwind 扫描不到动态拼接的类名 |
+| 文章 h2/h3 的 `id` 与右侧 TOC 必须共用 `slugifyHeading` | `tina-markdown.tsx` + `toc.ts` | 目录锚点对不上，点了不跳 |
+| 移动端 <`sm` 顶栏只保留品牌 / 主题 / 菜单；4 个主链接在 `sm+` | `layout.tsx` + `mobile-nav.tsx` | 360–390px 横向溢出 |
+| 笔记 JSON 的富文本 `body` 存 Markdown 字符串，不要存 AST | `content/notes/notes.json` | Tina 解析成 `invalid_markdown` |
 
 ---
 

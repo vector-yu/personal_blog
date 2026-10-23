@@ -30,7 +30,23 @@ const CHROME = 'C:/Program Files/Google/Chrome/Application/chrome.exe';
 /** Below Tailwind's `md`, where the rule applies. */
 const MOBILE = { width: 390, height: 844 };
 const DESKTOP = { width: 1280, height: 900 };
-const ROUTES = ['/', '/posts', '/posts/hello-tinacms', '/resume', '/about', '/no-such-page'];
+const ROUTES = [
+  '/',
+  '/posts',
+  '/posts/hello-tinacms',
+  '/resume',
+  '/about',
+  '/tags',
+  '/archive',
+  '/projects',
+  '/notes',
+  '/now',
+  '/reading',
+  '/uses',
+  '/start-here',
+  '/series',
+  '/no-such-page',
+];
 
 const results = [];
 const check = (name, passed, detail = '') => {

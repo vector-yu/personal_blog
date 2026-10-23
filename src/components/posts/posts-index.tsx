@@ -38,6 +38,9 @@ export function PostsIndex({ posts, page }: { posts: PostSummary[]; page: number
           </SectionLink>
           <SectionLink href="/tags">标签</SectionLink>
           <SectionLink href="/archive">归档</SectionLink>
+          <SectionLink href="/notes">笔记</SectionLink>
+          <SectionLink href="/series">系列</SectionLink>
+          <SectionLink href="/start-here">从这开始</SectionLink>
           <SectionLink href="/rss.xml">RSS</SectionLink>
         </nav>
       </header>
