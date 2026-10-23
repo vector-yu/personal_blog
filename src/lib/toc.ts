@@ -3,7 +3,7 @@ import type { TinaMarkdownContent } from 'tinacms/dist/rich-text';
 export type TocHeading = {
   id: string;
   text: string;
-  level: 2 | 3;
+  level: 1 | 2 | 3;
 };
 
 type MarkdownNode = {
@@ -39,9 +39,9 @@ function nodeText(node: MarkdownNode): string {
 }
 
 /**
- * Pull the h2/h3 outline out of the Tina rich-text AST.
+ * Pull the h1/h2/h3 outline out of the Tina rich-text AST.
  *
- * The `h2`/`h3` renderers in `tina-markdown.tsx` build their ids from the same
+ * The heading renderers in `tina-markdown.tsx` build their ids from the same
  * `slugifyHeading`, so the TOC links always match the rendered headings. A
  * repeated heading text would produce a repeated id; that is rare enough that it
  * is not worth a positional id that the heading renderer cannot reconstruct.
@@ -55,7 +55,8 @@ export function extractHeadings(
   const walk = (node: MarkdownNode) => {
     if (!node || typeof node !== 'object') return;
 
-    const level = node.type === 'h2' ? 2 : node.type === 'h3' ? 3 : null;
+    const level =
+      node.type === 'h1' ? 1 : node.type === 'h2' ? 2 : node.type === 'h3' ? 3 : null;
     if (level) {
       const text = nodeText(node).trim();
       if (text) headings.push({ id: slugifyHeading(text), text, level });

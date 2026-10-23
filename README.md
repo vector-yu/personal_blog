@@ -128,7 +128,7 @@ src/components/home/        主页区块（首屏 / 背景 / 关于 / 拉链履�
 - **笔记的 `body` 在 JSON 里存 Markdown 字符串**，不要手写 rich-text AST：Tina 的 JSON
   富文本解析器会把它当字符串解析，手写 AST 会变成 `invalid_markdown`。
 - 顶栏在 `sm` 以上展示 4 个主链接；`sm` 以下收进 `MobileNav`，避免 360–390px 横向溢出。
-- 文章 h2/h3 的 `id` 与右侧 TOC 都走 `src/lib/toc.ts` 的 `slugifyHeading`；新增标题渲染
+- 文章 h1/h2/h3 的 `id` 与右侧 TOC 都走 `src/lib/toc.ts` 的 `slugifyHeading`；新增标题渲染
   不要绕过它。
 - 默认分享图由 `src/app/opengraph-image.tsx` 生成（Latin hostname，`next/og` 默认字体不含
   中文）；文章有 `cover` 时覆盖。

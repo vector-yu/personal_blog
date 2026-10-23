@@ -48,7 +48,12 @@ export function TableOfContents({
   const links = headings.map((heading) => {
     const current = active === heading.id;
     return (
-      <li key={heading.id} className={heading.level === 3 ? 'pl-3' : undefined}>
+      <li
+        key={heading.id}
+        className={
+          heading.level === 3 ? 'pl-6' : heading.level === 2 ? 'pl-3' : undefined
+        }
+      >
         <a
           href={`#${heading.id}`}
           aria-current={current ? 'location' : undefined}

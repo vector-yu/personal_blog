@@ -48,12 +48,12 @@ function textFromChildren(children: ReactNode): string {
 }
 
 /**
- * Adds a stable id + scroll margin to h2/h3. The ids are built with the same
+ * Adds a stable id + scroll margin to h1/h2/h3. The ids are built with the same
  * `slugifyHeading` used by `extractHeadings`, so the right-hand TOC anchors line
  * up exactly. `scroll-mt-28` clears the sticky header on anchor jumps.
  */
-function MarkdownHeading({ level, children }: { level: 2 | 3; children?: ReactNode }) {
-  const Tag = level === 2 ? 'h2' : 'h3';
+function MarkdownHeading({ level, children }: { level: 1 | 2 | 3; children?: ReactNode }) {
+  const Tag = level === 1 ? 'h1' : level === 2 ? 'h2' : 'h3';
   const id = slugifyHeading(textFromChildren(children));
 
   return (
@@ -159,6 +159,9 @@ const components = {
   ),
 
   // --- Built-in element overrides ---------------------------------------------
+  h1: (props: { children?: ReactNode }) => (
+    <MarkdownHeading level={1}>{props.children}</MarkdownHeading>
+  ),
   h2: (props: { children?: ReactNode }) => (
     <MarkdownHeading level={2}>{props.children}</MarkdownHeading>
   ),

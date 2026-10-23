@@ -44,7 +44,7 @@
 > **笔记的 `body` 在 JSON 里是 Markdown 字符串**，不是 rich-text AST；手写 AST 会得到
 > `invalid_markdown`。
 > **移动端**：`sm` 以上顶栏显示 4 个主链接；`sm` 以下收进 `MobileNav`（360–390px 不能
-> 横向溢出）。**文章目录**在 `lg+` 固定在正文右侧；h2/h3 的 `id` 与 TOC 必须共用
+> 横向溢出）。**文章目录**在 `lg+` 固定在正文右侧；h1/h2/h3 的 `id` 与 TOC 必须共用
 > `src/lib/toc.ts` 的 `slugifyHeading`。
 
 ---
