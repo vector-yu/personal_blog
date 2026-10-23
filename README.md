@@ -53,7 +53,7 @@ content/pages/*.mdx         独立页面（如「关于」）
 content/home/home.json      个人主页（单文档，Tina 的「个人主页」集合）
 public/uploads/             媒体库
 public/admin/               tinacms build 生成的编辑器 SPA
-src/app/                    路由（主页 / 列表页 / 详情页 / 关于）
+src/app/                    路由（主页 / 列表页 / 详情页 / 履历 / 关于）
 src/components/tina-markdown.tsx    ★ 组件映射表（TinaMarkdown 渲染层）
 src/components/mdx/         自定义交互组件
 src/components/home/        主页区块（首屏 / 背景 / 关于 / 拉链履历）
@@ -69,8 +69,8 @@ src/components/home/        主页区块（首屏 / 背景 / 关于 / 拉链履�
 | --- | --- | --- |
 | 首屏 | 网站名称 + 座右铭 | `siteName` / `tagline` |
 | 背景 | 默认沿用全站流动几何；可切换为图片或视频 | `background` |
-| 关于我 | 头像、姓名、学校、自我介绍、逐条信息 | `profile` |
-| 履历 | 上下两层：顶层是带拉链的布面，滚动拉下拉链露出下层履历 | `timeline` |
+| 个人介绍 | 头像、姓名、学校、自我介绍、逐条信息（横向铺开） | `profile` |
+| 履历 | 整幅拉链布面 + 无边框铺开的履历 | `timeline` |
 
 以上全部来自 **一个** 文档：`content/home/home.json`，在 `/admin/index.html` 的
 「个人主页」集合里编辑（该集合是 JSON 格式的单文档，编辑器里禁用了新建/删除）。
@@ -87,9 +87,13 @@ src/components/home/        主页区块（首屏 / 背景 / 关于 / 拉链履�
 - 背景层位于内容之下、`<Backdrop />` 之上；换成媒体后由同一条「阅读带」保证正文对比度。
 - 只接受站内路径或 http(s) 地址，`javascript:` 之类的 src 会被丢弃。
 
+> 首页**没有**「关于我」「履历」这类小标题：个人介绍直接以姓名为标题，履历直接以整幅布面开场。
 > 桌面滚到履历时，拉链滑块会停在视口下方，布面向两侧裂开成 V 字，露出下层履历；
 > 手机、`prefers-reduced-motion`、无 JS 时**不渲染顶层布面**，直接显示完整履历（R1）。
 > 履历正文始终在预渲染 HTML 里，拉链只是提升层，不是内容可见性的前提。
+>
+> 顶栏的「履历」是独立页 **`/resume`**：纯列表、无动画，和首页读取同一份 `timeline` 数据。
+> 首页的拉链履历负责表现，`/resume` 负责可扫读的完整清单。
 
 ---
 

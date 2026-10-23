@@ -3,42 +3,45 @@
 import { useEffect, useRef, useState } from 'react';
 import { m, useMotionValue, useScroll, useSpring, useTransform } from 'framer-motion';
 import { useNoMotion } from '@/components/site/use-no-motion';
+import { ResumeEntryRow } from '@/components/home/resume-entry';
 import type { HomeTimelineEntry } from '@/lib/home';
 
 /**
- * The résumé as a zippered bag.
+ * The résumé as a full-bleed zippered sheet.
  *
  * ── The two layers ──────────────────────────────────────────────────────────
- * The resume cards are the BOTTOM layer, in normal document flow. The TOP layer
- * is `.zip-fabric`: an opaque paper/midnight sheet split down the middle into
- * two halves, each clipped with a V whose apex follows the slider. Above the
- * apex the fabric is gone (that is the opening); below it the two halves meet
- * and the interlocked teeth cover the seam. So the page really is a bag with a
- * zipper: scrolling pulls the slider down, the V widens, and the resume comes
- * out from underneath.
+ * The résumé rows are the BOTTOM layer, in normal document flow. The TOP layer
+ * is `.zip-fabric`: an opaque paper/midnight sheet that spans the whole
+ * viewport, split down the middle into two halves clipped with a V whose apex
+ * follows the slider. Above the apex the sheet is gone (the opening); below it
+ * the two halves meet and the interlocked teeth cover the seam. Scrolling pulls
+ * the slider down, the V widens, and the résumé comes out from underneath.
+ *
+ * There is deliberately no rounded/bordered container: the sheet is a sheet,
+ * not a card, and the rows underneath are open (no card frames).
  *
  * ── Why the slider stays put ────────────────────────────────────────────────
  * Progress runs from "stage top hits 80% of the viewport" to "stage bottom
  * hits 80%". The scroll distance therefore equals the stage height, while the
  * slider travels the same distance inside the stage — the two cancel, and the
- * slider stays at 80% of the viewport while the fabric moves up past it. That
- * is what makes it read as zipping the page open rather than as a decoration
- * scrolling away.
+ * slider stays near the bottom of the viewport while the fabric moves up past
+ * it. That is what makes it read as zipping the page open rather than as a
+ * decoration scrolling away.
  *
  * ── Content safety ──────────────────────────────────────────────────────────
- * The cover is a progressive enhancement. It is not rendered until after
+ * The sheet is a progressive enhancement. It is not rendered until after
  * hydration, and never at all on phones / reduced motion (`useNoMotion`). The
- * cards are always in the HTML, so a no-JS visitor, a phone, or a crawler sees
- * the complete résumé with no cover in the way. This matters more here than
- * anywhere else on the site: the cover is opaque by design.
+ * rows are always in the HTML, so a no-JS visitor, a phone, or a crawler sees
+ * the complete résumé with no sheet in the way. The /resume page renders the
+ * same rows with no client code at all.
  *
  * ── Geometry ────────────────────────────────────────────────────────────────
- * The bag has a 56px collar at the top. The fabric lives below it. The slider
+ * The sheet has a 56px collar at the top. The fabric lives below it. The slider
  * is 84px tall; its TOP is the V apex, so at progress 0 the apex is at the
- * fabric's top edge and the bag is completely closed, and at progress 1 the
- * slider's bottom rests on the fabric's bottom edge. The tapes are rotated
- * around the two top corners and lengthen to the apex; their teeth are SVG
- * tiles so they stay crisp at any angle.
+ * fabric's top edge and the sheet is closed, and at progress 1 the slider's
+ * bottom rests on the sheet's bottom edge. The tapes are rotated around the two
+ * top corners and lengthen to the apex; their teeth are SVG tiles so they stay
+ * crisp at any angle.
  */
 const COLLAR = 56;
 const PULL_HEIGHT = 84;
@@ -50,7 +53,7 @@ export function ZipTimeline({ entries }: { entries: HomeTimelineEntry[] }) {
   const [measured, setMeasured] = useState(false);
 
   // Geometry is measured into MotionValues, not React state: the zipper runs on
-  // every scroll frame, and re-rendering the eight cards for each one would be
+  // every scroll frame, and re-rendering the rows for each one would be
   // wasteful. Only mount and "has been measured" need state.
   const stageWidth = useMotionValue(0);
   const stageHeight = useMotionValue(0);
@@ -114,13 +117,18 @@ export function ZipTimeline({ entries }: { entries: HomeTimelineEntry[] }) {
 
   // Clamp the fade to an exact 0: the spring lags behind the raw scroll value,
   // so at the final pixel it can still sit at ~0.98 and leave a ghost of the
-  // slider over the last card. `[0.84, 0.97]` + the snap removes that.
+  // slider over the last row. `[0.84, 0.97]` + the snap removes that.
   const coverOpacity = useTransform(progress, (value) =>
     value >= 0.97 ? 0 : Math.min(1, Math.max(0, (0.97 - value) / (0.97 - 0.84)))
   );
-  const tapeOpacity = useTransform(progress, (value) =>
-    value <= 0.03 ? value / 0.03 : value >= 0.97 ? 0 : 1
-  );
+  // Keep the tapes hidden until the V has actually started to open. At
+  // progress 0 they lie flat along the sheet's top edge and read as a
+  // horizontal gold line; fading them in from 8% avoids that false reading.
+  const tapeOpacity = useTransform(progress, (value) => {
+    if (value <= 0.08) return 0;
+    if (value <= 0.12) return (value - 0.08) / 0.04;
+    return value >= 0.97 ? 0 : 1;
+  });
 
   const tapeLength = useTransform([apex, stageWidth], ([value, width]: number[]) =>
     Math.max(1, Math.hypot(width / 2, value))
@@ -131,96 +139,35 @@ export function ZipTimeline({ entries }: { entries: HomeTimelineEntry[] }) {
   const rightRotate = useTransform(leftRotate, (value) => -value);
 
   return (
-    <div
-      ref={trackRef}
-      className={
-        active
-          ? 'relative mt-12 overflow-hidden rounded-[2rem] border-[3px] border-ink/85 bg-paper/40 shadow-brutal-xl dark:border-chalk/25 dark:bg-midnight/40 dark:shadow-chalk-lg'
-          : 'relative mt-12'
-      }
-    >
-      {/* --- BOTTOM LAYER: the résumé ------------------------------------- */}
+    <div ref={trackRef} className="relative w-full overflow-hidden">
+      {/* --- BOTTOM LAYER: the résumé, open and unframed ------------------- */}
       <ol
         className={
           active
-            ? 'relative z-0 space-y-6 px-4 pt-14 pb-8 sm:px-6'
-            : 'relative z-0 space-y-7'
+            ? 'relative z-0 mx-auto w-full max-w-7xl divide-y-2 divide-dashed divide-ink/15 px-6 pt-14 pb-4 dark:divide-chalk/15'
+            : 'relative z-0 mx-auto w-full max-w-7xl divide-y-2 divide-dashed divide-ink/15 px-6 dark:divide-chalk/15'
         }
       >
         {entries.length === 0 ? (
-          <li className="rounded-2xl border-2 border-dashed border-ink/25 bg-white/40 p-6 text-center text-sm font-medium text-ink/60 dark:border-chalk/20 dark:bg-white/[0.03] dark:text-slate-400">
+          <li className="py-14 text-center text-sm font-medium text-ink/60 dark:text-slate-400">
             还没有履历条目。到 /admin 的「个人主页」里添加第一条吧。
           </li>
         ) : (
-          entries.map((entry) => (
-            <li key={`${entry.period}-${entry.title}`}>
-              {/* A narrower card is deliberate: the V opening is widest at the
-                  centre, so a centred column clears the fabric edge sooner and
-                  the text is never sliced by the taper. */}
-              <article className="group relative mx-auto w-full max-w-lg overflow-hidden rounded-2xl border-[3px] border-ink/85 bg-white/65 p-6 shadow-brutal backdrop-blur-xl backdrop-saturate-125 md:w-[60%] dark:border-chalk/20 dark:bg-white/[0.045] dark:shadow-chalk">
-                <span
-                  aria-hidden
-                  className={`absolute inset-y-0 left-0 w-1.5 ${
-                    entry.current
-                      ? 'bg-gradient-to-b from-iris via-blush to-sun'
-                      : 'bg-ink/10 dark:bg-chalk/10'
-                  }`}
-                />
-
-                <div className="relative">
-                  <div className="flex flex-wrap items-center gap-2.5">
-                    {entry.period ? (
-                      <span className="inline-flex items-center rounded-full border-2 border-ink/20 bg-sun/40 px-3 py-1 text-xs font-black text-amber-900 dark:border-sun/30 dark:bg-sun/15 dark:text-amber-200">
-                        {entry.period}
-                      </span>
-                    ) : null}
-
-                    {entry.current ? (
-                      <span className="inline-flex items-center gap-1.5 rounded-full border-2 border-blush/50 bg-blush/15 px-3 py-1 text-xs font-black text-blush-text dark:border-blush/40 dark:bg-blush/20 dark:text-rose-200">
-                        <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-blush" />
-                        现在
-                      </span>
-                    ) : null}
-                  </div>
-
-                  <h3 className="mt-3.5 text-title">{entry.title}</h3>
-
-                  {entry.place ? (
-                    <p className="mt-1.5 text-sm font-bold text-ink/55 dark:text-slate-400">
-                      {entry.place}
-                    </p>
-                  ) : null}
-
-                  {entry.description ? (
-                    <p className="mt-3.5 leading-relaxed text-ink/75 dark:text-slate-300">
-                      {entry.description}
-                    </p>
-                  ) : null}
-
-                  {entry.tags.length > 0 ? (
-                    <ul className="mt-4 flex flex-wrap gap-2">
-                      {entry.tags.map((tag) => (
-                        <li
-                          key={tag}
-                          className="rounded-full border border-ink/15 bg-white/70 px-2.5 py-0.5 text-xs font-bold text-ink/65 dark:border-chalk/15 dark:bg-white/[0.06] dark:text-slate-300"
-                        >
-                          {tag}
-                        </li>
-                      ))}
-                    </ul>
-                  ) : null}
-                </div>
-              </article>
-            </li>
+          entries.map((entry, index) => (
+            <ResumeEntryRow
+              key={`${entry.period}-${entry.title}`}
+              entry={entry}
+              index={index}
+            />
           ))
         )}
       </ol>
 
-      {/* --- TOP LAYER: the zippered fabric -------------------------------- */}
+      {/* --- TOP LAYER: the full-bleed zippered sheet ---------------------- */}
       {active && measured ? (
         <div aria-hidden className="pointer-events-none absolute inset-0 z-20 print:hidden">
           <m.div style={{ opacity: coverOpacity }} className="absolute inset-0">
-            {/* Collar: always closed, so the slider starts inside the bag. */}
+            {/* Collar: always closed, so the slider starts inside the sheet. */}
             <div className="zip-fabric absolute inset-x-0 top-0 h-14" />
 
             {/* The zipper itself lives below the collar. */}
@@ -250,8 +197,8 @@ export function ZipTimeline({ entries }: { entries: HomeTimelineEntry[] }) {
                 <div className="zipper-closed h-full w-full" />
               </m.div>
 
-              {/* The slider. Its TOP edge is the apex, so at rest the bag is
-                  completely closed and at the end its bottom meets the bag. */}
+              {/* The slider. Its TOP edge is the apex, so at rest the sheet is
+                  completely closed and at the end its bottom meets the sheet. */}
               <m.div
                 style={{ top: apex }}
                 className="absolute left-1/2 z-30 -translate-x-1/2"
@@ -267,9 +214,9 @@ export function ZipTimeline({ entries }: { entries: HomeTimelineEntry[] }) {
 }
 
 /**
- * A chunky sliders, drawn rather than iconified: gradient metal body, ink
+ * A chunky slider, drawn rather than iconified: gradient metal body, ink
  * outline, a finger slot and grip ridges, plus the little tab below. It is
- * aria-hidden because the whole cover is decorative.
+ * aria-hidden because the whole sheet is decorative.
  */
 function ZipperPull() {
   return (

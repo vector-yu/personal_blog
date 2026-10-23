@@ -32,6 +32,7 @@ try {
     { path: '/', expected: 200, label: 'home' },
     { path: '/posts', expected: 200, label: 'post list' },
     { path: '/posts/hello-tinacms', expected: 200, label: 'published post' },
+    { path: '/resume', expected: 200, label: 'resume page' },
     { path: '/about', expected: 200, label: 'about page' },
     { path: '/rss.xml', expected: 200, label: 'rss feed' },
     { path: '/sitemap.xml', expected: 200, label: 'sitemap' },

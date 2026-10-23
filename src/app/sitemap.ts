@@ -12,6 +12,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   return [
     { url: `${base}/`, changeFrequency: 'daily', priority: 1 },
     { url: `${base}/posts`, changeFrequency: 'daily', priority: 0.8 },
+    { url: `${base}/resume`, changeFrequency: 'monthly', priority: 0.5 },
     { url: `${base}/about`, changeFrequency: 'monthly', priority: 0.4 },
     ...posts.map((post) => {
       // Only pass lastModified when the date actually parses: Next calls toISOString() on

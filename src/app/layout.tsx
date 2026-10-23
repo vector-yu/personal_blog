@@ -85,7 +85,7 @@ function NavLink({ href, children }: { href: string; children: React.ReactNode }
   return (
     <Link
       href={href}
-      className="rounded-full border-2 border-transparent px-3 py-1.5 font-bold text-ink/65 transition-all duration-200 hover:-translate-y-0.5 hover:border-ink hover:bg-white/85 hover:text-ink hover:shadow-brutal-xs motion-reduce:hover:translate-y-0 dark:text-slate-300 dark:hover:border-chalk dark:hover:bg-white/10 dark:hover:text-white dark:hover:shadow-chalk-xs"
+      className="rounded-full border-2 border-transparent px-2.5 py-1.5 font-bold whitespace-nowrap text-ink/65 transition-all duration-200 hover:-translate-y-0.5 hover:border-ink hover:bg-white/85 hover:text-ink hover:shadow-brutal-xs motion-reduce:hover:translate-y-0 sm:px-3 dark:text-slate-300 dark:hover:border-chalk dark:hover:bg-white/10 dark:hover:text-white dark:hover:shadow-chalk-xs"
     >
       {children}
     </Link>
@@ -96,8 +96,11 @@ function SiteHeader({ siteName }: { siteName: string }) {
   return (
     // Pillar 1: the header is a frosted sheet that content scrolls underneath.
     <header className="sticky top-0 z-40 border-b-2 border-ink/10 bg-white/60 backdrop-blur-xl backdrop-saturate-150 print:hidden dark:border-chalk/10 dark:bg-midnight/60">
-      <nav className="mx-auto flex max-w-3xl items-center justify-between gap-4 px-4 py-3">
-        <Link href="/" className="group inline-flex items-center gap-2.5">
+      <nav className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-3 sm:px-6">
+        <Link
+          href="/"
+          className="group inline-flex shrink-0 items-center gap-2.5 whitespace-nowrap"
+        >
           {/* Logo mark: gradient geometry inside a hard outline. */}
           <span
             aria-hidden
@@ -105,12 +108,14 @@ function SiteHeader({ siteName }: { siteName: string }) {
           >
             <span className="h-3 w-3 rotate-45 rounded-[3px] bg-ink/90 dark:bg-midnight/90" />
           </span>
-          <span className="text-base font-black tracking-tight">{siteName}</span>
+          <span className="text-base font-black tracking-tight whitespace-nowrap">
+            {siteName}
+          </span>
         </Link>
 
-        <div className="flex items-center gap-1 text-sm">
+        <div className="flex items-center gap-0.5 text-sm sm:gap-1">
           <NavLink href="/posts">文章</NavLink>
-          <NavLink href="/#journey">履历</NavLink>
+          <NavLink href="/resume">履历</NavLink>
           <NavLink href="/about">关于</NavLink>
           <ThemeToggle />
         </div>
@@ -123,7 +128,7 @@ function SiteFooter({ siteName }: { siteName: string }) {
   return (
     <footer className="relative z-10 mt-20 print:hidden">
       <div className="border-t-2 border-ink/15 bg-white/55 backdrop-blur-xl dark:border-chalk/15 dark:bg-white/[0.03]">
-        <div className="mx-auto flex max-w-3xl flex-col gap-4 px-4 py-8 text-sm text-ink/70 sm:flex-row sm:items-center sm:justify-between dark:text-slate-300">
+        <div className="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-8 text-sm text-ink/70 sm:flex-row sm:items-center sm:justify-between sm:px-6 dark:text-slate-300">
           <p>
             © {new Date().getFullYear()} {siteName} · Built with Next.js &amp; TinaCMS
           </p>
