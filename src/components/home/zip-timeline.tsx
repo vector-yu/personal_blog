@@ -1,45 +1,81 @@
 'use client';
 
-import { useRef } from 'react';
-import { m, useScroll, useSpring, useTransform } from 'framer-motion';
+import { useEffect, useRef, useState } from 'react';
+import { m, useMotionValue, useScroll, useSpring, useTransform } from 'framer-motion';
 import { useNoMotion } from '@/components/site/use-no-motion';
 import type { HomeTimelineEntry } from '@/lib/home';
 
 /**
- * The résumé, presented as a zipper.
+ * The résumé as a zippered bag.
  *
- * ── How the trick works ─────────────────────────────────────────────────────
- * A vertical rail runs down the left of the list. Two copies of the teeth are
- * stacked and clipped against each other:
+ * ── The two layers ──────────────────────────────────────────────────────────
+ * The resume cards are the BOTTOM layer, in normal document flow. The TOP layer
+ * is `.zip-fabric`: an opaque paper/midnight sheet split down the middle into
+ * two halves, each clipped with a V whose apex follows the slider. Above the
+ * apex the fabric is gone (that is the opening); below it the two halves meet
+ * and the interlocked teeth cover the seam. So the page really is a bag with a
+ * zipper: scrolling pulls the slider down, the V widens, and the resume comes
+ * out from underneath.
  *
- *   - the CLOSED strip is visible ABOVE the slider (clip from the top);
- *   - the OPEN strip is visible BELOW the slider (clip from the bottom), with
- *     the rainbow "lining" showing through the gap.
+ * ── Why the slider stays put ────────────────────────────────────────────────
+ * Progress runs from "stage top hits 80% of the viewport" to "stage bottom
+ * hits 80%". The scroll distance therefore equals the stage height, while the
+ * slider travels the same distance inside the stage — the two cancel, and the
+ * slider stays at 80% of the viewport while the fabric moves up past it. That
+ * is what makes it read as zipping the page open rather than as a decoration
+ * scrolling away.
  *
- * That is how a real zipper behaves: the slider separates the track behind it.
- * The slider's `top` is a MotionValue driven by the section's scroll progress,
- * so it genuinely travels down as the visitor scrolls.
+ * ── Content safety ──────────────────────────────────────────────────────────
+ * The cover is a progressive enhancement. It is not rendered until after
+ * hydration, and never at all on phones / reduced motion (`useNoMotion`). The
+ * cards are always in the HTML, so a no-JS visitor, a phone, or a crawler sees
+ * the complete résumé with no cover in the way. This matters more here than
+ * anywhere else on the site: the cover is opaque by design.
  *
- * ── Why content never depends on JavaScript ─────────────────────────────────
- * Only the RAIL is driven by Framer. The résumé entries are ordinary markup,
- * always present and always visible; their entrance is a CSS scroll-driven
- * animation (`.scroll-reveal`) that simply does nothing where it is unsupported.
- * No visitor can end up with an invisible résumé because a MotionValue stayed
- * at zero.
- *
- * ── Mobile ──────────────────────────────────────────────────────────────────
- * R1 says phones get no motion. `useNoMotion()` therefore jumps the rail to the
- * fully open state and removes the slider, while the responsive classes hide the
- * rail entirely below `md`; the entries keep their normal document flow. The
- * spring is never created on a phone because its target is a constant.
+ * ── Geometry ────────────────────────────────────────────────────────────────
+ * The bag has a 56px collar at the top. The fabric lives below it. The slider
+ * is 84px tall; its TOP is the V apex, so at progress 0 the apex is at the
+ * fabric's top edge and the bag is completely closed, and at progress 1 the
+ * slider's bottom rests on the fabric's bottom edge. The tapes are rotated
+ * around the two top corners and lengthen to the apex; their teeth are SVG
+ * tiles so they stay crisp at any angle.
  */
+const COLLAR = 56;
+const PULL_HEIGHT = 84;
+
 export function ZipTimeline({ entries }: { entries: HomeTimelineEntry[] }) {
   const noMotion = useNoMotion();
   const trackRef = useRef<HTMLDivElement>(null);
+  const [mounted, setMounted] = useState(false);
+  const [measured, setMeasured] = useState(false);
+
+  // Geometry is measured into MotionValues, not React state: the zipper runs on
+  // every scroll frame, and re-rendering the eight cards for each one would be
+  // wasteful. Only mount and "has been measured" need state.
+  const stageWidth = useMotionValue(0);
+  const stageHeight = useMotionValue(0);
+
+  useEffect(() => setMounted(true), []);
+
+  useEffect(() => {
+    const node = trackRef.current;
+    if (!node) return;
+
+    const measure = () => {
+      stageWidth.set(node.clientWidth);
+      stageHeight.set(node.clientHeight);
+      setMeasured(true);
+    };
+
+    measure();
+    const observer = new ResizeObserver(measure);
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, [stageWidth, stageHeight]);
 
   const { scrollYProgress } = useScroll({
     target: trackRef,
-    offset: ['start 0.72', 'end 0.88'],
+    offset: ['start 0.8', 'end 0.8'],
   });
 
   const smoothed = useSpring(scrollYProgress, {
@@ -48,79 +84,80 @@ export function ZipTimeline({ entries }: { entries: HomeTimelineEntry[] }) {
     restDelta: 0.001,
   });
 
-  // MotionConfig cannot gate directly-driven MotionValues, so the no-motion
-  // branch swaps in constants instead of just ignoring the spring.
+  // MotionConfig cannot gate MotionValues that are driven directly, so the
+  // no-motion branch swaps in a constant instead of merely ignoring the spring.
   const still = useTransform(scrollYProgress, [0, 1], [0, 0]);
-  const open = useTransform(scrollYProgress, [0, 1], [1, 1]);
+  const progress = noMotion ? still : smoothed;
 
-  const progress = noMotion ? open : smoothed;
-  const pullProgress = noMotion ? still : smoothed;
+  const active = mounted && !noMotion;
 
-  const closedClip = useTransform(progress, (value) => `inset(${value * 100}% 0 0 0)`);
-  const openClip = useTransform(progress, (value) => `inset(0 0 ${(1 - value) * 100}% 0)`);
-  const pullTop = useTransform(
-    pullProgress,
-    (value) => `calc(${value * 100}% - ${value * 64}px)`
+  const fabricHeight = useTransform(stageHeight, (value) => Math.max(1, value - COLLAR));
+  const maxApex = useTransform(fabricHeight, (value) => Math.max(0, value - PULL_HEIGHT));
+
+  const apex = useTransform([progress, maxApex], ([value, limit]: number[]) =>
+    Math.min(limit, Math.max(0, value * limit))
   );
 
+  const apexPercent = useTransform([apex, fabricHeight], ([value, height]: number[]) =>
+    `${(value / height) * 100}%`
+  );
+
+  const leftClip = useTransform(
+    apexPercent,
+    (value) => `polygon(0 0, 0 100%, 50% 100%, 50% ${value}, 0 0)`
+  );
+  const rightClip = useTransform(
+    apexPercent,
+    (value) => `polygon(100% 0, 100% 100%, 50% 100%, 50% ${value}, 100% 0)`
+  );
+  const closedClip = useTransform(apexPercent, (value) => `inset(${value} 0 0 0)`);
+
+  // Clamp the fade to an exact 0: the spring lags behind the raw scroll value,
+  // so at the final pixel it can still sit at ~0.98 and leave a ghost of the
+  // slider over the last card. `[0.84, 0.97]` + the snap removes that.
+  const coverOpacity = useTransform(progress, (value) =>
+    value >= 0.97 ? 0 : Math.min(1, Math.max(0, (0.97 - value) / (0.97 - 0.84)))
+  );
+  const tapeOpacity = useTransform(progress, (value) =>
+    value <= 0.03 ? value / 0.03 : value >= 0.97 ? 0 : 1
+  );
+
+  const tapeLength = useTransform([apex, stageWidth], ([value, width]: number[]) =>
+    Math.max(1, Math.hypot(width / 2, value))
+  );
+  const leftRotate = useTransform([apex, stageWidth], ([value, width]: number[]) =>
+    (-Math.atan2(width / 2, Math.max(value, 0.001)) * 180) / Math.PI
+  );
+  const rightRotate = useTransform(leftRotate, (value) => -value);
+
   return (
-    <div ref={trackRef} className="relative mt-12">
-      {/* --- the zipper rail (desktop only) --------------------------------- */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-y-0 left-2 hidden w-10 md:block"
+    <div
+      ref={trackRef}
+      className={
+        active
+          ? 'relative mt-12 overflow-hidden rounded-[2rem] border-[3px] border-ink/85 bg-paper/40 shadow-brutal-xl dark:border-chalk/25 dark:bg-midnight/40 dark:shadow-chalk-lg'
+          : 'relative mt-12'
+      }
+    >
+      {/* --- BOTTOM LAYER: the résumé ------------------------------------- */}
+      <ol
+        className={
+          active
+            ? 'relative z-0 space-y-6 px-4 pt-14 pb-8 sm:px-6'
+            : 'relative z-0 space-y-7'
+        }
       >
-        {/* Open below the slider: separated teeth + the coloured lining. */}
-        <m.div style={{ clipPath: openClip }} className="absolute inset-0">
-          <div className="zipper-open-left absolute inset-y-0 left-0 w-[18px]" />
-          <div className="zipper-open-right absolute inset-y-0 right-0 w-[18px]" />
-          <div className="absolute inset-y-0 left-1/2 w-1.5 -translate-x-1/2 rounded-full bg-gradient-to-b from-iris via-blush to-sun opacity-90" />
-        </m.div>
-
-        {/* Closed above the slider: interlocking teeth. */}
-        <m.div style={{ clipPath: closedClip }} className="absolute inset-0">
-          <div className="zipper-closed absolute inset-0" />
-        </m.div>
-
-        {/* The slider itself. Removed entirely when motion is off. */}
-        {noMotion ? null : (
-          <m.div
-            style={{ top: pullTop }}
-            className="absolute left-1/2 z-20 -translate-x-1/2"
-          >
-            <div className="relative h-16 w-10 rounded-2xl border-[3px] border-ink bg-gradient-to-b from-sun via-sun to-blush shadow-brutal-sm dark:border-chalk dark:shadow-chalk-sm">
-              <span className="absolute top-2.5 left-1/2 h-5 w-2.5 -translate-x-1/2 rounded-full bg-ink/80 dark:bg-midnight/80" />
-              <span className="absolute inset-x-1.5 bottom-2 h-1 rounded-full bg-white/60" />
-            </div>
-            <span className="absolute -bottom-2 left-1/2 h-3 w-1.5 -translate-x-1/2 rounded-b-sm bg-ink dark:bg-chalk" />
-          </m.div>
-        )}
-      </div>
-
-      {/* --- the résumé ----------------------------------------------------- */}
-      {entries.length === 0 ? (
-        <p className="rounded-2xl border-2 border-dashed border-ink/25 bg-white/40 p-6 text-center text-sm font-medium text-ink/60 dark:border-chalk/20 dark:bg-white/[0.03] dark:text-slate-400">
-          还没有履历条目。到 /admin 的「个人主页」里添加第一条吧。
-        </p>
-      ) : (
-        <ol className="space-y-7 md:pl-20">
-          {entries.map((entry) => (
-            <li
-              key={`${entry.period}-${entry.title}`}
-              className="scroll-reveal relative"
-            >
-              {/* connector into the rail */}
-              <span
-                aria-hidden
-                className="absolute top-8 -left-[3.75rem] hidden h-4 w-4 rounded-full border-[3px] border-ink bg-mint shadow-brutal-xs md:block dark:border-chalk"
-              />
-              <span
-                aria-hidden
-                className="absolute top-[2.55rem] -left-[2.75rem] hidden h-0.5 w-11 bg-ink/25 md:block dark:bg-chalk/25"
-              />
-
-              <article className="group relative overflow-hidden rounded-2xl border-[3px] border-ink/85 bg-white/65 p-6 shadow-brutal backdrop-blur-xl backdrop-saturate-125 dark:border-chalk/20 dark:bg-white/[0.045] dark:shadow-chalk">
-                {/* Gradient spine for the current entry; a quiet rule otherwise. */}
+        {entries.length === 0 ? (
+          <li className="rounded-2xl border-2 border-dashed border-ink/25 bg-white/40 p-6 text-center text-sm font-medium text-ink/60 dark:border-chalk/20 dark:bg-white/[0.03] dark:text-slate-400">
+            还没有履历条目。到 /admin 的「个人主页」里添加第一条吧。
+          </li>
+        ) : (
+          entries.map((entry) => (
+            <li key={`${entry.period}-${entry.title}`}>
+              {/* A narrower card is deliberate: the V opening is widest at the
+                  centre, so a centred column clears the fabric edge sooner and
+                  the text is never sliced by the taper. */}
+              <article className="group relative mx-auto w-full max-w-lg overflow-hidden rounded-2xl border-[3px] border-ink/85 bg-white/65 p-6 shadow-brutal backdrop-blur-xl backdrop-saturate-125 md:w-[60%] dark:border-chalk/20 dark:bg-white/[0.045] dark:shadow-chalk">
                 <span
                   aria-hidden
                   className={`absolute inset-y-0 left-0 w-1.5 ${
@@ -175,9 +212,90 @@ export function ZipTimeline({ entries }: { entries: HomeTimelineEntry[] }) {
                 </div>
               </article>
             </li>
-          ))}
-        </ol>
-      )}
+          ))
+        )}
+      </ol>
+
+      {/* --- TOP LAYER: the zippered fabric -------------------------------- */}
+      {active && measured ? (
+        <div aria-hidden className="pointer-events-none absolute inset-0 z-20 print:hidden">
+          <m.div style={{ opacity: coverOpacity }} className="absolute inset-0">
+            {/* Collar: always closed, so the slider starts inside the bag. */}
+            <div className="zip-fabric absolute inset-x-0 top-0 h-14" />
+
+            {/* The zipper itself lives below the collar. */}
+            <div
+              className="absolute inset-x-0 bottom-0 overflow-hidden"
+              style={{ top: COLLAR }}
+            >
+              {/* The two fabric halves. The V edge is exactly the tape centre. */}
+              <m.div style={{ clipPath: leftClip }} className="zip-fabric absolute inset-0" />
+              <m.div style={{ clipPath: rightClip }} className="zip-fabric absolute inset-0" />
+
+              {/* Separated tapes above the apex, hinged at the top corners. */}
+              <m.div
+                style={{ height: tapeLength, rotate: leftRotate, opacity: tapeOpacity }}
+                className="zipper-tape-left absolute top-0 -left-[13px] z-10 w-[26px] origin-top"
+              />
+              <m.div
+                style={{ height: tapeLength, rotate: rightRotate, opacity: tapeOpacity }}
+                className="zipper-tape-right absolute top-0 -right-[13px] z-10 w-[26px] origin-top"
+              />
+
+              {/* Interlocked track below the apex. */}
+              <m.div
+                style={{ clipPath: closedClip }}
+                className="absolute inset-y-0 left-1/2 z-20 w-12 -translate-x-1/2"
+              >
+                <div className="zipper-closed h-full w-full" />
+              </m.div>
+
+              {/* The slider. Its TOP edge is the apex, so at rest the bag is
+                  completely closed and at the end its bottom meets the bag. */}
+              <m.div
+                style={{ top: apex }}
+                className="absolute left-1/2 z-30 -translate-x-1/2"
+              >
+                <ZipperPull />
+              </m.div>
+            </div>
+          </m.div>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+/**
+ * A chunky sliders, drawn rather than iconified: gradient metal body, ink
+ * outline, a finger slot and grip ridges, plus the little tab below. It is
+ * aria-hidden because the whole cover is decorative.
+ */
+function ZipperPull() {
+  return (
+    <div className="relative h-[84px] w-[52px]">
+      <div className="absolute inset-0 rounded-[18px] border-[3px] border-ink bg-[linear-gradient(180deg,#ffe6a3,#ffd166_38%,#ffad7a)] shadow-[0_6px_0_0_#0b1221] dark:border-chalk dark:shadow-[0_6px_0_0_#e9eef8]">
+        {/* Jaw: a dark wedge where the two tapes meet. */}
+        <span
+          aria-hidden
+          className="absolute top-0 left-1/2 h-3 w-7 -translate-x-1/2 bg-ink/80 [clip-path:polygon(0_0,100%_0,50%_100%)] dark:bg-midnight/80"
+        />
+        <span aria-hidden className="absolute inset-x-2 top-2 h-1.5 rounded-full bg-white/70" />
+        <span
+          aria-hidden
+          className="absolute top-5 left-1/2 h-8 w-3 -translate-x-1/2 rounded-full bg-ink/80 dark:bg-midnight/80"
+        />
+        <span aria-hidden className="absolute inset-x-3 bottom-6 block space-y-1.5">
+          <span className="block h-1 rounded-full bg-ink/20" />
+          <span className="block h-1 rounded-full bg-ink/20" />
+          <span className="block h-1 rounded-full bg-ink/20" />
+        </span>
+        <span aria-hidden className="absolute inset-x-3 bottom-2 h-2 rounded-full bg-white/40" />
+      </div>
+      <span
+        aria-hidden
+        className="absolute -bottom-3 left-1/2 h-4 w-2 -translate-x-1/2 rounded-b-md border-x-2 border-b-2 border-ink bg-sun dark:border-chalk"
+      />
     </div>
   );
 }

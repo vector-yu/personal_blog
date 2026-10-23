@@ -28,7 +28,8 @@
 > （Tina 的「个人主页」集合，`format: 'json'`、单文档、编辑器里禁用新建/删除）。
 > `siteName` 同时驱动顶部导航、浏览器标题和 og；`background.kind` 可在
 > gradient / image / video 之间切换（留空自动回退 gradient）。
-> 拉链时间线与滚动揭示只是装饰，履历正文始终在预渲染 HTML 里，移动端零动效。
+> 履历是**上下两层**：顶层拉链布面只在「桌面 + JS」下渲染，滚动拉开后露出下层履历；
+> 手机、reduced-motion、无 JS 时不渲染顶层，直接显示完整履历。正文始终在预渲染 HTML 里。
 > 详见 `README.md` 的「个人主页」一节。
 
 ---

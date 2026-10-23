@@ -121,7 +121,7 @@ class="animate-flow animate-tumble"
 | 视差/push 必须加在 **wrapper** 上 | `backdrop.tsx` | CSS 动画优先级高于行内样式 |
 | 新增可插入组件必须同步 **4 处** | 见 `AGENTS.md` 第二节 | 内容门禁 |
 | `.scroll-reveal` 必须留在 `(width >= 48rem)` + `prefers-reduced-motion: no-preference` + `@supports (animation-timeline: view())` 的合围内 | `globals.css` | 手机零动效；不支持的浏览器/无 JS 时内容立即可见 |
-| 拉链轨道和滑块只能是**装饰**，履历正文不能依赖 MotionValue 才显示 | `zip-timeline.tsx` | no-JS、手机、爬虫看到的是完整 HTML |
+| 顶层拉链布面必须只在「桌面 + JS」下渲染，不能成为履历可见性的前提 | `zip-timeline.tsx` | no-JS、手机、爬虫看到完整履历 |
 
 ---
 
