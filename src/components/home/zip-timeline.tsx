@@ -11,11 +11,13 @@ import type { HomeTimelineEntry } from '@/lib/home';
  *
  * ── The two layers ──────────────────────────────────────────────────────────
  * The résumé rows are the BOTTOM layer, in normal document flow. The TOP layer
- * is `.zip-fabric`: an opaque paper/midnight sheet that spans the whole
- * viewport, split down the middle into two halves clipped with a V whose apex
- * follows the slider. Above the apex the sheet is gone (the opening); below it
- * the two halves meet and the interlocked teeth cover the seam. Scrolling pulls
- * the slider down, the V widens, and the résumé comes out from underneath.
+ * is `.zip-fabric`: a frosted-glass sheet that spans the whole viewport, split
+ * down the middle into two halves clipped with a V whose apex follows the
+ * slider. Above the apex the sheet is gone (the opening); below it the two
+ * halves meet and the interlocked teeth cover the seam. Scrolling pulls the
+ * slider down, the V widens, and the résumé comes out from underneath. The
+ * glass is translucent and blurred, so the rows stay visible as soft shapes
+ * even while they are still covered.
  *
  * There is deliberately no rounded/bordered container: the sheet is a sheet,
  * not a card, and the rows underneath are open (no card frames).
@@ -36,14 +38,14 @@ import type { HomeTimelineEntry } from '@/lib/home';
  * same rows with no client code at all.
  *
  * ── Geometry ────────────────────────────────────────────────────────────────
- * The sheet has a 56px collar at the top. The fabric lives below it. The slider
- * is 84px tall; its TOP is the V apex, so at progress 0 the apex is at the
- * fabric's top edge and the sheet is closed, and at progress 1 the slider's
- * bottom rests on the sheet's bottom edge. The tapes are rotated around the two
- * top corners and lengthen to the apex; their teeth are SVG tiles so they stay
- * crisp at any angle.
+ * The sheet IS the stage: there is no separate collar band at the top (that
+ * band used to leave a visible seam down the centre). The slider is 84px tall;
+ * its TOP is the V apex, so at progress 0 the apex is at the sheet's top edge
+ * and the sheet is closed, and at progress 1 the slider's bottom rests on the
+ * sheet's bottom edge. The tapes are rotated around the two top corners and
+ * lengthen to the apex; their teeth are SVG tiles so they stay crisp at any
+ * angle.
  */
-const COLLAR = 56;
 const PULL_HEIGHT = 84;
 
 export function ZipTimeline({ entries }: { entries: HomeTimelineEntry[] }) {
@@ -94,15 +96,14 @@ export function ZipTimeline({ entries }: { entries: HomeTimelineEntry[] }) {
 
   const active = mounted && !noMotion;
 
-  const fabricHeight = useTransform(stageHeight, (value) => Math.max(1, value - COLLAR));
-  const maxApex = useTransform(fabricHeight, (value) => Math.max(0, value - PULL_HEIGHT));
+  const maxApex = useTransform(stageHeight, (value) => Math.max(0, value - PULL_HEIGHT));
 
   const apex = useTransform([progress, maxApex], ([value, limit]: number[]) =>
     Math.min(limit, Math.max(0, value * limit))
   );
 
-  const apexPercent = useTransform([apex, fabricHeight], ([value, height]: number[]) =>
-    `${(value / height) * 100}%`
+  const apexPercent = useTransform([apex, stageHeight], ([value, height]: number[]) =>
+    `${(value / Math.max(1, height)) * 100}%`
   );
 
   const leftClip = useTransform(
@@ -177,15 +178,14 @@ export function ZipTimeline({ entries }: { entries: HomeTimelineEntry[] }) {
           {/* LEFT HALF: collar + fabric + its open tape. The whole group is
               translated past the left edge of the viewport at the end. */}
           <m.div style={{ x: leftShift }} className="absolute inset-0">
-            <div className="zip-fabric absolute top-0 left-0 h-14 w-1/2" />
-            <div
-              className="absolute inset-x-0 bottom-0 overflow-hidden"
-              style={{ top: COLLAR }}
-            >
-              <m.div style={{ clipPath: leftClip }} className="zip-fabric absolute inset-0" />
+            <div className="absolute inset-0 overflow-hidden">
+              <m.div
+                style={{ clipPath: leftClip }}
+                className="zip-fabric absolute inset-0 backdrop-blur-xl backdrop-saturate-125"
+              />
               <m.div
                 style={{ height: tapeLength, rotate: leftRotate, opacity: tapeOpacity }}
-                className="zipper-tape-left absolute top-0 -left-[13px] z-10 w-[26px] origin-top"
+                className="zipper-tape-left absolute top-0 -left-[13px] z-10 w-[26px] origin-top backdrop-blur-md backdrop-saturate-125"
               />
             </div>
           </m.div>
@@ -194,15 +194,14 @@ export function ZipTimeline({ entries }: { entries: HomeTimelineEntry[] }) {
               The whole group is translated past the right edge of the viewport
               at the end, so the zipper leaves with it instead of fading. */}
           <m.div style={{ x: rightShift }} className="absolute inset-0">
-            <div className="zip-fabric absolute top-0 right-0 h-14 w-1/2" />
-            <div
-              className="absolute inset-x-0 bottom-0 overflow-hidden"
-              style={{ top: COLLAR }}
-            >
-              <m.div style={{ clipPath: rightClip }} className="zip-fabric absolute inset-0" />
+            <div className="absolute inset-0 overflow-hidden">
+              <m.div
+                style={{ clipPath: rightClip }}
+                className="zip-fabric absolute inset-0 backdrop-blur-xl backdrop-saturate-125"
+              />
               <m.div
                 style={{ height: tapeLength, rotate: rightRotate, opacity: tapeOpacity }}
-                className="zipper-tape-right absolute top-0 -right-[13px] z-10 w-[26px] origin-top"
+                className="zipper-tape-right absolute top-0 -right-[13px] z-10 w-[26px] origin-top backdrop-blur-md backdrop-saturate-125"
               />
 
               {/* Interlocked track below the apex. */}
@@ -230,34 +229,42 @@ export function ZipTimeline({ entries }: { entries: HomeTimelineEntry[] }) {
 }
 
 /**
- * A chunky slider, drawn rather than iconified: gradient metal body, ink
- * outline, a finger slot and grip ridges, plus the little tab below. It is
- * aria-hidden because the whole sheet is decorative.
+ * A frosted-glass slider, not a black-outlined metal pill.
+ *
+ * The old version had a full ink border and a dark jaw wedge at its top edge —
+ * that wedge read as a black bar across the top of the zipper. Both are gone.
+ * The body is a translucent glass capsule with a warm sun/blush tint, so the
+ * page underneath stays visible through it; the finger slot and grip ridges
+ * are the only darker details. It is aria-hidden because the sheet is
+ * decorative.
  */
 function ZipperPull() {
   return (
     <div className="relative h-[84px] w-[52px]">
-      <div className="absolute inset-0 rounded-[18px] border-[3px] border-ink bg-[linear-gradient(180deg,#ffe6a3,#ffd166_38%,#ffad7a)] shadow-[0_6px_0_0_#0b1221] dark:border-chalk dark:shadow-[0_6px_0_0_#e9eef8]">
-        {/* Jaw: a dark wedge where the two tapes meet. */}
+      {/* No top border: the slider sits at the very top of the sheet, and a top
+          edge there read as a dark bar across the zipper. The glass tint and
+          the white inset highlight define the top instead. */}
+      <div className="absolute inset-0 overflow-hidden rounded-[18px] border-x-2 border-b-2 border-t-0 border-ink/20 bg-white/35 shadow-glass backdrop-blur-xl backdrop-saturate-150 dark:border-chalk/15 dark:bg-white/[0.08]">
+        {/* Warm glass tint, strongest at the top. */}
         <span
           aria-hidden
-          className="absolute top-0 left-1/2 h-3 w-7 -translate-x-1/2 bg-ink/80 [clip-path:polygon(0_0,100%_0,50%_100%)] dark:bg-midnight/80"
+          className="absolute inset-0 bg-gradient-to-b from-sun/40 via-blush/15 to-transparent"
         />
-        <span aria-hidden className="absolute inset-x-2 top-2 h-1.5 rounded-full bg-white/70" />
+        <span aria-hidden className="absolute inset-x-2 top-2 h-1.5 rounded-full bg-white/60" />
         <span
           aria-hidden
-          className="absolute top-5 left-1/2 h-8 w-3 -translate-x-1/2 rounded-full bg-ink/80 dark:bg-midnight/80"
+          className="absolute top-5 left-1/2 h-8 w-3 -translate-x-1/2 rounded-full bg-ink/45 dark:bg-midnight/45"
         />
         <span aria-hidden className="absolute inset-x-3 bottom-6 block space-y-1.5">
-          <span className="block h-1 rounded-full bg-ink/20" />
-          <span className="block h-1 rounded-full bg-ink/20" />
-          <span className="block h-1 rounded-full bg-ink/20" />
+          <span className="block h-1 rounded-full bg-ink/15" />
+          <span className="block h-1 rounded-full bg-ink/15" />
+          <span className="block h-1 rounded-full bg-ink/15" />
         </span>
-        <span aria-hidden className="absolute inset-x-3 bottom-2 h-2 rounded-full bg-white/40" />
+        <span aria-hidden className="absolute inset-x-3 bottom-2 h-2 rounded-full bg-white/30" />
       </div>
       <span
         aria-hidden
-        className="absolute -bottom-3 left-1/2 h-4 w-2 -translate-x-1/2 rounded-b-md border-x-2 border-b-2 border-ink bg-sun dark:border-chalk"
+        className="absolute -bottom-3 left-1/2 h-4 w-2 -translate-x-1/2 rounded-b-md border-x-2 border-b-2 border-ink/20 bg-white/40 backdrop-blur-md dark:border-chalk/15 dark:bg-white/10"
       />
     </div>
   );

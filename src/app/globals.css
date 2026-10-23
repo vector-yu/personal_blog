@@ -506,62 +506,91 @@
   }
 
   /* --- two-layer zipper ---------------------------------------------------
-     `.zip-fabric` is the opaque TOP layer: a paper/midnight sheet with a
-     subtle twill, so the résumé underneath cannot read through it.
-     `.zipper-closed` is the interlocked track below the slider.
-     `.zipper-tape-left/right` are the separated tapes along the V opening.
-     Their slate base is visible against both paper and midnight, so there is
-     no second theme asset. Teeth are SVG tiles because a repeating gradient
-     cannot draw a rounded, outlined tooth. */
+     The TOP layer is FROSTED GLASS, not paper: a translucent tint plus a
+     backdrop blur, so the résumé underneath is visible but blurred. The V
+     opening is the only place it is sharp. This matches the rest of the site's
+     glass panels; nothing here is an opaque black slab.
+
+     NOTE: the blur itself is applied with Tailwind's `backdrop-blur-*` /
+     `backdrop-saturate-*` utilities in `zip-timeline.tsx`. A literal
+     `backdrop-filter` declaration inside this @layer components block is
+     dropped by the Tailwind/Lightning CSS pipeline (verified: the rule reaches
+     the browser with background-color but no filter), while the utility form
+     is emitted and works. Keep the blur on the element.
+
+     `.zipper-closed` is the interlocked track below the slider (gold teeth,
+     soft ink outlines only). `.zipper-tape-left/right` are the separated glass
+     tapes along the V opening, with the same teeth. Teeth are SVG tiles because
+     a repeating gradient cannot draw a rounded, outlined tooth. */
   .zip-fabric {
-    background-color: var(--color-paper);
+    background-color: rgb(255 255 255 / 0.32);
     background-image:
-      repeating-linear-gradient(45deg, rgb(11 18 33 / 0.045) 0 1px, transparent 1px 7px),
-      repeating-linear-gradient(-45deg, rgb(255 255 255 / 0.5) 0 1px, transparent 1px 9px);
-    box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.6);
+      repeating-linear-gradient(45deg, rgb(255 255 255 / 0.16) 0 1px, transparent 1px 9px),
+      linear-gradient(180deg, rgb(255 255 255 / 0.18), transparent 34%);
+    box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.65);
   }
 
   [data-theme='dark'] .zip-fabric {
-    background-color: var(--color-midnight);
+    background-color: rgb(255 255 255 / 0.055);
     background-image:
-      repeating-linear-gradient(45deg, rgb(233 238 248 / 0.03) 0 1px, transparent 1px 8px),
-      repeating-linear-gradient(-45deg, rgb(255 255 255 / 0.02) 0 1px, transparent 1px 10px);
-    box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.06);
+      repeating-linear-gradient(45deg, rgb(255 255 255 / 0.04) 0 1px, transparent 1px 9px),
+      linear-gradient(180deg, rgb(255 255 255 / 0.07), transparent 34%);
+    box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.12);
   }
 
   .zipper-closed {
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='20'%3E%3Crect x='0' y='0' width='24' height='11' rx='3' fill='%23ffd166' stroke='%230b1221' stroke-width='2'/%3E%3Crect x='24' y='9' width='24' height='11' rx='3' fill='%23ffd166' stroke='%230b1221' stroke-width='2'/%3E%3C/svg%3E");
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='20'%3E%3Crect x='0' y='0' width='24' height='11' rx='3' fill='%23ffd166' stroke='%230b1221' stroke-opacity='0.7' stroke-width='2'/%3E%3Crect x='24' y='9' width='24' height='11' rx='3' fill='%23ffd166' stroke='%230b1221' stroke-opacity='0.7' stroke-width='2'/%3E%3C/svg%3E");
     background-position: center top;
     background-size: 48px 20px;
     background-repeat: repeat-y;
   }
 
   [data-theme='dark'] .zipper-closed {
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='20'%3E%3Crect x='0' y='0' width='24' height='11' rx='3' fill='%23ffd166' stroke='%23e9eef8' stroke-width='2'/%3E%3Crect x='24' y='9' width='24' height='11' rx='3' fill='%23ffd166' stroke='%23e9eef8' stroke-width='2'/%3E%3C/svg%3E");
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='20'%3E%3Crect x='0' y='0' width='24' height='11' rx='3' fill='%23ffd166' stroke='%23e9eef8' stroke-opacity='0.8' stroke-width='2'/%3E%3Crect x='24' y='9' width='24' height='11' rx='3' fill='%23ffd166' stroke='%23e9eef8' stroke-opacity='0.8' stroke-width='2'/%3E%3C/svg%3E");
   }
 
   .zipper-tape-left,
   .zipper-tape-right {
-    background-color: #334155;
+    background-color: rgb(255 255 255 / 0.28);
     background-repeat: repeat-y;
     background-size: 26px 18px;
-    box-shadow: inset 0 0 0 1px rgb(15 23 42 / 0.35);
+    box-shadow:
+      inset 0 0 0 1px rgb(255 255 255 / 0.45),
+      inset 0 0 0 2px rgb(11 18 33 / 0.06);
   }
 
   .zipper-tape-left {
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='26' height='18'%3E%3Crect width='26' height='18' fill='%23334155'/%3E%3Crect x='0' width='3' height='18' fill='%23e2e8f0' opacity='0.18'/%3E%3Crect x='13' y='1.5' width='12' height='9' rx='3' fill='%23ffd166' stroke='%230b1221' stroke-width='1.5'/%3E%3C/svg%3E");
-    /* Shadow cast into the opening (local +x), so the cut edge reads as a
-       fabric edge sitting above the résumé rather than as a crop. */
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='26' height='18'%3E%3Crect x='13' y='1.5' width='12' height='9' rx='3' fill='%23ffd166' stroke='%230b1221' stroke-opacity='0.7' stroke-width='1.5'/%3E%3C/svg%3E");
+    /* A soft shadow into the opening (local +x), so the glass edge sits above
+       the résumé instead of looking like a crop. */
     box-shadow:
-      inset 0 0 0 1px rgb(15 23 42 / 0.35),
-      7px 0 14px rgb(11 18 33 / 0.22);
+      inset 0 0 0 1px rgb(255 255 255 / 0.45),
+      inset 0 0 0 2px rgb(11 18 33 / 0.06),
+      7px 0 14px rgb(11 18 33 / 0.14);
   }
 
   .zipper-tape-right {
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='26' height='18'%3E%3Crect width='26' height='18' fill='%23334155'/%3E%3Crect x='23' width='3' height='18' fill='%23e2e8f0' opacity='0.18'/%3E%3Crect x='1' y='1.5' width='12' height='9' rx='3' fill='%23ffd166' stroke='%230b1221' stroke-width='1.5'/%3E%3C/svg%3E");
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='26' height='18'%3E%3Crect x='1' y='1.5' width='12' height='9' rx='3' fill='%23ffd166' stroke='%230b1221' stroke-opacity='0.7' stroke-width='1.5'/%3E%3C/svg%3E");
     box-shadow:
-      inset 0 0 0 1px rgb(15 23 42 / 0.35),
-      -7px 0 14px rgb(11 18 33 / 0.22);
+      inset 0 0 0 1px rgb(255 255 255 / 0.45),
+      inset 0 0 0 2px rgb(11 18 33 / 0.06),
+      -7px 0 14px rgb(11 18 33 / 0.14);
+  }
+
+  [data-theme='dark'] .zipper-tape-left,
+  [data-theme='dark'] .zipper-tape-right {
+    background-color: rgb(255 255 255 / 0.07);
+    box-shadow:
+      inset 0 0 0 1px rgb(255 255 255 / 0.12),
+      inset 0 0 0 2px rgb(255 255 255 / 0.04);
+  }
+
+  [data-theme='dark'] .zipper-tape-left {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='26' height='18'%3E%3Crect x='13' y='1.5' width='12' height='9' rx='3' fill='%23ffd166' stroke='%23e9eef8' stroke-opacity='0.8' stroke-width='1.5'/%3E%3C/svg%3E");
+  }
+
+  [data-theme='dark'] .zipper-tape-right {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='26' height='18'%3E%3Crect x='1' y='1.5' width='12' height='9' rx='3' fill='%23ffd166' stroke='%23e9eef8' stroke-opacity='0.8' stroke-width='1.5'/%3E%3C/svg%3E");
   }
 }
 
