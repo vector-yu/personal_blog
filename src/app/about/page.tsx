@@ -69,7 +69,7 @@ export default async function AboutPage() {
           <div className="relative h-28 w-28 shrink-0 -rotate-2 rounded-[2rem] border-[3px] border-ink bg-white/60 p-1.5 shadow-brutal-lg backdrop-blur-xl dark:border-chalk/25 dark:bg-white/[0.05] dark:shadow-chalk-lg">
             <div className="relative h-full w-full overflow-hidden rounded-[1.6rem] border-2 border-ink/80 bg-gradient-to-br from-iris/30 via-blush/30 to-sun/30 dark:border-chalk/20">
               <Image
-                src={profile.avatar ?? '/uploads/avatar.svg'}
+                src={profile.avatar ?? '/uploads/avatar_color.png'}
                 alt={profile.name}
                 fill
                 sizes="112px"

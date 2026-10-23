@@ -118,7 +118,7 @@ export const DEFAULT_HOME: HomeContent = {
     blur: 20,
   },
   profile: {
-    avatar: '/uploads/avatar.svg',
+    avatar: '/uploads/avatar_color.png',
     name: '你的名字',
     school: '你的学校',
     bio: '你好，我是这里的作者。这里记录技术笔记、阅读和正在做的事——把学过的东西讲清楚，也把没想明白的问题留在这里。',
