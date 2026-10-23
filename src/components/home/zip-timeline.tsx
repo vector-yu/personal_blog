@@ -20,7 +20,10 @@ import type { HomeTimelineEntry } from '@/lib/home';
  * even while they are still covered.
  *
  * There is deliberately no rounded/bordered container: the sheet is a sheet,
- * not a card, and the rows underneath are open (no card frames).
+ * not a card, and the rows underneath are open (no card frames). The cloth ends
+ * in a wavy hem that hangs below the stage (see `.curtain-hem`); the track root
+ * uses `overflow-x-clip`, not `overflow-hidden`, so the hem is not cut flat while
+ * the retracting halves still cannot create a horizontal scrollbar.
  *
  * ── Why the slider stays put ────────────────────────────────────────────────
  * Progress runs from "stage top hits 80% of the viewport" to "stage bottom
@@ -39,7 +42,10 @@ import type { HomeTimelineEntry } from '@/lib/home';
  *
  * ── Geometry ────────────────────────────────────────────────────────────────
  * The sheet IS the stage: there is no separate collar band at the top (that
- * band used to leave a visible seam down the centre). The slider is 84px tall;
+ * band used to leave a visible seam down the centre). The cloth continues 20px
+ * above and 36px below the stage's bottom edge, where the mask turns it into a
+ * hanging wave; the slider's closed track ends in a bottom stop just above it.
+ * The slider is 84px tall;
  * its TOP is the V apex, so at progress 0 the apex is at the sheet's top edge
  * and the sheet is closed, and at progress 1 the slider's bottom rests on the
  * sheet's bottom edge. The tapes are rotated around the two top corners and
@@ -148,7 +154,7 @@ export function ZipTimeline({ entries }: { entries: HomeTimelineEntry[] }) {
   const rightRotate = useTransform(leftRotate, (value) => -value);
 
   return (
-    <div ref={trackRef} className="relative w-full overflow-hidden">
+    <div ref={trackRef} className="relative w-full overflow-x-clip">
       {/* --- BOTTOM LAYER: the résumé, open and unframed ------------------- */}
       <ol
         className={
@@ -188,6 +194,15 @@ export function ZipTimeline({ entries }: { entries: HomeTimelineEntry[] }) {
                 className="zipper-tape-left absolute top-0 -left-[13px] z-10 w-[26px] origin-top backdrop-blur-md backdrop-saturate-125"
               />
             </div>
+
+            {/* The hanging hem is deliberately outside the clipping container:
+                it starts 20px above the fabric's bottom and continues 36px
+                below it, with a wavy mask and a shadow. Without it the sheet
+                ends on a hard horizontal line at the stage/footer boundary. */}
+            <div
+              aria-hidden
+              className="curtain-hem absolute -bottom-9 left-0 z-30 h-14 w-1/2 backdrop-blur-xl backdrop-saturate-125"
+            />
           </m.div>
 
           {/* RIGHT HALF: collar + fabric + tape + the closed track and slider.
@@ -221,6 +236,22 @@ export function ZipTimeline({ entries }: { entries: HomeTimelineEntry[] }) {
                 <ZipperPull />
               </m.div>
             </div>
+
+            {/* The hanging hem is deliberately outside the clipping container:
+                it starts 20px above the fabric's bottom and continues 36px
+                below it, with a wavy mask and a shadow. The left and right
+                strips meet under the bottom stop. */}
+            <div
+              aria-hidden
+              className="curtain-hem absolute -bottom-9 right-0 z-30 h-14 w-1/2 backdrop-blur-xl backdrop-saturate-125"
+            />
+
+            {/* Bottom stop: finishes the closed track instead of letting the
+                teeth run into the hem. It rides with the right half. */}
+            <span
+              aria-hidden
+              className="absolute bottom-1 left-1/2 z-40 h-3 w-12 -translate-x-1/2 rounded-full border-2 border-ink/30 bg-sun/90 shadow-brutal-xs backdrop-blur-md dark:border-chalk/20 dark:bg-sun/70"
+            />
           </m.div>
         </div>
       ) : null}

@@ -129,6 +129,7 @@ class="animate-flow animate-tumble"
 | 笔记 JSON 的富文本 `body` 存 Markdown 字符串，不要存 AST | `content/notes/notes.json` | Tina 解析成 `invalid_markdown` |
 | 首页技术栈自动滚动必须在 `md` 以下和 reduced-motion 关闭，且隐藏第二份副本 | `tech-marquee.tsx` | 手机出现自动动画 / 横向溢出 |
 | 技术栈图标用 `public/tech` 的 SVG 作 mask，颜色只从 `src/lib/tech.ts` 取 | `tech-chip.tsx` + `tech.ts` | 暗色下黑图标不可见、颜色漂移 |
+| 拉链根容器用 `overflow-x-clip`，且保留下摆与止口 | `zip-timeline.tsx` | 下摆被裁平 / 收尾时出现横向滚动条 |
 
 ---
 
