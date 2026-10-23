@@ -37,6 +37,7 @@ git push -u origin main
 - `tina/config.ts`
 - `tina/tina-lock.json` ← 关键，已在仓库中跟踪
 - `content/**/*.mdx`
+- `content/home/home.json` ← 个人主页（单文档 JSON；缺了首页会退回默认文案）
 
 **不应提交的文件**（已在 `.gitignore` 中排除）：`.env`、`tina/__generated__/`、`node_modules/`。
 `public/admin/` 只跟踪它自带的 `.gitignore`，构建产物由 `tinacms build` 生成。

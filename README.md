@@ -50,12 +50,45 @@ tina/config.ts              内容模型（schema）——唯一的配置入口
 tina/tina-lock.json         自动生成，需提交到 git
 content/posts/*.mdx         博客文章
 content/pages/*.mdx         独立页面（如「关于」）
+content/home/home.json      个人主页（单文档，Tina 的「个人主页」集合）
 public/uploads/             媒体库
 public/admin/               tinacms build 生成的编辑器 SPA
-src/app/                    路由（列表页 / 详情页 / 关于）
+src/app/                    路由（主页 / 列表页 / 详情页 / 关于）
 src/components/tina-markdown.tsx    ★ 组件映射表（TinaMarkdown 渲染层）
 src/components/mdx/         自定义交互组件
+src/components/home/        主页区块（首屏 / 背景 / 关于 / 拉链履历）
 ```
+
+---
+
+## 个人主页（`/`）
+
+首页不是文章列表，而是一份可以编辑的个人档案：
+
+| 区域 | 内容 | 字段 |
+| --- | --- | --- |
+| 首屏 | 网站名称 + 座右铭 | `siteName` / `tagline` |
+| 背景 | 默认沿用全站流动几何；可切换为图片或视频 | `background` |
+| 关于我 | 头像、姓名、学校、自我介绍、逐条信息 | `profile` |
+| 履历 | 拉链式时间线，滚动时逐条拉开 | `timeline` |
+
+以上全部来自 **一个** 文档：`content/home/home.json`，在 `/admin/index.html` 的
+「个人主页」集合里编辑（该集合是 JSON 格式的单文档，编辑器里禁用了新建/删除）。
+`siteName` 同时用于顶部导航、浏览器标题与 Open Graph，改一处即可。
+
+### 切换首屏背景
+
+`background.kind` 三选一：`gradient`（默认）/ `image` / `video`。
+
+- `image`：填 `background.image`（媒体库上传，或已加入 `src/lib/image-hosts.ts` 白名单的远程图）。
+- `video`：填 `background.video`，支持 `/uploads/xxx.mp4` 或 https 直链；`poster` 可选。
+- `dim`（0–100）控制压暗，`blur`（0–40）控制虚化；文字始终在背景之上。
+- 选了 image/video 却没填地址时会自动回退到 gradient，不会出现透明首屏。
+- 背景层位于内容之下、`<Backdrop />` 之上；换成媒体后由同一条「阅读带」保证正文对比度。
+- 只接受站内路径或 http(s) 地址，`javascript:` 之类的 src 会被丢弃。
+
+> 首屏、关于、履历在移动端直接呈现（R1：手机没有动效）；拉链与滚动揭示只在 `md` 以上启用。
+> 拉链只是装饰层，履历内容始终在预渲染 HTML 里，不依赖 JavaScript。
 
 ---
 

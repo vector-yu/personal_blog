@@ -117,9 +117,11 @@ class="animate-flow animate-tumble"
 | `AnimatePresence` 必须是 `initial={false}` | `post-list.tsx` | 否则静态 HTML 里每张卡都是 `opacity:0` |
 | `<html>` 上的 `suppressHydrationWarning` 不能删 | `layout.tsx` | 阻塞脚本故意写了 React 没渲染的属性 |
 | `<Backdrop />` 必须留在 `<MotionProvider>` **内部** | `layout.tsx` | `m.*` 在 LazyMotion 外**不绑定 MotionValue**，transform 会静默塌缩成 `none` |
-| 用了 `TiltCard` 的卡片不能再写 `hover:-translate-y-*` | `page.tsx`、`post-list.tsx` | 行内 transform 会覆盖 class |
+| 用了 `TiltCard` 的卡片不能再写 `hover:-translate-y-*` | `post-list.tsx` | 行内 transform 会覆盖 class |
 | 视差/push 必须加在 **wrapper** 上 | `backdrop.tsx` | CSS 动画优先级高于行内样式 |
 | 新增可插入组件必须同步 **4 处** | 见 `AGENTS.md` 第二节 | 内容门禁 |
+| `.scroll-reveal` 必须留在 `(width >= 48rem)` + `prefers-reduced-motion: no-preference` + `@supports (animation-timeline: view())` 的合围内 | `globals.css` | 手机零动效；不支持的浏览器/无 JS 时内容立即可见 |
+| 拉链轨道和滑块只能是**装饰**，履历正文不能依赖 MotionValue 才显示 | `zip-timeline.tsx` | no-JS、手机、爬虫看到的是完整 HTML |
 
 ---
 
@@ -129,6 +131,10 @@ class="animate-flow animate-tumble"
 
 **加一个动效组件** → 必须 `useNoMotion()` 门控；持续动画的元素必须带 `max-md:animate-none`；
 Framer 用 `m.*`（不是 `motion.*`，`LazyMotion strict` 会抛错）。
+
+**加滚动揭示** → 给元素加 `.scroll-reveal`（CSS 视图时间线），**不要**用 Framer 的
+`initial={{ opacity: 0 }}`：后者会被序列化进预渲染 HTML，无 JS 访客看到空白。
+新加的元素必须默认可见，动画只做增强。
 
 **改颜色** → 先改 `@theme` token；改完**必须重跑对比度像素测量**（见 L2），不要只算 token。
 

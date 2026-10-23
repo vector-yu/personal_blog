@@ -209,6 +209,155 @@ export default defineConfig({
   schema: {
     collections: [
       {
+        /*
+         * The homepage is STRUCTURED DATA, not a rich-text page: a headline, a
+         * handful of profile rows and a résumé list. JSON keeps every one of
+         * those a first-class, editable field instead of making the owner edit
+         * MDX by hand. There is exactly one document (`match`), so the editor
+         * disables create/delete and the server reads a fixed `home.json`.
+         */
+        name: 'home',
+        label: '个人主页',
+        path: 'content/home',
+        format: 'json',
+        match: { include: 'home' },
+        ui: {
+          // Exactly one document, so the editor never offers create/delete.
+          // NOTE: deliberately no `router` here. A collection-level router of
+          // `() => '/'` made the admin redirect the collection LIST away to the
+          // site root (`#/~ /`), so the homepage document could not be opened at
+          // all in /admin. The document is edited in the form; the site page is
+          // opened from the usual "view site" link.
+          allowedActions: { create: false, delete: false },
+        },
+        fields: [
+          {
+            type: 'string',
+            name: 'siteName',
+            label: '网站名称',
+            isTitle: true,
+            required: true,
+            description: '首页大标题，同时作为顶部导航与浏览器标题里的站点名。',
+          },
+          {
+            type: 'string',
+            name: 'tagline',
+            label: '副标题 / 座右铭',
+            ui: { component: 'textarea' },
+            description: '显示在大标题下方的一句话。',
+          },
+          {
+            type: 'string',
+            name: 'scrollHint',
+            label: '向下滚动提示',
+            description: '首屏底部的小字，留空则使用默认文案。',
+          },
+          {
+            type: 'object',
+            name: 'background',
+            label: '首屏背景',
+            description: '默认使用站点的流动几何背景；也可以换成图片或视频。',
+            fields: [
+              {
+                type: 'string',
+                name: 'kind',
+                label: '背景类型',
+                options: ['gradient', 'image', 'video'],
+                required: true,
+              },
+              {
+                type: 'image',
+                name: 'image',
+                label: '背景图片',
+                description: '背景类型选 image 时生效。',
+              },
+              {
+                type: 'string',
+                name: 'video',
+                label: '背景视频地址',
+                description: '背景类型选 video 时生效，可填 .mp4 直链或 /uploads/xxx.mp4。',
+              },
+              {
+                type: 'image',
+                name: 'poster',
+                label: '视频封面（可选）',
+              },
+              {
+                type: 'number',
+                name: 'dim',
+                label: '压暗程度（0–100）',
+                description: '数值越大，背景越暗，文字越清楚。',
+              },
+              {
+                type: 'number',
+                name: 'blur',
+                label: '虚化程度（0–40）',
+                description: '背景图片 / 视频的模糊半径，单位为像素。',
+              },
+            ],
+          },
+          {
+            type: 'object',
+            name: 'profile',
+            label: '个人介绍',
+            fields: [
+              { type: 'image', name: 'avatar', label: '头像' },
+              { type: 'string', name: 'name', label: '姓名' },
+              { type: 'string', name: 'school', label: '就读学校' },
+              {
+                type: 'string',
+                name: 'bio',
+                label: '自我介绍',
+                ui: { component: 'textarea' },
+              },
+              {
+                type: 'object',
+                name: 'facts',
+                label: '更多信息（逐条展示）',
+                list: true,
+                ui: {
+                  itemProps: (item) => ({ label: item?.label ?? '信息' }),
+                },
+                fields: [
+                  { type: 'string', name: 'label', label: '标签', required: true },
+                  { type: 'string', name: 'value', label: '内容' },
+                ],
+              },
+            ],
+          },
+          {
+            type: 'object',
+            name: 'timeline',
+            label: '履历（时间线）',
+            list: true,
+            ui: {
+              itemProps: (item) => ({
+                label:
+                  [item?.period, item?.title].filter(Boolean).join(' ') || '履历条目',
+              }),
+            },
+            fields: [
+              {
+                type: 'string',
+                name: 'period',
+                label: '时间段',
+                description: '例如 2024 — 2026。',
+              },
+              { type: 'string', name: 'title', label: '标题', required: true },
+              { type: 'string', name: 'place', label: '学校 / 公司 / 地点' },
+              {
+                type: 'string',
+                name: 'description',
+                label: '描述',
+                ui: { component: 'textarea' },
+              },
+              { type: 'string', name: 'tags', label: '标签', list: true },
+              { type: 'boolean', name: 'current', label: '标记为「现在」' },
+            ],
+          },
+        ],
+      },
+      {
         name: 'post',
         label: '博客文章',
         path: 'content/posts',

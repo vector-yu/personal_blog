@@ -2,6 +2,7 @@ import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import PostClient from './post-client';
 import { client } from '@/lib/tina';
+import { getHomeContent } from '@/lib/home';
 import { parseDate } from '@/lib/site';
 
 /**
@@ -11,9 +12,6 @@ import { parseDate } from '@/lib/site';
  * (`/posts/2026%2Fnested-post`), which never matches the URL the lists and sitemap emit.
  */
 type Params = { filename: string[] };
-
-/** Kept in sync with the root layout; a page-level openGraph replaces it rather than merging. */
-const SITE_NAME = '我的博客';
 
 /**
  * Revalidate so an edit to a published post actually reaches the article page.
@@ -60,6 +58,11 @@ export async function generateMetadata({ params }: { params: Promise<Params> }):
     const { data } = await client.queries.post({ relativePath });
     if (!isPublished(data?.post)) return { title: '文章未找到' };
 
+    // A page-level `openGraph` replaces the layout's object rather than merging, so the
+    // site name has to be repeated here. Read it from the homepage document so renaming
+    // the site in the editor updates article shares too.
+    const { siteName } = await getHomeContent();
+
     const post = data.post;
     const description = post.description ?? undefined;
 
@@ -74,7 +77,7 @@ export async function generateMetadata({ params }: { params: Promise<Params> }):
         type: 'article',
         // Repeated from the root layout on purpose: a page-level `openGraph` object replaces the
         // layout's rather than deep-merging, so omitting siteName here drops og:site_name.
-        siteName: SITE_NAME,
+        siteName,
         title: post.title,
         description,
         url: `/posts/${filename.join('/')}`,

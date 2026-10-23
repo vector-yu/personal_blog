@@ -19,10 +19,17 @@
 | CMS | TinaCMS 3.13.0 + TinaCloud |
 | 线上域名 | https://yujingyao.com （也绑定在 TinaCloud Site URL 白名单里） |
 | 部署 | Vercel，构建命令 `npm run build`（**不要改成 `next build`**） |
-| 内容 | `content/posts/*.mdx`、`content/pages/*.mdx`，正文用 MDX |
+| 内容 | `content/posts/*.mdx`、`content/pages/*.mdx`，正文用 MDX；主页是 `content/home/home.json` |
 
 **铁律（产品要求，不要违反）**：正文渲染只用 Tina 官方的 `<TinaMarkdown>`。
 **不要**引入 `next-mdx-remote`、`@next/mdx` 或任何 MDX 编译管线。
+
+> **首页（`/`）是个人档案页，不是文章列表。** 数据全部来自 `content/home/home.json`
+> （Tina 的「个人主页」集合，`format: 'json'`、单文档、编辑器里禁用新建/删除）。
+> `siteName` 同时驱动顶部导航、浏览器标题和 og；`background.kind` 可在
+> gradient / image / video 之间切换（留空自动回退 gradient）。
+> 拉链时间线与滚动揭示只是装饰，履历正文始终在预渲染 HTML 里，移动端零动效。
+> 详见 `README.md` 的「个人主页」一节。
 
 ---
 
@@ -96,6 +103,11 @@ npm run smoke                      # admin / visual / interaction / save / http
    它控制 canonical / og / sitemap / RSS。**不要写进本地 `.env`**（`.env` 优先于 Vercel 变量）。
 6. **本地 `.env` 里的占位符是故意的**，真实凭据只放在 Vercel 环境变量和你的本地 `.env` 中；
    `.env` 已 gitignore。
+7. **单文档集合不要加 `ui.router: () => '/'`**（实测踩过）：它会让 `/admin` 的集合列表
+   直接跳到站点根（URL 变成 `#/~ /`），文档根本打不开。首页集合「个人主页」因此只保留
+   `allowedActions`，不加 router——编辑在表单里，看站点走顶部导航。
+8. **首页集合是 `format: 'json'`**：改完 schema 后仍要重启 `npm run dev` 重新生成 client；
+   `content/home/home.json` 是内容，必须提交到 git。
 
 ---
 

@@ -89,6 +89,14 @@
   --text-title--line-height: 1.4;
   --text-title--font-weight: 800;
 
+  /* The website name on the homepage. A clamp rather than a fixed size: four
+     CJK glyphs should feel monumental on a desktop but must still fit a 390px
+     phone without wrapping into a ragged column. */
+  --text-hero: clamp(3rem, 9vw, 7rem);
+  --text-hero--line-height: 1.04;
+  --text-hero--letter-spacing: -0.01em;
+  --text-hero--font-weight: 900;
+
   /* --- hard offset shadows (Neo-Brutalism) --------------------------------
      Each one pairs the hard offset with an `inset` top highlight. That inset is
      what stops a frosted panel from reading as a flat tinted rectangle: it
@@ -326,6 +334,47 @@
 }
 
 /* ============================================================================
+   Scroll-driven reveal (progressive enhancement)
+   ----------------------------------------------------------------------------
+   `.scroll-reveal` fades and lifts an element as it enters the viewport. This is
+   a CSS scroll-driven animation, not JavaScript: no IntersectionObserver, no
+   hydration pass, and no first-paint flash.
+
+   Three guards make it safe:
+     - below `md` the standing no-motion rule disables every animation anyway;
+     - `prefers-reduced-motion: reduce` never receives the animation;
+     - a browser without `animation-timeline: view()` just shows the base style.
+
+   `backwards` (NOT `both`) applies the hidden `from` frame while the element is
+   still below the range and then releases it, so nothing keeps a permanent
+   transform afterwards (see L5 in STYLE-GUIDE.md).
+   ========================================================================== */
+
+@keyframes reveal-rise {
+  from {
+    opacity: 0;
+    translate: 0 1.5rem;
+  }
+  to {
+    opacity: 1;
+    translate: 0 0;
+  }
+}
+
+@media (width >= 48rem) and (prefers-reduced-motion: no-preference) {
+  @supports (animation-timeline: view()) {
+    .scroll-reveal {
+      animation-name: reveal-rise;
+      animation-duration: 1s; /* ignored by a progress-based timeline */
+      animation-timing-function: linear;
+      animation-fill-mode: backwards;
+      animation-timeline: view();
+      animation-range: entry 0% entry 45%;
+    }
+  }
+}
+
+/* ============================================================================
    Base layer
    ========================================================================== */
 
@@ -454,6 +503,48 @@
   .grain-overlay {
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");
     background-size: 160px 160px;
+  }
+
+  /* --- zipper rail --------------------------------------------------------
+     The same track in two states. `ZipTimeline` stacks these two layers and
+     reveals each with a scroll-driven clip-path, so the rail really unzips
+     behind the slider. The teeth are an SVG tile: repeating-linear-gradient
+     cannot draw a rounded, outlined tooth. The dark variants only swap the
+     outline colour — the gold fill is the same in both themes. */
+  .zipper-closed,
+  .zipper-open-left,
+  .zipper-open-right {
+    background-repeat: repeat-y;
+  }
+
+  .zipper-closed {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='18'%3E%3Crect x='0' y='0' width='20' height='10' rx='3' fill='%23ffd166' stroke='%230b1221' stroke-width='2'/%3E%3Crect x='20' y='8' width='20' height='10' rx='3' fill='%23ffd166' stroke='%230b1221' stroke-width='2'/%3E%3C/svg%3E");
+    background-position: center top;
+    background-size: 40px 18px;
+  }
+
+  .zipper-open-left {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='16'%3E%3Crect x='0' y='2' width='14' height='8' rx='2.5' fill='%23ffd166' stroke='%230b1221' stroke-width='2'/%3E%3C/svg%3E");
+    background-position: 0 0;
+    background-size: 18px 16px;
+  }
+
+  .zipper-open-right {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='16'%3E%3Crect x='4' y='2' width='14' height='8' rx='2.5' fill='%23ffd166' stroke='%230b1221' stroke-width='2'/%3E%3C/svg%3E");
+    background-position: 0 8px;
+    background-size: 18px 16px;
+  }
+
+  [data-theme='dark'] .zipper-closed {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='18'%3E%3Crect x='0' y='0' width='20' height='10' rx='3' fill='%23ffd166' stroke='%23e9eef8' stroke-width='2'/%3E%3Crect x='20' y='8' width='20' height='10' rx='3' fill='%23ffd166' stroke='%23e9eef8' stroke-width='2'/%3E%3C/svg%3E");
+  }
+
+  [data-theme='dark'] .zipper-open-left {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='16'%3E%3Crect x='0' y='2' width='14' height='8' rx='2.5' fill='%23ffd166' stroke='%23e9eef8' stroke-width='2'/%3E%3C/svg%3E");
+  }
+
+  [data-theme='dark'] .zipper-open-right {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='16'%3E%3Crect x='4' y='2' width='14' height='8' rx='2.5' fill='%23ffd166' stroke='%23e9eef8' stroke-width='2'/%3E%3C/svg%3E");
   }
 }
 
