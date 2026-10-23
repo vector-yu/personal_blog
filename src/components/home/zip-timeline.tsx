@@ -115,20 +115,28 @@ export function ZipTimeline({ entries }: { entries: HomeTimelineEntry[] }) {
   );
   const closedClip = useTransform(apexPercent, (value) => `inset(${value} 0 0 0)`);
 
-  // Clamp the fade to an exact 0: the spring lags behind the raw scroll value,
-  // so at the final pixel it can still sit at ~0.98 and leave a ghost of the
-  // slider over the last row. `[0.84, 0.97]` + the snap removes that.
-  const coverOpacity = useTransform(progress, (value) =>
-    value >= 0.97 ? 0 : Math.min(1, Math.max(0, (0.97 - value) / (0.97 - 0.84)))
-  );
   // Keep the tapes hidden until the V has actually started to open. At
   // progress 0 they lie flat along the sheet's top edge and read as a
   // horizontal gold line; fading them in from 8% avoids that false reading.
+  // There is deliberately NO end fade: the tapes leave with their half.
   const tapeOpacity = useTransform(progress, (value) => {
     if (value <= 0.08) return 0;
     if (value <= 0.12) return (value - 0.08) / 0.04;
-    return value >= 0.97 ? 0 : 1;
+    return 1;
   });
+
+  // The ending is a CURTAIN PULL, not a fade. In the last 20% of the
+  // progress the two halves (each with its collar, fabric and tape) slide
+  // horizontally past opposite edges of the viewport. The closed track and
+  // the slider ride with the right half, so the whole zipper leaves the
+  // screen instead of a ghost being faded out.
+  const retract = useTransform(progress, (value) =>
+    value <= 0.8 ? 0 : Math.min(1, (value - 0.8) / 0.2)
+  );
+  const leftShift = useTransform([retract, stageWidth], ([value, width]: number[]) =>
+    -value * width * 0.62
+  );
+  const rightShift = useTransform(leftShift, (value) => -value);
 
   const tapeLength = useTransform([apex, stageWidth], ([value, width]: number[]) =>
     Math.max(1, Math.hypot(width / 2, value))
@@ -166,24 +174,32 @@ export function ZipTimeline({ entries }: { entries: HomeTimelineEntry[] }) {
       {/* --- TOP LAYER: the full-bleed zippered sheet ---------------------- */}
       {active && measured ? (
         <div aria-hidden className="pointer-events-none absolute inset-0 z-20 print:hidden">
-          <m.div style={{ opacity: coverOpacity }} className="absolute inset-0">
-            {/* Collar: always closed, so the slider starts inside the sheet. */}
-            <div className="zip-fabric absolute inset-x-0 top-0 h-14" />
-
-            {/* The zipper itself lives below the collar. */}
+          {/* LEFT HALF: collar + fabric + its open tape. The whole group is
+              translated past the left edge of the viewport at the end. */}
+          <m.div style={{ x: leftShift }} className="absolute inset-0">
+            <div className="zip-fabric absolute top-0 left-0 h-14 w-1/2" />
             <div
               className="absolute inset-x-0 bottom-0 overflow-hidden"
               style={{ top: COLLAR }}
             >
-              {/* The two fabric halves. The V edge is exactly the tape centre. */}
               <m.div style={{ clipPath: leftClip }} className="zip-fabric absolute inset-0" />
-              <m.div style={{ clipPath: rightClip }} className="zip-fabric absolute inset-0" />
-
-              {/* Separated tapes above the apex, hinged at the top corners. */}
               <m.div
                 style={{ height: tapeLength, rotate: leftRotate, opacity: tapeOpacity }}
                 className="zipper-tape-left absolute top-0 -left-[13px] z-10 w-[26px] origin-top"
               />
+            </div>
+          </m.div>
+
+          {/* RIGHT HALF: collar + fabric + tape + the closed track and slider.
+              The whole group is translated past the right edge of the viewport
+              at the end, so the zipper leaves with it instead of fading. */}
+          <m.div style={{ x: rightShift }} className="absolute inset-0">
+            <div className="zip-fabric absolute top-0 right-0 h-14 w-1/2" />
+            <div
+              className="absolute inset-x-0 bottom-0 overflow-hidden"
+              style={{ top: COLLAR }}
+            >
+              <m.div style={{ clipPath: rightClip }} className="zip-fabric absolute inset-0" />
               <m.div
                 style={{ height: tapeLength, rotate: rightRotate, opacity: tapeOpacity }}
                 className="zipper-tape-right absolute top-0 -right-[13px] z-10 w-[26px] origin-top"
@@ -198,7 +214,7 @@ export function ZipTimeline({ entries }: { entries: HomeTimelineEntry[] }) {
               </m.div>
 
               {/* The slider. Its TOP edge is the apex, so at rest the sheet is
-                  completely closed and at the end its bottom meets the sheet. */}
+                  completely closed; it rides the right half off the screen. */}
               <m.div
                 style={{ top: apex }}
                 className="absolute left-1/2 z-30 -translate-x-1/2"
