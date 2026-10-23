@@ -331,6 +331,19 @@
       transform: none;
     }
   }
+
+  /* Endless horizontal loop for the homepage tech strip. The track is rendered
+     twice and moves by -50%, so the seam is invisible. Mobile and reduced-motion
+     opt out with `max-md:animate-none` / `motion-reduce:animate-none` on the
+     track (and the global <48rem kill switch still applies). */
+  @keyframes tech-marquee {
+    from {
+      transform: translate3d(0, 0, 0);
+    }
+    to {
+      transform: translate3d(-50%, 0, 0);
+    }
+  }
 }
 
 /* ============================================================================

@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import type { Metadata } from 'next';
 import Body from '@/components/tina-markdown';
 import { SocialLinks } from '@/components/site/social-links';
+import { TechStackGrid } from '@/components/tech/tech-stack-grid';
 import { client } from '@/lib/tina';
 import { getHomeContent } from '@/lib/home';
 
@@ -45,7 +46,7 @@ export default async function AboutPage() {
 
   if (!page) notFound();
 
-  const { profile, socials } = home;
+  const { profile, socials, techStack } = home;
 
   return (
     <main className="relative z-10 mx-auto max-w-4xl px-4 py-14 sm:py-20">
@@ -101,6 +102,23 @@ export default async function AboutPage() {
 
         <SocialLinks socials={socials} className="mt-7" />
       </header>
+
+      {techStack.length > 0 ? (
+        <section aria-labelledby="about-tech" className="mt-10">
+          <div className="flex items-baseline justify-between gap-3 border-t-2 border-dashed border-ink/20 pt-6 dark:border-chalk/20">
+            <h2
+              id="about-tech"
+              className="text-[0.62rem] font-black tracking-[0.18em] text-ink/45 uppercase dark:text-slate-500"
+            >
+              Toolbox
+            </h2>
+            <span className="text-xs font-bold text-ink/40 dark:text-slate-500">
+              {techStack.length} 项
+            </span>
+          </div>
+          <TechStackGrid techStack={techStack} className="mt-4" />
+        </section>
+      ) : null}
 
       <div className="prose prose-slate mt-12 max-w-none animate-rise dark:prose-invert prose-headings:font-black prose-headings:tracking-tight prose-h1:border-b-0 prose-strong:font-black prose-li:marker:text-iris [animation-delay:100ms]">
         <Body content={page.body} />

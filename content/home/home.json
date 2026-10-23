@@ -43,6 +43,56 @@
       "kind": "email"
     }
   ],
+  "techStack": [
+    {
+      "name": "Python",
+      "icon": "python"
+    },
+    {
+      "name": "React",
+      "icon": "react"
+    },
+    {
+      "name": "PHP",
+      "icon": "php"
+    },
+    {
+      "name": "TypeScript",
+      "icon": "typescript"
+    },
+    {
+      "name": "Next.js",
+      "icon": "nextdotjs"
+    },
+    {
+      "name": "Tailwind CSS",
+      "icon": "tailwindcss"
+    },
+    {
+      "name": "Node.js",
+      "icon": "nodedotjs"
+    },
+    {
+      "name": "D3.js",
+      "icon": "d3"
+    },
+    {
+      "name": "Figma",
+      "icon": "figma"
+    },
+    {
+      "name": "Git",
+      "icon": "git"
+    },
+    {
+      "name": "Docker",
+      "icon": "docker"
+    },
+    {
+      "name": "MySQL",
+      "icon": "mysql"
+    }
+  ],
   "timeline": [
     {
       "period": "2026 — 现在",

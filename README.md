@@ -71,6 +71,7 @@ src/components/home/        主页区块（首屏 / 背景 / 关于 / 拉链履�
 | 背景 | 默认沿用全站流动几何；可切换为图片或视频 | `background` |
 | 个人介绍 | 头像、姓名、学校、自我介绍、逐条信息（横向铺开） | `profile` |
 | 社交 | 页脚 / 关于页的图标链接 | `socials` |
+| 技术栈 | 首页滚动带 + 关于页 3/4 列小方块 | `techStack` |
 | 履历 | 整幅磨砂玻璃拉链 + 无边框铺开的履历 | `timeline` |
 
 以上全部来自 **一个** 文档：`content/home/home.json`，在 `/admin/index.html` 的
@@ -97,6 +98,21 @@ src/components/home/        主页区块（首屏 / 背景 / 关于 / 拉链履�
 >
 > 顶栏的「履历」是独立页 **`/resume`**：纯列表、无动画，和首页读取同一份 `timeline` 数据。
 > 首页的拉链履历负责表现，`/resume` 负责可扫读的完整清单。
+
+### 技术栈
+
+首页在个人介绍与拉链履历之间有一条 **`Toolbox`** 滚动带；关于页用同一份数据渲染
+3 个（手机）/ 4 个（桌面）一排的小方块。
+
+- 编辑：`/admin/index.html` →「个人主页」→「技术栈」。每项只有**名称**和**图标**，
+  拖拽可调整顺序、留空则整条不渲染。
+- 图标：`public/tech/<key>.svg`（来自 Simple Icons，CC0）。图标文件是单色的，组件把它
+  当 alpha mask，再用 `src/lib/tech.ts` 里的品牌色上色；因此同一份文件在明暗主题下都
+  可用。未知/空图标自动回退为名称首字母。
+- 默认占位：Python、React、PHP、TypeScript、Next.js、Tailwind CSS、Node.js、D3.js、
+  Figma、Git、Docker、MySQL。
+- 动效：桌面自动循环、悬停暂停；`md` 以下与 `prefers-reduced-motion` 下不自动播放，
+  第二份副本隐藏，退化为可横向滑动的静态带（R1）。
 
 ---
 

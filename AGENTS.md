@@ -28,6 +28,10 @@
 > （Tina 的「个人主页」集合，`format: 'json'`、单文档、编辑器里禁用新建/删除）。
 > `siteName` 同时驱动顶部导航、浏览器标题和 og；`background.kind` 可在
 > gradient / image / video 之间切换（留空自动回退 gradient）。
+> 个人介绍与履历之间有 `Toolbox` 技术栈带（`techStack`）：桌面自动循环、悬停暂停，
+> `md` 以下/reduced-motion 下退化为静态横向滑动；关于页用同一份数据画 3/4 列小方块。
+> 图标是 `public/tech/<key>.svg` + `src/lib/tech.ts` 的品牌色 mask；未知图标回退首字母。
+>
 > 首页没有「关于我」「履历」小标题。履历是**上下两层**：顶层磨砂玻璃拉链只在
 > 「桌面 + JS」下渲染，滚动拉开后露出下层履历；手机、reduced-motion、无 JS 时
 > 不渲染顶层，直接显示完整履历。正文始终在预渲染 HTML 里。

@@ -42,6 +42,12 @@ export type HomeSocial = {
   kind: HomeSocialKind;
 };
 
+export type HomeTech = {
+  name: string;
+  /** One of `src/lib/tech.ts`'s icon keys; empty/unknown falls back to a monogram. */
+  icon: string;
+};
+
 const SOCIAL_KINDS: HomeSocialKind[] = [
   'github',
   'email',
@@ -87,6 +93,7 @@ export type HomeContent = {
   background: HomeBackground;
   profile: HomeProfile;
   socials: HomeSocial[];
+  techStack: HomeTech[];
   timeline: HomeTimelineEntry[];
 };
 
@@ -125,6 +132,20 @@ export const DEFAULT_HOME: HomeContent = {
   socials: [
     { label: 'GitHub', url: 'https://github.com/yourname', kind: 'github' },
     { label: 'Email', url: 'mailto:hello@example.com', kind: 'email' },
+  ],
+  techStack: [
+    { name: 'Python', icon: 'python' },
+    { name: 'React', icon: 'react' },
+    { name: 'PHP', icon: 'php' },
+    { name: 'TypeScript', icon: 'typescript' },
+    { name: 'Next.js', icon: 'nextdotjs' },
+    { name: 'Tailwind CSS', icon: 'tailwindcss' },
+    { name: 'Node.js', icon: 'nodedotjs' },
+    { name: 'D3.js', icon: 'd3' },
+    { name: 'Figma', icon: 'figma' },
+    { name: 'Git', icon: 'git' },
+    { name: 'Docker', icon: 'docker' },
+    { name: 'MySQL', icon: 'mysql' },
   ],
   timeline: [
     {
@@ -232,6 +253,19 @@ function normaliseProfile(value: unknown): HomeProfile {
   };
 }
 
+function normaliseTechStack(value: unknown): HomeTech[] {
+  if (!Array.isArray(value)) return DEFAULT_HOME.techStack;
+  return value
+    .map((item) => {
+      const record = asRecord(item);
+      return {
+        name: asText(record.name),
+        icon: asText(record.icon),
+      };
+    })
+    .filter((tech) => tech.name.length > 0);
+}
+
 function normaliseSocials(value: unknown): HomeSocial[] {
   if (!Array.isArray(value)) return DEFAULT_HOME.socials;
   return value
@@ -276,6 +310,7 @@ export function normaliseHome(value: unknown): HomeContent {
     background: normaliseBackground(record.background),
     profile: normaliseProfile(record.profile),
     socials: normaliseSocials(record.socials),
+    techStack: normaliseTechStack(record.techStack),
     // Same rule as `facts`: a saved empty timeline means "no entries yet" and
     // renders the empty state; only a missing field restores the sample data.
     timeline: Array.isArray(record.timeline)

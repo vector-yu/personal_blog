@@ -2,6 +2,7 @@ import { HomeHero } from '@/components/home/hero';
 import { HeroBackground } from '@/components/home/hero-background';
 import { ProfileSection } from '@/components/home/profile-section';
 import { TimelineSection } from '@/components/home/timeline-section';
+import { TechMarquee } from '@/components/tech/tech-marquee';
 import { getHomeContent } from '@/lib/home';
 
 export const revalidate = 60;
@@ -37,6 +38,8 @@ export default async function HomePage() {
       />
 
       <ProfileSection profile={home.profile} />
+
+      <TechMarquee techStack={home.techStack} />
 
       <TimelineSection entries={home.timeline} />
     </main>

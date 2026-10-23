@@ -1,4 +1,5 @@
 import { defineConfig, type TinaField, type TinaTemplate } from 'tinacms';
+import { TECH_OPTIONS } from '../src/lib/tech';
 
 /**
  * Branch resolution.
@@ -361,6 +362,27 @@ export default defineConfig({
                 name: 'kind',
                 label: '图标',
                 options: ['github', 'email', 'x', 'bilibili', 'rss', 'link'],
+              },
+            ],
+          },
+          {
+            type: 'object',
+            name: 'techStack',
+            label: '技术栈（首页滚动条 / 关于页）',
+            description:
+              '首页在个人介绍与履历之间循环滚动；关于页以 3–4 个一排的小块展示。拖拽可调整顺序。',
+            list: true,
+            ui: {
+              itemProps: (item) => ({ label: item?.name || '技术栈' }),
+            },
+            fields: [
+              { type: 'string', name: 'name', label: '名称', required: true },
+              {
+                type: 'string',
+                name: 'icon',
+                label: '图标',
+                options: TECH_OPTIONS,
+                description: '图标来自 public/tech；选择后自动匹配品牌色。',
               },
             ],
           },
