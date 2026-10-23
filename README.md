@@ -99,6 +99,16 @@ src/components/home/        主页区块（首屏 / 背景 / 关于 / 拉链履�
 
 ---
 
+## 文章正文的内置渲染
+
+- **代码块**：`src/components/mdx/highlight-code.ts` 是一个零依赖的 token 着色器
+  （覆盖 TS / JS / JSON / CSS 等常见片段），颜色按深色代码面板调过；
+  `CopyButton` 复制的仍然是未着色的原始代码。
+- **表格**：`src/components/tina-markdown.tsx` 里外层负责圆角裁切、内层负责横向滚动；
+  单元格固定 `px-4 py-3`，最后一行的底边由外框代替，避免表头/表尾空隙和双线。
+
+---
+
 ## 如何新增一个「可视化编辑器里可插入」的自定义组件
 
 只需三步，**三处名字必须完全一致（PascalCase）**：

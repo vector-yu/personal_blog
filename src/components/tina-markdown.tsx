@@ -7,6 +7,7 @@ import { Callout } from '@/components/mdx/callout';
 import { Counter } from '@/components/mdx/counter';
 import { CopyButton } from '@/components/mdx/copy-button';
 import { Figure } from '@/components/mdx/figure';
+import { codeTokenClass, highlightCode } from '@/components/mdx/highlight-code';
 import { InvalidMarkdown } from '@/components/mdx/invalid-markdown';
 import { sanitizeUrl } from '@/components/mdx/sanitize-url';
 import { Tabs } from '@/components/mdx/tabs';
@@ -111,6 +112,8 @@ const components = {
   // --- Built-in element overrides ---------------------------------------------
   code_block: (props: { value?: string; lang?: string; children?: React.ReactNode }) => {
     const code = typeof props.value === 'string' ? props.value : '';
+    const tokens = highlightCode(code);
+
     return (
       <div
         data-tina-field={tinaField(props as unknown as Record<string, unknown>)}
@@ -125,7 +128,13 @@ const components = {
           {code ? <CopyButton value={code} /> : null}
         </div>
         <pre className="overflow-x-auto p-5 text-sm leading-relaxed">
-          <code className="font-mono text-slate-100">{code}</code>
+          <code className="font-mono text-slate-200">
+            {tokens.map((token, index) => (
+              <span key={index} className={codeTokenClass(token.kind)}>
+                {token.text}
+              </span>
+            ))}
+          </code>
         </pre>
         {/* Iridescent top edge — the gradient motif, at hairline scale. */}
         <span
@@ -196,9 +205,11 @@ const components = {
     const rows = props.tableRows ?? [];
 
     const table = props.children ? (
-      <table className="w-full border-collapse text-sm">{props.children}</table>
+      <table className="w-full border-collapse text-sm" style={{ margin: 0 }}>
+        {props.children}
+      </table>
     ) : rows.length > 0 ? (
-      <table className="w-full border-collapse text-sm">
+      <table className="w-full border-collapse text-sm" style={{ margin: 0 }}>
         <tbody>
           {rows.map((row, rowIndex) => (
             <tr key={rowIndex}>
@@ -216,8 +227,11 @@ const components = {
     if (!table) return null;
 
     return (
-      <div className="my-8 overflow-x-auto rounded-2xl border-2 border-ink/20 bg-white/50 backdrop-blur-sm dark:border-chalk/20 dark:bg-white/[0.03]">
-        {table}
+      // The outer element owns the rounded border and clips the header/rows to
+      // it; the inner element scrolls wide tables. Keeping both is what stops a
+      // square table corner from leaking outside the rounded panel.
+      <div className="my-8 overflow-hidden rounded-2xl border-2 border-ink/20 bg-white/50 backdrop-blur-sm dark:border-chalk/20 dark:bg-white/[0.03]">
+        <div className="overflow-x-auto">{table}</div>
       </div>
     );
   },

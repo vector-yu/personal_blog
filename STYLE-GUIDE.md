@@ -122,6 +122,8 @@ class="animate-flow animate-tumble"
 | 新增可插入组件必须同步 **4 处** | 见 `AGENTS.md` 第二节 | 内容门禁 |
 | `.scroll-reveal` 必须留在 `(width >= 48rem)` + `prefers-reduced-motion: no-preference` + `@supports (animation-timeline: view())` 的合围内 | `globals.css` | 手机零动效；不支持的浏览器/无 JS 时内容立即可见 |
 | 顶层拉链玻璃必须只在「桌面 + JS」下渲染，不能成为履历可见性的前提 | `zip-timeline.tsx` | no-JS、手机、爬虫看到完整履历 |
+| 表格必须保持「外层 `overflow-hidden` 圆角 + 内层 `overflow-x-auto`」，且 `table` 的 margin 为 0 | `tina-markdown.tsx` | 否则表头/表尾出现空隙，圆角处露出方角 |
+| 代码块 token 颜色类必须是 `highlight-code.ts` 里的字面量 | `highlight-code.ts` | Tailwind 扫描不到动态拼接的类名 |
 
 ---
 
