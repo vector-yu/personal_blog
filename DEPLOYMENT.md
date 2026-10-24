@@ -89,7 +89,7 @@ node scripts/check-env.mjs --strict   # 应为 ✔
 npm run build                          # 不带 --skip-cloud-checks
 ```
 
-### 两个容易踩的云端前置条件
+### 三个容易踩的云端前置条件
 
 1. **`main` 分支必须已在 TinaCloud 建好索引**。TinaCloud 项目刚创建时索引可能还没完成，
    此时构建会报 `Branch 'main' is not on TinaCloud` 或
@@ -99,6 +99,20 @@ npm run build                          # 不带 --skip-cloud-checks
    所以改了 `tina/config.ts` 之后必须跑一次 `npx tinacms dev`（让它生成 lock）再提交，
    否则云端会报 local/remote schema 不一致。
    `npm run check:env` 现在会检测「config.ts 比 tina-lock.json 新」并直接报错，避免踩这个坑。
+3. **lock 文件已提交，也不等于 TinaCloud 已索引新 schema**。push 只更新 GitHub；TinaCloud
+   的 schema 索引是异步的，Vercel 构建可能先跑，于是报：
+
+   ```text
+   The local GraphQL schema doesn't match the remote GraphQL schema.
+   Last indexed at: <旧时间>
+   Reason: [NON_BREAKING - TYPE_ADDED] Type 'PostEn' was added
+   ```
+
+   这不是代码错误，`npm run build:local` 通过也不能排除它（本地构建不校验云端 schema）。
+   → 到 TinaCloud 项目配置对 `main` 点 **Reindex**，等状态 complete，再在 Vercel 点 **Redeploy**。
+   不要用 `--skip-cloud-checks` 绕过：`/admin` 会查询远端不存在的类型。
+   判断索引是否完成：远端 GraphQL 的 `__schema` 出现新类型（如 `PostEn` / `PageEn`），
+   或 TinaCloud 的索引时间晚于该提交。
 
 ---
 

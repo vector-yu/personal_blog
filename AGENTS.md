@@ -167,6 +167,22 @@ npm run smoke                      # http / admin / visual / interaction / langu
     标签/系列详情页会回索引页，不要硬拼同路径。
 13. **JSON 英文文档是 `*.en.json`**（`home.en.json`、`projects.en.json` 等），不是新目录；
     `tina/config.ts` 的 `match: '*'` 让两份文档都出现在同一个集合里。
+14. **改了 `tina/config.ts` 的 schema 后，TinaCloud 远端索引必须完成，Vercel 才能构建。**
+    典型报错：
+
+    ```text
+    The local GraphQL schema doesn't match the remote GraphQL schema.
+    Last indexed at: <旧时间>
+    Reason: [NON_BREAKING - TYPE_ADDED] Type 'PostEn' was added
+    ```
+
+    这不是代码错误。`tina/tina-lock.json` 已提交、`npm run build:local` 也通过，只说明本地正确；
+    **push 不等于 TinaCloud 已索引**，索引是异步的，可能在 Vercel 构建开始后才完成，甚至 webhook 没触发。
+    处理：到 TinaCloud 项目配置（`https://app.tina.io/projects/<clientId>/configuration`）
+    对 `main` 分支点 **Reindex**，等状态变成 `complete`，再在 Vercel 点 **Redeploy**。
+    不要用 `--skip-cloud-checks` 绕过：那会让 `/admin` 查询一个远端不存在的 schema。
+    判断远端是否已更新：查询远端 GraphQL 的 `__schema` 里是否出现新类型（如 `PostEn` / `PageEn`），
+    或看 TinaCloud 的索引时间是否晚于该提交。
 
 ---
 

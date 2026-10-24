@@ -506,6 +506,34 @@ npm run check:i18n -- --strict # 任何中英不配对都失败（build 使用�
 `npm run build`（生产构建，需 TinaCloud）会额外验证 `tina-lock.json` 与云端 schema 一致；
 在拿到 Client ID / Token 之前用 `npm run build:local` 即可。
 
+### 改了 Tina schema 后：先让 TinaCloud 索引完成
+
+**这不是 `build:local` 能覆盖的检查**：`build:local` 走 `--skip-cloud-checks`，即使本地通过，
+也不代表线上能构建。
+
+只要改了 `tina/config.ts`（新增集合、字段、类型），Vercel 构建里的 `tinacms build` 会比较
+本地 `tina/tina-lock.json` 和 TinaCloud 远端 schema。远端还没索引时，构建会失败并打印：
+
+```text
+The local GraphQL schema doesn't match the remote GraphQL schema.
+Last indexed at: <旧时间>
+Reason: [NON_BREAKING - TYPE_ADDED] Type 'PostEn' was added
+```
+
+**原因**：push 只把代码推到 GitHub；TinaCloud 的 schema 索引是**异步**的，可能在 Vercel
+开始构建时还没跑完，甚至 webhook 没触发。日志里的 `Last indexed at` 如果早于本次提交，
+就是这个问题。
+
+**处理**：
+
+1. 打开 TinaCloud 项目配置：`https://app.tina.io/projects/<clientId>/configuration`
+2. 对 `main` 分支点 **Reindex**，等状态变成 `complete`；
+3. 回 Vercel，对失败的部署点 **Redeploy**。
+
+不要用 `--skip-cloud-checks` 绕过：构建会过，但 `/admin` 里的英文集合/新字段会查询一个
+远端不存在的 schema。判断是否已索引：远端 GraphQL 的 `__schema` 中出现新类型
+（例如 `PostEn` / `PageEn`），或索引时间晚于该提交。
+
 ---
 
 ## 编辑器与交互自动化冒烟测试
