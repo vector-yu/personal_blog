@@ -17,6 +17,7 @@
     "build": "node scripts/check-env.mjs --strict && tinacms build && node scripts/verify-build-artifacts.mjs --strict && node scripts/validate-content.mjs --strict && node --experimental-strip-types --no-warnings scripts/check-i18n.mjs --strict && next build && node scripts/runtime-independence-smoke.mjs && node scripts/route-contract-smoke.mjs",
     "build:local": "node scripts/build-local.mjs",
     "check:local-api": "node scripts/check-local-api.mjs",
+    "convert:math": "node scripts/convert-math.mjs",
     "start": "next start",
     "typecheck": "tsc --noEmit",
     "smoke:admin": "node scripts/admin-smoke.mjs",

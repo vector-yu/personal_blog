@@ -189,6 +189,8 @@ npm run smoke                      # http / admin / visual / interaction / langu
     整篇正文变成 `invalid_markdown`（后台红框 `Error parsing markdown`）。
     正确写法：行内用反引号包住 `` `$e^{i\pi}$` ``，块级用 ```math 代码块，或插入 `Math`
     组件（`formula` + `display`）。渲染实现是 `src/components/mdx/math.tsx` + KaTeX CSS。
+    已有大量 `$...$` 文章用 `npm run convert:math -- --write <目录>` 批量转换
+    （默认 dry-run；脚本会跳过 frontmatter、代码块、行内代码，并用 `parseMDX` 验证结果）。
     全角标点本身可以正常解析；如果它在公式里，随公式一起走这三条路径就不会报错。
 
 ---

@@ -256,6 +256,39 @@ Tina 的解析器**没有** remark/rehype 插件入口，所以不能直接挂 `
 依赖：`katex`（直接依赖）；样式 `katex/dist/katex.min.css` 在
 `src/app/[lang]/layout.tsx` 引入。实现：`src/components/mdx/math.tsx`。
 
+### 批量转换已有 `$...$` 文章
+
+`scripts/convert-math.mjs` 会把 `.md` / `.mdx` 里的 `$...$`、`$$...$$` 转成
+`<Math formula="..." />`，并自动跳过 frontmatter、代码块、行内代码和已有 JSX 标签。
+
+先预览（默认不写盘）：
+
+```bash
+# 扫描仓库里的 content/posts、content/posts-en、content/pages、content/pages-en
+npm run convert:math
+
+# 或指定你的本地笔记目录（路径有空格要加引号）
+npm run convert:math -- "D:\notes\math"
+```
+
+确认输出没问题后再写：
+
+```bash
+npm run convert:math -- --write "D:\notes\math"
+git diff -- "D:\notes\math"
+```
+
+转换规则：
+
+- `$a^2+b^2=c^2$` → `<Math formula="a^2+b^2=c^2" />`
+- `$$...$$` → `<Math formula="..." display={true} />`
+- 公式里有 `"`、`&`、`<`、`>` 时自动写成 `formula={"..."}`，避免 MDX 属性解析问题
+- 纯数字/货币（如 `$5 和 $10`）默认不转；`--all` 会连 `$x$` 这种单变量也转，
+  但请先 dry-run 检查，避免把货币误判成公式
+- 每个文件转换后都会先用 Tina 的 `parseMDX` 验证；解析失败的文件不会写盘
+
+建议先复制一份笔记或在 git 仓库里操作；脚本只会在 `--write` 时改动文件。
+
 ---
 
 ## 如何新增一个「可视化编辑器里可插入」的自定义组件
