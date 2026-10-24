@@ -90,6 +90,13 @@ const richTextField = {
         { name: 'caption', type: 'string' },
       ],
     },
+    {
+      name: 'Math',
+      fields: [
+        { name: 'formula', type: 'string' },
+        { name: 'display', type: 'boolean' },
+      ],
+    },
   ],
 };
 

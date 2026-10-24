@@ -12,6 +12,7 @@ import { CopyButton } from '@/components/mdx/copy-button';
 import { Figure } from '@/components/mdx/figure';
 import { codeTokenClass, highlightCode } from '@/components/mdx/highlight-code';
 import { InvalidMarkdown } from '@/components/mdx/invalid-markdown';
+import { MathFormula } from '@/components/mdx/math';
 import { sanitizeUrl } from '@/components/mdx/sanitize-url';
 import { Tabs } from '@/components/mdx/tabs';
 import { VideoEmbed } from '@/components/mdx/video-embed';
@@ -103,6 +104,11 @@ export interface VideoEmbedBlockProps extends Record<string, unknown> {
   caption?: string | null;
 }
 
+export interface MathBlockProps extends Record<string, unknown> {
+  formula?: string | null;
+  display?: boolean | null;
+}
+
 /**
  * Maps MDX/rich-text element names to React components.
  *
@@ -146,6 +152,12 @@ const components = {
     </div>
   ),
 
+  Math: (props: MathBlockProps) => (
+    <span data-tina-field={tinaField(props)}>
+      <MathFormula formula={props.formula} display={props.display} />
+    </span>
+  ),
+
   // --- Parser failure nodes ----------------------------------------------------
   // Without these, a body that fails to parse renders as raw MDX source with no signal.
   invalid_markdown: (props: { value?: string; message?: string; children?: React.ReactNode }) => (
@@ -170,8 +182,38 @@ const components = {
   h3: (props: { children?: ReactNode }) => (
     <MarkdownHeading level={3}>{props.children}</MarkdownHeading>
   ),
+  // Inline code is normally left to prose styles. A backtick-wrapped math
+  // expression (`` `$e^{i\pi}$` ``) is a safe way to write inline LaTeX in MDX:
+  // the backticks protect `{}` and `\` from the MDX expression parser, then this
+  // override renders the content with KaTeX.
+  code: (props: { children?: ReactNode }) => {
+    const text = textFromChildren(props.children).trim();
+    const match = /^\$([\s\S]+)\$$/.exec(text);
+    if (match) return <MathFormula formula={match[1]} />;
+    return (
+      <code className="rounded bg-ink/5 px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/10">
+        {props.children}
+      </code>
+    );
+  },
+
   code_block: (props: { value?: string; lang?: string; children?: React.ReactNode }) => {
     const code = typeof props.value === 'string' ? props.value : '';
+
+    // A fenced ```math block is safe by construction: the fence content is raw
+    // text, so braces, backslashes and full-width punctuation never reach the
+    // MDX expression parser.
+    if (props.lang === 'math' || props.lang === 'latex') {
+      return (
+        <div
+          data-tina-field={tinaField(props as unknown as Record<string, unknown>)}
+          className="not-prose my-8"
+        >
+          <MathFormula formula={code} display />
+        </div>
+      );
+    }
+
     const tokens = highlightCode(code);
 
     return (

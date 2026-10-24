@@ -63,6 +63,7 @@ try {
   check('document open in editor (breadcrumb + fields)', /博客文章\s*\/\s*hello-tinacms/.test(editorText));
   check('form fields from schema rendered', /标题[\s\S]*发布日期[\s\S]*摘要[\s\S]*正文/.test(editorText));
   check('rich-text body loaded', /欢迎[\s\S]*提示框组件[\s\S]*交互组件[\s\S]*标签页/.test(editorText));
+  check('no markdown parse error in the editor', !/Error parsing markdown/.test(editorText));
 
   // --- 3. custom components appear as rich-text embeds -----------------------
   check('Callout rendered as editor embed', /提示框 \(Callout\)/.test(editorText));
@@ -70,6 +71,7 @@ try {
   check('Tabs rendered as editor embed', /标签页 \(Tabs\)/.test(editorText));
   check('Figure rendered as editor embed', /图片 \(Figure\)/.test(editorText));
   check('VideoEmbed rendered as editor embed', /视频 \(Video\)/.test(editorText));
+  check('Math rendered as editor embed', /数学公式 \(Math\)/.test(editorText));
   check('embeds are editable (Open options)', /提示框 \(Callout\)[\s\S]*Open options/.test(editorText));
 
   // NOTE: visual editing (click-to-edit on the site page) is covered separately by
@@ -111,6 +113,7 @@ try {
     check('Embed menu offers Tabs', /Tabs|标签页/.test(menuText));
     check('Embed menu offers Figure', /Figure|图片/.test(menuText));
     check('Embed menu offers VideoEmbed', /VideoEmbed|视频/.test(menuText));
+    check('Embed menu offers Math', /Math|数学公式/.test(menuText));
   }
 
   await page.screenshot({ path: OUT });

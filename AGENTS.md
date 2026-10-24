@@ -76,7 +76,8 @@
 - **组件名必须大写开头**。`<callout />` 会被 MDX 解析器当成原始 HTML，页面上原样显示。
 
 参考实现：`Callout`（嵌套富文本 + 固定选项）、`Counter`（客户端状态 + localStorage）、
-`Tabs`（对象列表 + ARIA）、`Figure`（image 字段 + 远程主机白名单）、`VideoEmbed`（白名单拼 URL）。
+`Tabs`（对象列表 + ARIA）、`Figure`（image 字段 + 远程主机白名单）、`VideoEmbed`（白名单拼 URL）、
+`Math`（KaTeX 字符串 + `display`）。
 
 ---
 
@@ -183,6 +184,12 @@ npm run smoke                      # http / admin / visual / interaction / langu
     不要用 `--skip-cloud-checks` 绕过：那会让 `/admin` 查询一个远端不存在的 schema。
     判断远端是否已更新：查询远端 GraphQL 的 `__schema` 里是否出现新类型（如 `PostEn` / `PageEn`），
     或看 TinaCloud 的索引时间是否晚于该提交。
+15. **数学公式不要用 `$...$` 裸写**。Tina 的 `parseMDX` 没有 remark/rehype 插件入口，
+    `remark-math` / `rehype-katex` 接不进去；`$e^{i\pi}$` 里的 `{}` / `\` 会被当成 MDX 表达式，
+    整篇正文变成 `invalid_markdown`（后台红框 `Error parsing markdown`）。
+    正确写法：行内用反引号包住 `` `$e^{i\pi}$` ``，块级用 ```math 代码块，或插入 `Math`
+    组件（`formula` + `display`）。渲染实现是 `src/components/mdx/math.tsx` + KaTeX CSS。
+    全角标点本身可以正常解析；如果它在公式里，随公式一起走这三条路径就不会报错。
 
 ---
 

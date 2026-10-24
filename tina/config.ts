@@ -141,6 +141,26 @@ const richTextTemplates: TinaTemplate[] = [
       { name: 'caption', label: '说明文字', type: 'string' },
     ],
   },
+  {
+    name: 'Math',
+    label: '数学公式 (Math)',
+    fields: [
+      {
+        name: 'formula',
+        label: 'LaTeX 公式',
+        type: 'string',
+        ui: { component: 'textarea' },
+        description: '不要写 $ 或 $$，只写公式本身，例如 \\frac{a}{b}。',
+        required: true,
+      },
+      {
+        name: 'display',
+        label: '块级公式（独占一行）',
+        type: 'boolean',
+        description: '不勾选是行内公式；勾选后居中独占一行。',
+      },
+    ],
+  },
 ];
 
 const postFields: TinaField[] = [

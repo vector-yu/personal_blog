@@ -72,3 +72,15 @@ export default defineConfig({
 | 纯静态部署     | ✅    |
 
 > 内容保存在 Git 仓库里，编辑器保存即提交。
+
+## 数学公式
+
+行内公式用反引号包住 LaTeX：`$e^{i\pi}+1=0$`。也可以插入 `Math` 组件：<Math formula="a^2+b^2=c^2" />。
+
+块级公式用 `math` 代码块：
+
+```math
+\int_{0}^{1} x^2\,dx = \frac{1}{3}
+```
+
+公式里的花括号、反斜杠和全角标点都不会再让 MDX 解析失败。

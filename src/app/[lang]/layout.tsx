@@ -24,6 +24,7 @@ import { messagesFor } from '@/i18n/server';
 import { getHomeContent, type HomeSocial } from '@/lib/home';
 import { metadataBaseUrl } from '@/lib/site-url';
 import { THEME_INIT_SCRIPT } from '@/lib/theme';
+import 'katex/dist/katex.min.css';
 import '../globals.css';
 
 type Params = { lang: string };

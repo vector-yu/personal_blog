@@ -72,3 +72,15 @@ export default defineConfig({
 | Static deployment | ✅        |
 
 > Content lives in the Git repository; saving in the editor creates a commit.
+
+## Math
+
+Write inline LaTeX inside backticks: `$e^{i\pi}+1=0$`. You can also insert the `Math` component: <Math formula="a^2+b^2=c^2" />.
+
+For a block formula, use a `math` code fence:
+
+```math
+\int_{0}^{1} x^2\,dx = \frac{1}{3}
+```
+
+Braces, backslashes, and full-width punctuation inside math no longer break the MDX parser.

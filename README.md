@@ -215,12 +215,52 @@ URL 是语言的唯一来源：**同一路径永远返回同一语言**，不做
   `CopyButton` 复制的仍然是未着色的原始代码。
 - **表格**：`src/components/tina-markdown.tsx` 里外层负责圆角裁切、内层负责横向滚动；
   单元格固定 `px-4 py-3`，最后一行的底边由外框代替，避免表头/表尾空隙和双线。
+- **数学公式**：KaTeX 渲染，见下一节。
+
+### 数学公式（KaTeX）
+
+这个项目的正文不是 MDX 编译链，而是 TinaCMS 的 `parseMDX` → AST → `<TinaMarkdown>`。
+Tina 的解析器**没有** remark/rehype 插件入口，所以不能直接挂 `remark-math` /
+`rehype-katex`；即使安装也不会进入 Tina 的解析流程。这里用 Tina 原生节点 + KaTeX
+达到同样效果，并且不会让 `{}` / `\` 触发 MDX 表达式解析。
+
+支持三种写法：
+
+1. **行内公式**：用反引号包住 `$...$`，反引号负责保护花括号和反斜杠：
+
+   ```markdown
+   这是行内公式：`$e^{i\pi}+1=0$`。
+   ```
+
+2. **块级公式**：用 `math` 代码块：
+
+   ````markdown
+   ```math
+   \int_{0}^{1} x^2\,dx = \frac{1}{3}
+   ```
+   ````
+
+3. **Math 组件**：在编辑器「插入组件」里选「数学公式 (Math)」，或在 MDX 里写：
+
+   ```markdown
+   <Math formula="a^2+b^2=c^2" />
+   <Math formula="\frac{a}{b}" display={true} />
+   ```
+
+   `formula` 只写公式本身，不要包 `$` / `$$`；`display` 勾选后独占一行。
+
+公式里的全角标点（如 `，`、`＝`）也会被 KaTeX 按 Unicode 处理，不会触发
+`Error parsing markdown`。如果普通中文段落（没有 `$` / `{}`）仍出现红框，那通常是
+编辑器/浏览器层面的问题，而不是 MDX 解析，需要单独排查。
+
+依赖：`katex`（直接依赖）；样式 `katex/dist/katex.min.css` 在
+`src/app/[lang]/layout.tsx` 引入。实现：`src/components/mdx/math.tsx`。
 
 ---
 
 ## 如何新增一个「可视化编辑器里可插入」的自定义组件
 
-只需三步，**三处名字必须完全一致（PascalCase）**：
+核心是**四处同名**（PascalCase）；漏掉第 4 处是最常见的构建失败原因：
 
 ### 1. 在 `tina/config.ts` 的 `richTextTemplates` 里声明模板
 
@@ -259,6 +299,11 @@ const components = {
 };
 ```
 
+### 4. 同步到 `scripts/validate-content.mjs` 的 `richTextField.templates`
+
+只改前 3 处时，页面能渲染，但 `npm run check:content` 会把新组件当成未注册的原始
+HTML（非 strict 警告，strict 直接失败）。字段名和类型必须和 `tina/config.ts` 完全一致。
+
 完成后编辑器「插入组件」菜单里就会出现该项，保存后 `content/**.mdx` 里会写入
 `<MyComponent label="..." />`。
 
@@ -281,8 +326,9 @@ const components = {
 | 交互 + 列表数据 | `type: 'object', list: true` | `Tabs` |
 | 图片 + 图注 | `type: 'image'` + `string` | `Figure` |
 | 第三方嵌入 | 白名单 `provider` + ID，组件内拼 URL | `VideoEmbed` |
+| 数学公式 | `formula` 字符串 + `display` 布尔 | `Math` |
 
-已内置的 5 个组件（都会出现在编辑器「插入组件」菜单里）：
+已内置的 6 个组件（都会出现在编辑器「插入组件」菜单里）：
 
 | 组件 | 说明 |
 | --- | --- |
@@ -291,6 +337,7 @@ const components = {
 | `Tabs` | 标签页，符合 WAI-ARIA tabs 模式（方向键可切换） |
 | `Figure` | 图片 + 图注；本地图走 `public/uploads`，远程图走 `next/image` |
 | `VideoEmbed` | YouTube / Bilibili，填 ID 或整条链接均可，src 由组件按白名单拼接 |
+| `Math` | KaTeX 公式；`formula` 写 LaTeX，`display` 控制行内/块级 |
 
 ### 远程图片：新主机要加白名单
 
