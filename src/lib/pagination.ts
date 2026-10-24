@@ -1,3 +1,5 @@
+import { localePath, type Locale } from '@/i18n/config';
+
 export const POSTS_PER_PAGE = 8;
 
 export function pageCount(total: number): number {
@@ -14,9 +16,9 @@ export function paginate<T>(items: T[], page: number): T[] {
 }
 
 /**
- * Page 1 lives at `/posts` for a stable canonical URL; later pages use
- * `/posts/page/2`, etc.
+ * Page 1 lives at `/posts` (within the locale root) for a stable canonical URL;
+ * later pages use `/posts/page/2`, etc.
  */
-export function pagePath(page: number): string {
-  return page <= 1 ? '/posts' : `/posts/page/${page}`;
+export function pagePath(page: number, locale: Locale = 'zh'): string {
+  return localePath(locale, page <= 1 ? '/posts' : `/posts/page/${page}`);
 }

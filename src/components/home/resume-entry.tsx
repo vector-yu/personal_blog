@@ -17,9 +17,11 @@ import type { HomeTimelineEntry } from '@/lib/home';
 export function ResumeEntryRow({
   entry,
   index,
+  presentLabel,
 }: {
   entry: HomeTimelineEntry;
   index: number;
+  presentLabel: string;
 }) {
   return (
     <li className="group relative grid gap-5 py-10 sm:grid-cols-[9rem_minmax(0,1fr)] sm:gap-10 md:grid-cols-[12rem_minmax(0,1fr)] md:py-12">
@@ -49,7 +51,7 @@ export function ResumeEntryRow({
           {entry.current ? (
             <span className="inline-flex items-center gap-1.5 rounded-full border-2 border-blush/50 bg-blush/15 px-2.5 py-1 text-[0.65rem] font-black text-blush-text dark:border-blush/40 dark:bg-blush/20 dark:text-rose-200">
               <span aria-hidden className="h-1.5 w-1.5 rounded-full bg-blush" />
-              现在
+              {presentLabel}
             </span>
           ) : null}
         </div>

@@ -1,6 +1,7 @@
 'use client';
 
 import { m } from 'framer-motion';
+import { useLocaleCopy } from '@/i18n/client';
 import { usePersistentState } from '@/lib/use-persistent-state';
 
 export interface CounterProps {
@@ -30,6 +31,7 @@ export interface CounterProps {
  * ────────────────────────────────────────────────────────────────────────────
  */
 export function Counter({ label, initialValue, step }: CounterProps) {
+  const { copy } = useLocaleCopy();
   const initial = typeof initialValue === 'number' ? initialValue : 0;
   const increment = typeof step === 'number' && step !== 0 ? step : 1;
 
@@ -53,13 +55,13 @@ export function Counter({ label, initialValue, step }: CounterProps) {
         whileHover={{ scale: 1.08, rotate: -4 }}
         whileTap={{ scale: 0.88 }}
         className={`relative ${buttonClass}`}
-        aria-label="减少"
+        aria-label={copy.decrease}
       >
         −
       </m.button>
 
       <span className="relative min-w-24 text-center text-sm font-bold">
-        {label ? `${label}：` : ''}
+        {label ? `${label}${copy.counterSeparator}` : ''}
         {/*
           `key` remounts the node on every change, which restarts the keyframe pop.
           Only one <strong> is ever mounted, so a text read never sees two values.
@@ -81,7 +83,7 @@ export function Counter({ label, initialValue, step }: CounterProps) {
         whileHover={{ scale: 1.08, rotate: 4 }}
         whileTap={{ scale: 0.88 }}
         className={`relative ${buttonClass}`}
-        aria-label="增加"
+        aria-label={copy.increase}
       >
         +
       </m.button>

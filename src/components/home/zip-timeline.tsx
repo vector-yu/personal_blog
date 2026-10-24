@@ -54,7 +54,15 @@ import type { HomeTimelineEntry } from '@/lib/home';
  */
 const PULL_HEIGHT = 84;
 
-export function ZipTimeline({ entries }: { entries: HomeTimelineEntry[] }) {
+export function ZipTimeline({
+  entries,
+  emptyText,
+  presentLabel,
+}: {
+  entries: HomeTimelineEntry[];
+  emptyText: string;
+  presentLabel: string;
+}) {
   const noMotion = useNoMotion();
   const trackRef = useRef<HTMLDivElement>(null);
   const [mounted, setMounted] = useState(false);
@@ -165,7 +173,7 @@ export function ZipTimeline({ entries }: { entries: HomeTimelineEntry[] }) {
       >
         {entries.length === 0 ? (
           <li className="py-14 text-center text-sm font-medium text-ink/60 dark:text-slate-400">
-            还没有履历条目。到 /admin 的「个人主页」里添加第一条吧。
+            {emptyText}
           </li>
         ) : (
           entries.map((entry, index) => (
@@ -173,6 +181,7 @@ export function ZipTimeline({ entries }: { entries: HomeTimelineEntry[] }) {
               key={`${entry.period}-${entry.title}`}
               entry={entry}
               index={index}
+              presentLabel={presentLabel}
             />
           ))
         )}

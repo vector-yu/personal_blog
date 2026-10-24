@@ -1,0 +1,301 @@
+/**
+ * Chinese UI copy.
+ *
+ * Content (post titles, bodies, project names, …) does NOT live here; it lives
+ * in `content/`. This file is the single place for interface chrome so the
+ * English dictionary can be checked key-for-key by TypeScript.
+ */
+export const zh = {
+  common: {
+    siteDescription: '一个用 TinaCMS + Next.js 构建的静态个人博客',
+    contentNav: '内容导航',
+    all: '全部',
+    rss: 'RSS',
+    rssSubscribe: 'RSS 订阅',
+    postsCount: '{count} 篇文章',
+    itemsCount: '{count} 项',
+    booksCount: '{count} 本',
+    seriesCount: '{count} 个系列',
+    tagsCount: '{count} 个标签',
+    sectionsCount: '{count} 节',
+    minutesRead: '约 {minutes} 分钟',
+    page: '第 {page} 页',
+    draft: '草稿',
+    series: '系列',
+    tags: '标签',
+    previous: '上一篇',
+    next: '下一篇',
+    related: '继续阅读',
+    backToPosts: '返回文章列表',
+    updated: '最后更新于 {date}',
+  },
+
+  nav: {
+    posts: '文章',
+    projects: '项目',
+    resume: '履历',
+    about: '关于',
+    tags: '标签',
+    archive: '归档',
+    notes: '笔记',
+    series: '系列',
+    startHere: '从这开始',
+    now: 'Now',
+    reading: '阅读',
+    uses: '工具',
+    rss: 'RSS',
+    openMenu: '打开导航',
+  },
+
+  footer: {
+    browse: '浏览',
+    content: '内容',
+    more: '更多',
+    builtWith: 'Built with Next.js & TinaCMS',
+  },
+
+  theme: {
+    toggle: '切换明暗主题',
+  },
+
+  language: {
+    switchToEnglish: 'EN',
+    switchToChinese: '中文',
+    switchLabel: '切换语言',
+    switchToLabel: '切换到{language}',
+  },
+
+  home: {
+    avatarAlt: '{name} 的头像',
+    readArticles: '去读文章 →',
+    present: '现在',
+    emptyTimeline: '还没有履历条目。到 /admin 的「个人主页」里添加第一条吧。',
+    techStackAria: '技术栈',
+  },
+
+  posts: {
+    metaTitle: '文章',
+    metaDescription: '按发布时间排列的全部文章。',
+    eyebrow: 'Writing',
+    title: '文章',
+    pageSuffix: ' · 第 {page} 页',
+    navAll: '全部文章',
+    navTags: '标签',
+    navArchive: '归档',
+    navNotes: '笔记',
+    navSeries: '系列',
+    navStart: '从这开始',
+    empty: '还没有文章。进入 /admin/index.html 创建第一篇吧。',
+    all: '全部',
+    searchLabel: '搜索文章',
+    searchPlaceholder: '搜索标题或摘要',
+    noResults: '没有匹配的文章，换个关键词试试。',
+    noTagPosts: '这个标签下还没有文章。',
+    viewAllTagged: '查看「{tag}」的全部文章',
+  },
+
+  pagination: {
+    aria: '文章分页',
+    previous: '上一页',
+    next: '下一页',
+    page: '第 {page} 页',
+  },
+
+  toc: {
+    title: '本页目录',
+    sections: '{count} 节',
+    aria: '文章目录',
+  },
+
+  post: {
+    minutes: '约 {minutes} 分钟',
+    draft: '草稿',
+    series: '系列',
+    tags: '标签',
+    previous: '← 上一篇',
+    next: '下一篇 →',
+    prevNextAria: '上一篇 / 下一篇',
+    related: '继续阅读',
+    back: '返回文章列表',
+    notFoundTitle: '文章未找到',
+    unavailableTitle: '文章暂时无法加载',
+  },
+
+  archive: {
+    metaTitle: '归档',
+    metaDescription: '按年份浏览全部文章。',
+    eyebrow: 'Archive',
+    title: '归档',
+    summary: '{count} 篇文章，按年份排列。',
+    emptySummary: '还没有文章。等第一篇发布后，这里会自动出现。',
+    count: '{count} 篇',
+    empty: '还没有文章。进入 /admin 创建第一篇吧。',
+    undated: '未标注日期',
+    navAll: '全部文章',
+    navTags: '标签',
+  },
+
+  tags: {
+    metaTitle: '标签',
+    metaDescription: '按标签浏览全部文章。',
+    eyebrow: 'Taxonomy',
+    title: '标签',
+    summary: '{tagCount} 个标签，{postCount} 篇文章。点开一个标签，看同一主题下的全部内容。',
+    emptySummary: '还没有标签。给文章加上标签后，这里会自动生成聚合页。',
+    empty: '还没有标签。进入 /admin 编辑一篇文章，在「标签」里添加即可。',
+    navAll: '全部文章',
+    navArchive: '归档',
+  },
+
+  tag: {
+    metaTitle: '标签：{tag}',
+    metaDescription: '所有带有「{tag}」标签的文章。',
+    eyebrow: 'Tag',
+    taggedCount: '{count} 篇文章带着这个标签。',
+    allTags: '全部标签',
+    navAllPosts: '全部文章',
+    navArchive: '归档',
+  },
+
+  series: {
+    metaTitle: '系列',
+    metaDescription: '按主题串联的文章系列。',
+    eyebrow: 'Series',
+    title: '系列',
+    summary: '{count} 个系列。适合按顺序读，或者从感兴趣的一篇跳进去。',
+    emptySummary: '还没有系列。给文章填写「所属系列」后，这里会自动生成聚合页。',
+    count: '{count} 篇文章',
+    empty: '还没有系列。在文章编辑页的「所属系列」里填写一个名字即可。',
+    navAll: '全部文章',
+    navTags: '标签',
+    navArchive: '归档',
+  },
+
+  seriesDetail: {
+    metaTitle: '系列：{series}',
+    metaDescription: '「{series}」系列的全部文章。',
+    eyebrow: 'Series',
+    count: '{count} 篇文章',
+    allSeries: '全部系列',
+    allPosts: '全部文章',
+    tags: '标签',
+  },
+
+  projects: {
+    metaTitle: '项目',
+    metaDescription: '做过的项目、实验和长期维护的东西。',
+    eyebrow: 'Work',
+    title: '项目',
+    empty: '还没有项目。进入 /admin 的「项目」里添加第一个吧。',
+    featured: '精选',
+    live: '在线访问 ↗',
+    code: '代码 ↗',
+    stackAria: '技术栈',
+    navPosts: '文章',
+    navNotes: '笔记',
+    navStart: '从这开始',
+  },
+
+  notes: {
+    metaTitle: '笔记',
+    metaDescription: '短一点的记录：最近在折腾什么、看到什么、想明白或没想明白的事。',
+    eyebrow: 'Notes',
+    title: '笔记',
+    empty: '还没有笔记。进入 /admin 的「笔记 / 短记」里写一条吧。',
+    navPosts: '文章',
+    navProjects: '项目',
+    navStart: '从这开始',
+  },
+
+  reading: {
+    metaTitle: '阅读',
+    metaDescription: '最近读过的书，以及在读和想读的清单。',
+    eyebrow: 'Reading',
+    title: '阅读',
+    statusReading: '在读',
+    statusFinished: '读完',
+    statusWishlist: '想读',
+    rating: '评分 {value} / 5',
+    viewBook: '查看这本书 ↗',
+    count: '{count} 本',
+    empty: '书单还是空的。进入 /admin 的「阅读」里添加第一本吧。',
+    navNotes: '笔记',
+    navProjects: '项目',
+    navAbout: '关于',
+  },
+
+  resume: {
+    metaTitle: '履历',
+    metaDescription: '按时间排列的个人履历，与首页的拉链履历共用同一份内容。',
+    title: '履历',
+    empty: '还没有履历条目。到 /admin 的「个人主页」里添加第一条吧。',
+    present: '现在',
+  },
+
+  about: {
+    metaTitle: '关于',
+    eyebrow: 'About',
+    toolbox: 'Toolbox',
+    items: '{count} 项',
+    rssNote: '这个站持续更新。想第一时间看到新文章，可以订阅 RSS。',
+    rssCta: 'RSS 订阅',
+  },
+
+  startHere: {
+    metaTitle: '从这开始',
+    metaDescription: '第一次来？从这几篇文章开始了解这个站。',
+    eyebrow: 'Start here',
+    featured: '精选文章',
+    recent: '最近文章',
+    count: '{count} 篇',
+    navAll: '全部文章',
+    navProjects: '项目',
+    navNotes: '笔记',
+    navTags: '标签',
+  },
+
+  now: {
+    metaTitle: 'Now',
+    metaDescription: '最近在做什么、在学什么、在想什么。',
+    eyebrow: 'Now',
+  },
+
+  uses: {
+    metaTitle: 'Uses',
+    metaDescription: '日常使用的硬件、软件和工具。',
+    eyebrow: 'Uses',
+  },
+
+  notFound: {
+    title: '页面走丢了',
+    description: '这个地址没有对应的内容。可能是链接拼错了，也可能是这篇内容已经被移动或删除。',
+    home: '回到首页',
+    posts: '浏览全部文章',
+  },
+
+  mdx: {
+    calloutInfo: '提示',
+    calloutWarning: '注意',
+    calloutSuccess: '成功',
+    calloutDanger: '警告',
+    copy: '复制',
+    copied: '已复制',
+    zoomImage: '放大图片',
+    zoomImageAlt: '放大图片：{alt}',
+    imagePreview: '图片预览',
+    closePreview: '关闭图片预览',
+    increase: '增加',
+    decrease: '减少',
+    counterSeparator: '：',
+    videoFallback: '嵌入式视频',
+    invalidTitle: '本文内容暂时无法渲染',
+    invalidBody: '请联系站长，或稍后再试。',
+    invalidDevTitle: '⚠ MDX 解析失败，正文已退化为原始源码',
+    invalidDevBody: '常见原因：组件属性名拼写错误、属性类型与 tina/config.ts 里声明的字段类型不一致，或使用了未在 richTextTemplates 中注册的组件名。',
+    showSource: '查看原始源码',
+    hideSource: '隐藏原始源码',
+    tabFallback: '标签 {index}',
+  },
+};
+
+export type Messages = typeof zh;

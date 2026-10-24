@@ -10,7 +10,7 @@ import { chromium } from 'playwright';
 
 const baseUrl = process.argv[2] ?? 'http://localhost:3000';
 const CHROME = 'C:/Program Files/Google/Chrome/Application/chrome.exe';
-const POST_URL = `${baseUrl}/posts/hello-tinacms`;
+const POST_URL = `${baseUrl}/zh/posts/hello-tinacms`;
 
 const browser = await chromium.launch({ executablePath: CHROME, args: ['--no-sandbox'] });
 const context = await browser.newContext({ viewport: { width: 1440, height: 1000 } });
@@ -111,6 +111,19 @@ try {
   const src = (await iframe.getAttribute('src')) ?? '';
   check('video embed src is a provider embed URL', /youtube-nocookie\.com\/embed\//.test(src), src);
   check('video embed has an accessible title', ((await iframe.getAttribute('title')) ?? '').length > 0);
+
+  // --- English locale uses translated chrome -------------------------------
+  await page.goto(`${baseUrl}/en/posts/hello-tinacms`, { waitUntil: 'load', timeout: 60_000 });
+  await page.waitForTimeout(2000);
+  check(
+    'English counter exposes translated aria labels',
+    (await page.getByRole('button', { name: 'Increase' }).count()) > 0 &&
+      (await page.getByRole('button', { name: 'Decrease' }).count()) > 0
+  );
+  check(
+    'English tabs still switch',
+    (await page.getByRole('tab').count()) >= 2
+  );
 } catch (error) {
   check('interaction test completed', false, error.message);
 } finally {

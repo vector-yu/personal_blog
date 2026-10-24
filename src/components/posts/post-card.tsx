@@ -9,6 +9,8 @@ import { tagTone } from '@/components/posts/tag-tones';
  */
 export type PostListItem = {
   slug: string;
+  /** Locale-aware link to the post, computed on the server. */
+  href: string;
   title: string;
   /** Machine-readable ISO date, for the <time dateTime> attribute. */
   dateIso: string;
@@ -16,6 +18,8 @@ export type PostListItem = {
   dateLabel: string;
   description: string | null;
   tags: string[];
+  /** Locale-aware tag links, computed on the server. */
+  tagLinks: { name: string; href: string }[];
 };
 
 export function PostCard({ post, tags }: { post: PostListItem; tags: string[] }) {
@@ -35,7 +39,7 @@ export function PostCard({ post, tags }: { post: PostListItem; tags: string[] })
       <div className="relative">
         <h2 className="text-title">
           <Link
-            href={`/posts/${post.slug}`}
+            href={post.href}
             className="decoration-iris decoration-2 underline-offset-4 hover:underline"
           >
             {post.title}
@@ -53,15 +57,15 @@ export function PostCard({ post, tags }: { post: PostListItem; tags: string[] })
           <p className="mt-3 leading-relaxed text-ink/75 dark:text-slate-300">{post.description}</p>
         ) : null}
 
-        {post.tags.length ? (
+        {post.tagLinks.length ? (
           <div className="mt-4 flex flex-wrap gap-2">
-            {post.tags.map((tag) => (
+            {post.tagLinks.map((tag) => (
               <Link
-                key={tag}
-                href={`/tags/${encodeURIComponent(tag)}`}
-                className={`rounded-full border-2 px-2.5 py-0.5 text-xs font-bold transition-transform duration-200 hover:-translate-y-0.5 motion-reduce:shadow-none motion-reduce:transition-none motion-reduce:hover:translate-y-0 dark:shadow-chalk-xs ${tagTone(tag, tags)}`}
+                key={tag.name}
+                href={tag.href}
+                className={`rounded-full border-2 px-2.5 py-0.5 text-xs font-bold transition-transform duration-200 hover:-translate-y-0.5 motion-reduce:shadow-none motion-reduce:transition-none motion-reduce:hover:translate-y-0 dark:shadow-chalk-xs ${tagTone(tag.name, tags)}`}
               >
-                {tag}
+                {tag.name}
               </Link>
             ))}
           </div>

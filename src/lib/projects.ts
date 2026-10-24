@@ -1,4 +1,5 @@
 import { cache } from 'react';
+import type { Locale } from '@/i18n/config';
 import { sanitizeUrl } from '@/components/mdx/sanitize-url';
 import { client } from '@/lib/tina';
 
@@ -20,9 +21,15 @@ export type ProjectsContent = {
 };
 
 export const PROJECTS_RELATIVE_PATH = 'projects.json';
+export const PROJECTS_RELATIVE_PATH_EN = 'projects.en.json';
 
 export const DEFAULT_PROJECTS: ProjectsContent = {
   intro: '做过的一些东西。',
+  items: [],
+};
+
+export const DEFAULT_PROJECTS_EN: ProjectsContent = {
+  intro: 'A few things I have built.',
   items: [],
 };
 
@@ -41,12 +48,15 @@ function asStringList(value: unknown): string[] {
     .filter((item): item is string => item.length > 0);
 }
 
-export function normaliseProjects(value: unknown): ProjectsContent {
+export function normaliseProjects(
+  value: unknown,
+  defaults: ProjectsContent = DEFAULT_PROJECTS
+): ProjectsContent {
   const record = asRecord(value);
   const items = Array.isArray(record.items) ? record.items : [];
 
   return {
-    intro: asText(record.intro) || DEFAULT_PROJECTS.intro,
+    intro: asText(record.intro) || defaults.intro,
     items: items
       .map((entry) => {
         const item = asRecord(entry);
@@ -67,12 +77,15 @@ export function normaliseProjects(value: unknown): ProjectsContent {
   };
 }
 
-export const getProjects = cache(async (): Promise<ProjectsContent> => {
+export const getProjects = cache(async (locale: Locale = 'zh'): Promise<ProjectsContent> => {
+  const isEn = locale === 'en';
   try {
-    const { data } = await client.queries.project({ relativePath: PROJECTS_RELATIVE_PATH });
-    return normaliseProjects(data?.project);
+    const { data } = await client.queries.project({
+      relativePath: isEn ? PROJECTS_RELATIVE_PATH_EN : PROJECTS_RELATIVE_PATH,
+    });
+    return normaliseProjects(data?.project, isEn ? DEFAULT_PROJECTS_EN : DEFAULT_PROJECTS);
   } catch (error) {
-    console.error('Failed to load the projects document:', error);
-    return DEFAULT_PROJECTS;
+    console.error(`Failed to load the projects document (${locale}):`, error);
+    return isEn ? DEFAULT_PROJECTS_EN : DEFAULT_PROJECTS;
   }
 });

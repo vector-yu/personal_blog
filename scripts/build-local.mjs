@@ -60,6 +60,19 @@ if (validate.status !== 0) {
   process.exit(validate.status ?? 1);
 }
 
+// 2c. Check dictionary key parity and translation pairing.
+console.log('\n→ checking bilingual content\n');
+const i18n = run('node', [
+  '--experimental-strip-types',
+  '--no-warnings',
+  'scripts/check-i18n.mjs',
+  '--strict',
+]);
+if (i18n.status !== 0) {
+  console.error('\n✖ Aborting the build: fix the bilingual content problems above.\n');
+  process.exit(i18n.status ?? 1);
+}
+
 // 3. Build the site against the local API.
 console.log('\n→ next build (against the local content API)\n');
 const next = run('npx', ['next', 'build']);

@@ -5,6 +5,8 @@ import { useState } from 'react';
 import { AnimatePresence, m } from 'framer-motion';
 import { EmptySearch } from '@/components/site/illustrations';
 import { useNoMotion } from '@/components/site/use-no-motion';
+import { formatMessage } from '@/i18n/format';
+import type { Messages } from '@/i18n/messages';
 import { PostCard, type PostListItem } from '@/components/posts/post-card';
 import { tagTone } from '@/components/posts/tag-tones';
 
@@ -25,7 +27,25 @@ import { tagTone } from '@/components/posts/tag-tones';
 
 const ALL = '\u0000all';
 
-export function PostList({ posts, tags }: { posts: PostListItem[]; tags: string[] }) {
+export function PostList({
+  posts,
+  tags,
+  labels,
+  tagHrefPrefix,
+}: {
+  posts: PostListItem[];
+  tags: string[];
+  labels: Pick<
+    Messages['posts'],
+    | 'all'
+    | 'searchLabel'
+    | 'searchPlaceholder'
+    | 'noResults'
+    | 'noTagPosts'
+    | 'viewAllTagged'
+  >;
+  tagHrefPrefix: string;
+}) {
   const [activeTag, setActiveTag] = useState<string>(ALL);
   const [query, setQuery] = useState('');
   const noMotion = useNoMotion();
@@ -63,8 +83,8 @@ export function PostList({ posts, tags }: { posts: PostListItem[]; tags: string[
    * the server page, which never renders this component).
    */
   const emptyMessage = needle
-    ? '没有匹配的文章，换个关键词试试。'
-    : '这个标签下还没有文章。';
+    ? labels.noResults
+    : labels.noTagPosts;
 
   return (
     <>
@@ -72,7 +92,7 @@ export function PostList({ posts, tags }: { posts: PostListItem[]; tags: string[
         {tags.length > 0 ? (
           <div className="flex flex-wrap items-center gap-2">
             <FilterChip selected={activeTag === ALL} onClick={() => setActiveTag(ALL)}>
-              全部
+              {labels.all}
             </FilterChip>
             {tags.map((tag) => (
               <FilterChip
@@ -89,14 +109,14 @@ export function PostList({ posts, tags }: { posts: PostListItem[]; tags: string[
 
         <div className="relative shrink-0 sm:w-56">
           <label htmlFor="post-search" className="sr-only">
-            搜索文章
+            {labels.searchLabel}
           </label>
           <input
             id="post-search"
             type="search"
             value={query}
             onChange={(event) => setQuery(event.target.value)}
-            placeholder="搜索标题或摘要"
+            placeholder={labels.searchPlaceholder}
             className="w-full rounded-full border-2 border-ink/85 bg-white/70 py-2 pr-3 pl-9 text-sm font-medium text-ink shadow-brutal-xs backdrop-blur placeholder:text-ink/45 focus:outline-none dark:border-chalk/25 dark:bg-white/[0.06] dark:text-slate-100 dark:placeholder:text-slate-500 dark:shadow-chalk-xs"
           />
           <svg
@@ -147,10 +167,10 @@ export function PostList({ posts, tags }: { posts: PostListItem[]; tags: string[
             </p>
             {activeTag !== ALL && !needle ? (
               <Link
-                href={`/tags/${encodeURIComponent(activeTag)}`}
+                href={`${tagHrefPrefix}${encodeURIComponent(activeTag)}`}
                 className="rounded-full border-2 border-ink/25 bg-white/70 px-4 py-2 text-sm font-bold text-ink/70 transition-colors hover:border-ink/60 hover:text-ink dark:border-chalk/20 dark:bg-white/[0.05] dark:text-slate-300 dark:hover:border-chalk/40 dark:hover:text-white"
               >
-                查看「{activeTag}」的全部文章
+                {formatMessage(labels.viewAllTagged, { tag: activeTag })}
               </Link>
             ) : null}
           </m.div>

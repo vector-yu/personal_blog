@@ -24,7 +24,7 @@ const API = process.env.TINA_LOCAL_URL ?? 'http://localhost:4001/graphql';
 const BROKEN_PATH = 'content/posts/__guard-broken-fixture.mdx';
 const DRAFT_PATH = 'content/posts/__guard-draft-fixture.mdx';
 const DRAFT_SLUG = '__guard-draft-fixture';
-const BUILT_DIR = '.next/server/app/posts';
+const BUILT_DIR = '.next/server/app/zh/posts';
 
 const brokenFixture = `---
 title: 校验回归测试（应当失败）

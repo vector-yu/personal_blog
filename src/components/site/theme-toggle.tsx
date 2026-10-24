@@ -71,7 +71,7 @@ function MoonIcon() {
   );
 }
 
-export function ThemeToggle() {
+export function ThemeToggle({ label }: { label: string }) {
   return (
     <button
       type="button"
@@ -87,8 +87,8 @@ export function ThemeToggle() {
       }}
       // The accessible name is static, so it never desyncs from the DOM; the
       // visible icon carries the state and `title` spells out what it does.
-      aria-label="切换明暗主题"
-      title="切换明暗主题"
+      aria-label={label}
+      title={label}
       className="group grid h-10 w-10 shrink-0 place-items-center rounded-full border-2 border-transparent text-ink/65 transition-all duration-200 hover:-translate-y-0.5 hover:border-ink hover:bg-white/85 hover:shadow-brutal-xs motion-reduce:hover:translate-y-0 dark:text-slate-300 dark:hover:border-chalk dark:hover:bg-white/10 dark:hover:shadow-chalk-xs"
     >
       {/* Before the script runs — and with JavaScript disabled, where the page

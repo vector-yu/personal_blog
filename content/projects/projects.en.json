@@ -1,0 +1,25 @@
+{
+  "intro": "A few things I have built. Some are long-running projects, some were one-off experiments; the common thread is trying to make abstract ideas easier to see.",
+  "items": [
+    {
+      "title": "This blog",
+      "year": "2026",
+      "role": "Design / Development",
+      "summary": "A static personal site built with Next.js + TinaCMS: editable content, a zippered résumé, frosted glass, and a table of contents.",
+      "stack": ["Next.js", "TinaCMS", "Tailwind CSS"],
+      "link": "/en",
+      "repo": "https://github.com/yourname/personal-blog",
+      "featured": true
+    },
+    {
+      "title": "Data visualization experiments",
+      "year": "2025",
+      "role": "Frontend / Visualization",
+      "summary": "Turning abstract data structures into shapes you can drag and inspect. A sample project waiting for real content.",
+      "stack": ["TypeScript", "D3", "Canvas"],
+      "link": "",
+      "repo": "",
+      "featured": false
+    }
+  ]
+}

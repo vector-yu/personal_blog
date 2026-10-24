@@ -108,6 +108,7 @@ try {
   const suites = [
     { name: 'http statuses', args: ['scripts/http-status-smoke.mjs', BASE_URL] },
     { name: 'published-page interactions', args: ['scripts/interaction-smoke.mjs', BASE_URL] },
+    { name: 'language switch', args: ['scripts/language-switch-smoke.mjs', BASE_URL] },
     { name: 'visual editing', args: ['scripts/visual-edit-smoke.mjs', BASE_URL] },
     { name: 'editor (admin)', args: ['scripts/admin-smoke.mjs', BASE_URL] },
     { name: 'editor save', args: ['scripts/save-smoke.mjs', BASE_URL] },

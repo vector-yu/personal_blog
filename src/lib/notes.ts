@@ -1,5 +1,6 @@
 import { cache } from 'react';
 import type { TinaMarkdownContent } from 'tinacms/dist/rich-text';
+import type { Locale } from '@/i18n/config';
 import { client } from '@/lib/tina';
 
 export type NoteItem = {
@@ -15,9 +16,15 @@ export type NotesContent = {
 };
 
 export const NOTES_RELATIVE_PATH = 'notes.json';
+export const NOTES_RELATIVE_PATH_EN = 'notes.en.json';
 
 export const DEFAULT_NOTES: NotesContent = {
   intro: '短一点的记录。',
+  items: [],
+};
+
+export const DEFAULT_NOTES_EN: NotesContent = {
+  intro: 'Shorter notes.',
   items: [],
 };
 
@@ -54,12 +61,15 @@ function asStringList(value: unknown): string[] {
   ];
 }
 
-export function normaliseNotes(value: unknown): NotesContent {
+export function normaliseNotes(
+  value: unknown,
+  defaults: NotesContent = DEFAULT_NOTES
+): NotesContent {
   const record = asRecord(value);
   const items = Array.isArray(record.items) ? record.items : [];
 
   return {
-    intro: asText(record.intro) || DEFAULT_NOTES.intro,
+    intro: asText(record.intro) || defaults.intro,
     items: items
       .map((entry) => {
         const note = asRecord(entry);
@@ -76,12 +86,15 @@ export function normaliseNotes(value: unknown): NotesContent {
   };
 }
 
-export const getNotes = cache(async (): Promise<NotesContent> => {
+export const getNotes = cache(async (locale: Locale = 'zh'): Promise<NotesContent> => {
+  const isEn = locale === 'en';
   try {
-    const { data } = await client.queries.note({ relativePath: NOTES_RELATIVE_PATH });
-    return normaliseNotes(data?.note);
+    const { data } = await client.queries.note({
+      relativePath: isEn ? NOTES_RELATIVE_PATH_EN : NOTES_RELATIVE_PATH,
+    });
+    return normaliseNotes(data?.note, isEn ? DEFAULT_NOTES_EN : DEFAULT_NOTES);
   } catch (error) {
-    console.error('Failed to load the notes document:', error);
-    return DEFAULT_NOTES;
+    console.error(`Failed to load the notes document (${locale}):`, error);
+    return isEn ? DEFAULT_NOTES_EN : DEFAULT_NOTES;
   }
 });

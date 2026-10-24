@@ -1,0 +1,202 @@
+---
+title: Common bit-manipulation tricks
+date: 2026-10-21T14:20:07.548Z
+description: A short look at how integers are stored in binary and the bit tricks that show up in algorithm problems.
+tags:
+  - Algorithms
+featured: true
+draft: false
+---
+
+# What are bit operations?
+
+Bit operations take integers, convert them to binary, and apply logical operations bit by bit: AND (`&`), OR (`|`), XOR (`^`), NOT (`\~`), or shifts such as `<<` and `>>`.
+
+Notice that I said integers, not non-negative integers. So how does a computer — especially Python — store the binary representation of a negative number?
+
+# Binary of negative numbers
+
+Everything below is about Python. In Python, an integer carries its sign as part of its value. To model bit operations consistently, we can imagine that the stored binary has no fixed width: beyond the digits, infinitely many leading bits encode the sign. For example, 7 is `… 0000 0111`.
+
+There is a name for this: two's complement. I dislike the name, so let me try to reconstruct the designer's reasoning and derive a sensible representation for negatives.
+
+- First, negative numbers should correspond one-to-one with positive numbers and still be distinguishable. In decimal we keep the digits and use `+` / `-`, so `-2` corresponds to `+2`.
+- Second, the representation must not conflict with the bit operations we already have: `<<` should still mean "multiply by 2", and `>>` should still mean "divide by 2 and round down".
+- Most importantly, `0` must not be confused with `-0`. Those should be the same number. Humans can look at `-0` and read `0`; a computer cannot.
+
+So storing the sign in one extra bit is a bad design; it creates too many edge cases.
+
+The designer's move: if negatives need a one-to-one mapping, flip the meaning of `0` and `1` inside negative numbers. Use `1` for "empty" and `0` for "occupied"; now positives and negatives separate naturally.
+
+But `0` is still a problem. Under that idea, `… 0000 0000` is `+0` and `… 1111 1111` is `-0`. What now? Shift the negative range by one: let `… 1111 1111` mean `-1`, `… 1111 1110` mean `-2`, and so on.
+
+To read the binary of a negative number, you then only need to:
+
+- flip every `0` to `1` and every `1` to `0`;
+- add `1`.
+
+The result is the magnitude of the negative number — its absolute value.
+
+Do all three rules still hold?
+
+- Positives and negatives are distinguishable: yes.
+- `<<` still means multiply by 2:
+  - Appending a `0` is equivalent to doubling the flipped value and then adding `1`.
+  - Let the flipped value be `a`; the magnitude is `a + 1`.
+  - After shifting, the flipped value is `2a + 1`, so the magnitude is `2a + 1 + 1 = 2(a + 1)`.
+  - The sign is unchanged and the magnitude doubles exactly.
+- `>>` still means `// 2`:
+  - Dropping the last bit is equivalent to dropping the last bit of the flipped value.
+  - Let the flipped value be `a`; the original magnitude is `a + 1`.
+  - After dropping the last bit, the flipped value is `a // 2`, so the magnitude is `a // 2 + 1`.
+  - If `a` is odd, `(-(a + 1)) // 2 = (-2k - 2) // 2 = -k - 1 = -(a // 2 + 1)`.
+  - If `a` is even, `(-(a + 1)) // 2 = (-2k - 1) // 2 = (-2k - 2) // 2 = -k - 1 = -(a // 2 + 1)`.
+  - It still works. Note that floor division of a negative odd number rounds down: `-5 // 2 = -3`, not `-2`.
+
+For example, take `… 1111 1010`:
+
+- Flip: `… 0000 0101`
+- Add one: `… 0000 0110`
+
+`… 0000 0110` is 6, so `… 1111 1010` represents `-6`.
+
+You may wonder: how does the computer know whether `… 1111 1010` is `-6` or a very large number?
+
+- In Python the question does not arise, because integers carry their sign.
+- In languages such as C, integers have a fixed width, so the leading bit acts as the sign display. When you declare a variable you already decide whether it is signed. The same `1111 1010` is 250 in an unsigned variable and `-6` in a signed one.
+- So there is nothing to worry about; the design is excellent.
+
+# The essence of NOT
+
+Here is a question: 15 is `… 0000 1111`; what is the bitwise NOT of 15?
+
+1. `0`, because `… 0000 1111` becomes `… 1111 0000`, and 15 only used the rightmost four bits, so the result is those four bits, i.e. `-0 = 0`.
+2. `-16`, because `… 1111 0000` is negative, so you flip the bits back and add one: `-(15 + 1) = -16`.
+3. `-32`, because the last four bits are `0` and the rest are `1`, which would be `-0` (invalid), so you borrow one more bit and get `-32`.
+
+If you picked 1 or 3, go back and reread the previous section on negative binary.
+
+When we discussed negative binary, we already saw that the first step to recover the magnitude is to flip the bits. We thought of flipping as "turn `1` into `0` and `0` into `1`". But notice: the flipped value plus the original is always all ones, which is `-1`: `~n + n = … 1111 1111 = -1`. This holds for every integer, because every integer is made of `0`s and `1`s and nothing else. It is another axiom worth remembering, alongside `-n + n = 0`.
+
+Rearrange it and you get `~n = -1 - n`. That is the mathematical essence of NOT; every other plausible-sounding explanation is noise.
+
+# Common tricks
+
+## 1. Add or subtract one using NOT
+
+We know that an integer plus its bitwise NOT equals `-1`. That `-1` gives us `+1` and `-1` effects:
+
+- `-~n = -(-1 - n) = n + 1`, which is adding one.
+- `~-n = -1 - (-n) = n - 1`, which is subtracting one.
+
+## 2. Properties of XOR
+
+- `a ^ a = 0`
+- `a ^ 0 = a`
+- `a ^ -1 = ~a`
+
+## 3. Use XOR to test whether two numbers have the same sign
+
+The sign bit of a positive number is `0`; of a negative number, `1`. XORing two numbers with different signs sets the sign bit to `1`, i.e. negative. So `x ^ y >= 0` means they have the same sign (equality holds exactly when `x = y`), and `x ^ y < 0` means different signs.
+
+## 4. Extract the k-th bit with AND and a shift
+
+AND has these properties:
+
+- AND with `1` preserves the bit: `0 & 1 = 0`, `1 & 1 = 1`.
+- AND with `0` clears the bit: `0 & 0 = 0`, `1 & 0 = 0`.
+
+Create a number with a single `1` at position `k`, and you can extract the k-th bit:
+
+```python
+>>> a = 15
+>>> k = 3
+>>> bin(a)
+'0b1111'
+>>> bin(a & (1 << (k-1)))
+'0b100'
+```
+
+## 5. Test parity with AND
+
+The last bit is `1` for odd numbers and `0` for even numbers; this also works for negatives.
+
+```python
+>>> a = 15
+>>> a & 1
+1
+>>> (a+1) & 1
+0
+```
+
+## 6. Set the k-th bit to 1 with OR
+
+OR has these properties:
+
+- OR with `0` preserves the bit: `1 | 0 = 1`, `0 | 0 = 0`.
+- OR with `1` always yields `1`: `1 | 1 = 1`, `0 | 1 = 1`.
+
+So you can force any chosen bit to `1`:
+
+```python
+>>> a = 9
+>>> bin(a)
+'0b1001'
+>>> bin(a | (1 << (k-1)))
+'0b1101'
+```
+
+## 7. Flip the k-th bit with XOR
+
+XOR has these properties:
+
+- XOR with `0` preserves the bit: `1 ^ 0 = 1`, `0 ^ 0 = 0`.
+- XOR with `1` flips the bit: `1 ^ 1 = 0`, `0 ^ 1 = 1`.
+
+So you can flip any chosen bit:
+
+```python
+>>> a = 13
+>>> bin(a)
+'0b1101'
+>>> bin(a ^ (1 << (k-1)))
+'0b1001'
+```
+
+For example, [LeetCode 2997](https://leetcode.com/problems/minimum-number-of-operations-to-make-array-xor-equal-to-k/description/) uses XOR's commutativity and this flip trick. Operating on each number individually is equivalent to operating on the whole array, so you only need to count how many bits must be flipped to turn the array's XOR into `k`:
+
+```python
+class Solution:
+    def minOperations(self, nums: List[int], k: int) -> int:
+        return reduce(xor, nums, k).bit_count()
+```
+
+## 8. Clear the k-th bit with AND and NOT
+
+Another way to use AND:
+
+- AND with `1` preserves the bit: `0 & 1 = 0`, `1 & 1 = 1`.
+- AND with `0` always yields `0`: `0 & 0 = 0`, `1 & 0 = 0`.
+
+This time create a number that is all ones except for a `0` at position `k`:
+
+```python
+>>> a = 15
+>>> k = 3
+>>> bin(a)
+'0b1111'
+>>> bin(a & ~(1 << (k-1)))
+'0b1011'
+```
+
+## 9. Remove the last set bit with AND
+
+Subtracting one turns the last `1` into `0` and every bit after it into `1`. So from the last `1` onward, the result is the opposite of the original. ANDing with the original clears that last `1`:
+
+```python
+>>> a = 14
+>>> bin(a)
+'0b1110'
+>>> bin(a & (a-1))
+'0b1100'
+```

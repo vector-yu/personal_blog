@@ -1,0 +1,32 @@
+{
+  "intro": "Books I have read, am reading, and want to read. Ratings are subjective; the short notes only capture what felt worth keeping at the time.",
+  "books": [
+    {
+      "title": "Designing Data-Intensive Applications",
+      "author": "Martin Kleppmann",
+      "status": "reading",
+      "rating": 0,
+      "note": "Reading slowly, mapping each concept onto my own projects as I go.",
+      "cover": "",
+      "link": "https://dataintensive.net/"
+    },
+    {
+      "title": "The Design of Everyday Things",
+      "author": "Don Norman",
+      "status": "finished",
+      "rating": 5,
+      "note": "Good design makes the right action feel obvious.",
+      "cover": "",
+      "link": ""
+    },
+    {
+      "title": "Show Your Work!",
+      "author": "Austin Kleon",
+      "status": "wishlist",
+      "rating": 0,
+      "note": "I want to think more carefully about working in public.",
+      "cover": "",
+      "link": ""
+    }
+  ]
+}

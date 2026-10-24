@@ -1,4 +1,5 @@
 import { cache } from 'react';
+import type { Locale } from '@/i18n/config';
 import { client } from '@/lib/tina';
 
 /**
@@ -99,6 +100,7 @@ export type HomeContent = {
 
 /** Relative to the `home` collection's path (`content/home`). */
 export const HOME_RELATIVE_PATH = 'home.json';
+export const HOME_RELATIVE_PATH_EN = 'home.en.json';
 
 /**
  * Used when the document is missing or the query fails, and as the fallback for
@@ -176,6 +178,81 @@ export const DEFAULT_HOME: HomeContent = {
   ],
 };
 
+/**
+ * English fallback. Kept separate from `DEFAULT_HOME` so a missing English
+ * document never renders Chinese chrome/content in the English tree.
+ */
+export const DEFAULT_HOME_EN: HomeContent = {
+  siteName: "Vector Yu's Blog",
+  tagline: 'Since you are here, stay a while.',
+  scrollHint: 'Scroll to meet me',
+  background: {
+    kind: 'gradient',
+    image: null,
+    video: null,
+    poster: null,
+    dim: 52,
+    blur: 20,
+  },
+  profile: {
+    avatar: '/uploads/avatar_color.png',
+    name: 'Vector Yu',
+    school: 'Nanyang Technological University',
+    bio: 'At least I was here.',
+    facts: [
+      { label: 'Major', value: 'Data Science and Artificial Intelligence' },
+      { label: 'Focus', value: 'Data Science · Machine Learning' },
+      { label: 'Based in', value: 'Singapore' },
+      { label: 'Email', value: 'jyu044@e.ntu.edu.sg' },
+    ],
+  },
+  socials: [
+    { label: 'GitHub', url: 'https://github.com/vector-yu', kind: 'github' },
+    { label: 'Email', url: 'mailto:jyu044@e.ntu.edu.sg', kind: 'email' },
+  ],
+  techStack: [
+    { name: 'Python', icon: 'python' },
+    { name: 'React', icon: 'react' },
+    { name: 'PHP', icon: 'php' },
+    { name: 'TypeScript', icon: 'typescript' },
+    { name: 'Next.js', icon: 'nextdotjs' },
+    { name: 'Tailwind CSS', icon: 'tailwindcss' },
+    { name: 'Node.js', icon: 'nodedotjs' },
+    { name: 'D3.js', icon: 'd3' },
+    { name: 'Figma', icon: 'figma' },
+    { name: 'Git', icon: 'git' },
+    { name: 'Docker', icon: 'docker' },
+    { name: 'MySQL', icon: 'mysql' },
+  ],
+  timeline: [
+    {
+      period: '2026 — Now',
+      title: 'Started writing this blog seriously',
+      place: 'Personal project · This site',
+      description:
+        'Building a corner of the web with Next.js and TinaCMS: notes on code, reading, and whatever I am working on, with the discipline of explaining what I learn.',
+      tags: ['Next.js', 'TinaCMS'],
+      current: true,
+    },
+    {
+      period: '2024 — 2026',
+      title: 'Undergraduate · Your major',
+      place: 'Your university',
+      description: 'Coursework, research directions, projects, or results worth keeping.',
+      tags: ['Study', 'Projects'],
+      current: false,
+    },
+    {
+      period: '2022 — 2024',
+      title: 'High school',
+      place: 'Your school',
+      description: 'An experience, a turning point, or the first time you finished something properly.',
+      tags: ['Starting point'],
+      current: false,
+    },
+  ],
+};
+
 function asRecord(value: unknown): Record<string, unknown> {
   return typeof value === 'object' && value !== null ? (value as Record<string, unknown>) : {};
 }
@@ -200,11 +277,14 @@ function asNumber(value: unknown, fallback: number, min: number, max: number): n
   return Math.min(max, Math.max(min, value));
 }
 
-function normaliseBackground(value: unknown): HomeBackground {
+function normaliseBackground(
+  value: unknown,
+  defaults: HomeContent = DEFAULT_HOME
+): HomeBackground {
   const record = asRecord(value);
   const image = asOptionalText(record.image);
   const video = asOptionalText(record.video);
-  const requested = asText(record.kind, DEFAULT_HOME.background.kind);
+  const requested = asText(record.kind, defaults.background.kind);
 
   // A switch to image/video without a URL must not leave the hero transparent:
   // fall back to the built-in flowing gradient.
@@ -220,8 +300,8 @@ function normaliseBackground(value: unknown): HomeBackground {
     image,
     video,
     poster: asOptionalText(record.poster),
-    dim: asNumber(record.dim, DEFAULT_HOME.background.dim, 0, 100),
-    blur: asNumber(record.blur, DEFAULT_HOME.background.blur, 0, 40),
+    dim: asNumber(record.dim, defaults.background.dim, 0, 100),
+    blur: asNumber(record.blur, defaults.background.blur, 0, 40),
   };
 }
 
@@ -238,23 +318,29 @@ function normaliseFacts(value: unknown): HomeFact[] {
     .filter((fact) => fact.label.length > 0 && fact.value.length > 0);
 }
 
-function normaliseProfile(value: unknown): HomeProfile {
+function normaliseProfile(
+  value: unknown,
+  defaults: HomeContent = DEFAULT_HOME
+): HomeProfile {
   const record = asRecord(value);
 
   return {
-    avatar: asOptionalText(record.avatar) ?? DEFAULT_HOME.profile.avatar,
-    name: asText(record.name, DEFAULT_HOME.profile.name),
-    school: asText(record.school, DEFAULT_HOME.profile.school),
-    bio: asText(record.bio, DEFAULT_HOME.profile.bio),
+    avatar: asOptionalText(record.avatar) ?? defaults.profile.avatar,
+    name: asText(record.name, defaults.profile.name),
+    school: asText(record.school, defaults.profile.school),
+    bio: asText(record.bio, defaults.profile.bio),
     // An EXPLICIT empty list is a decision ("show no extra facts"), so only a
     // missing/non-array field falls back to the defaults. `facts.length > 0`
     // would make it impossible to clear the list from the editor.
-    facts: Array.isArray(record.facts) ? normaliseFacts(record.facts) : DEFAULT_HOME.profile.facts,
+    facts: Array.isArray(record.facts) ? normaliseFacts(record.facts) : defaults.profile.facts,
   };
 }
 
-function normaliseTechStack(value: unknown): HomeTech[] {
-  if (!Array.isArray(value)) return DEFAULT_HOME.techStack;
+function normaliseTechStack(
+  value: unknown,
+  defaults: HomeContent = DEFAULT_HOME
+): HomeTech[] {
+  if (!Array.isArray(value)) return defaults.techStack;
   return value
     .map((item) => {
       const record = asRecord(item);
@@ -266,15 +352,19 @@ function normaliseTechStack(value: unknown): HomeTech[] {
     .filter((tech) => tech.name.length > 0);
 }
 
-function normaliseSocials(value: unknown): HomeSocial[] {
-  if (!Array.isArray(value)) return DEFAULT_HOME.socials;
+function normaliseSocials(
+  value: unknown,
+  defaults: HomeContent = DEFAULT_HOME,
+  linkLabel = '链接'
+): HomeSocial[] {
+  if (!Array.isArray(value)) return defaults.socials;
   return value
     .map((item) => {
       const record = asRecord(item);
       const url = asText(record.url);
       const kind = socialKind(record.kind, url);
       return {
-        label: asText(record.label, kind === 'link' ? '链接' : kind),
+        label: asText(record.label, kind === 'link' ? linkLabel : kind),
         url,
         kind,
       };
@@ -300,39 +390,47 @@ function normaliseTimeline(value: unknown): HomeTimelineEntry[] {
 }
 
 /** Coerce whatever the editor saved into the shape the page renders. */
-export function normaliseHome(value: unknown): HomeContent {
+export function normaliseHome(
+  value: unknown,
+  defaults: HomeContent = DEFAULT_HOME,
+  linkLabel = '链接'
+): HomeContent {
   const record = asRecord(value);
 
   return {
-    siteName: asText(record.siteName, DEFAULT_HOME.siteName),
-    tagline: asText(record.tagline, DEFAULT_HOME.tagline),
-    scrollHint: asText(record.scrollHint, DEFAULT_HOME.scrollHint),
-    background: normaliseBackground(record.background),
-    profile: normaliseProfile(record.profile),
-    socials: normaliseSocials(record.socials),
-    techStack: normaliseTechStack(record.techStack),
+    siteName: asText(record.siteName, defaults.siteName),
+    tagline: asText(record.tagline, defaults.tagline),
+    scrollHint: asText(record.scrollHint, defaults.scrollHint),
+    background: normaliseBackground(record.background, defaults),
+    profile: normaliseProfile(record.profile, defaults),
+    socials: normaliseSocials(record.socials, defaults, linkLabel),
+    techStack: normaliseTechStack(record.techStack, defaults),
     // Same rule as `facts`: a saved empty timeline means "no entries yet" and
     // renders the empty state; only a missing field restores the sample data.
     timeline: Array.isArray(record.timeline)
       ? normaliseTimeline(record.timeline)
-      : DEFAULT_HOME.timeline,
+      : defaults.timeline,
   };
 }
 
 /**
- * Read the homepage document.
+ * Read the homepage document for one locale.
  *
  * `cache()` dedupes the call between the root layout (site name + metadata) and
  * the page itself within one render. A failure is logged and degrades to the
- * defaults rather than taking the whole page down — the rest of the site still
- * works if the homepage document is temporarily unavailable.
+ * locale's defaults rather than taking the whole page down — the rest of the
+ * site still works if the homepage document is temporarily unavailable.
  */
-export const getHomeContent = cache(async (): Promise<HomeContent> => {
+export const getHomeContent = cache(async (locale: Locale = 'zh'): Promise<HomeContent> => {
+  const isEn = locale === 'en';
+  const relativePath = isEn ? HOME_RELATIVE_PATH_EN : HOME_RELATIVE_PATH;
+  const defaults = isEn ? DEFAULT_HOME_EN : DEFAULT_HOME;
+
   try {
-    const { data } = await client.queries.home({ relativePath: HOME_RELATIVE_PATH });
-    return normaliseHome(data?.home);
+    const { data } = await client.queries.home({ relativePath });
+    return normaliseHome(data?.home, defaults, isEn ? 'Link' : '链接');
   } catch (error) {
-    console.error('Failed to load the homepage document:', error);
-    return DEFAULT_HOME;
+    console.error(`Failed to load the homepage document (${locale}):`, error);
+    return defaults;
   }
 });

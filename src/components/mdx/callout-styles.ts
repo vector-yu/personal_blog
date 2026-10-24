@@ -29,10 +29,3 @@ export const calloutAccents: Record<CalloutType, string> = {
   success: 'bg-emerald-500',
   danger: 'bg-rose-500',
 };
-
-export const calloutLabels: Record<CalloutType, string> = {
-  info: '提示',
-  warning: '注意',
-  success: '成功',
-  danger: '警告',
-};

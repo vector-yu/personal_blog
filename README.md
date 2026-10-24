@@ -6,6 +6,7 @@
 - **样式**：Tailwind CSS v4（`@tailwindcss/postcss` + `@tailwindcss/typography`）
 - **CMS**：TinaCMS 3（TinaCloud 托管后端）
 - **内容渲染**：Tina 官方 `<TinaMarkdown>`（**不使用** `next-mdx-remote` / `@next/mdx`）
+- **多语言**：中文 `/zh/...` + 英文 `/en/...`，根路径 `/` 308 到 `/zh`
 
 ---
 
@@ -16,7 +17,8 @@ npm install
 npm run dev
 ```
 
-- 站点：http://localhost:3000
+- 中文站点：http://localhost:3000/zh
+- 英文站点：http://localhost:3000/en
 - 可视化编辑器：http://localhost:3000/admin/index.html
 
 `npm run dev` 会同时启动 TinaCMS 本地内容 API（http://localhost:4001/graphql）和 Next.js。
@@ -32,6 +34,7 @@ npm run build:local  # 无凭据的本地静态构建验证（见下文）
 npm run start     # 启动生产服务器
 npm run typecheck # tsc --noEmit
 npm run check:env # 只检查 TinaCMS 环境变量
+npm run check:i18n -- --strict # 双语字典 / 文档 / 同 slug 配对
 ```
 
 `npm run build` 会先跑 `scripts/check-env.mjs --strict`：因为 TinaCMS 的 admin 是**静态构建的 SPA**，
@@ -48,20 +51,67 @@ npm run check:env # 只检查 TinaCMS 环境变量
 ```
 tina/config.ts              内容模型（schema）——唯一的配置入口
 tina/tina-lock.json         自动生成，需提交到 git
-content/posts/*.mdx         博客文章
-content/pages/*.mdx         独立页面（如「关于」）
-content/home/home.json      个人主页（单文档，Tina 的「个人主页」集合）
+content/posts/*.mdx         中文博客文章
+content/posts-en/*.mdx      英文博客文章（与中文同 slug 配对）
+content/pages/*.mdx         中文独立页面（如「关于」）
+content/pages-en/*.mdx      英文独立页面
+content/home/home.json      中文个人主页（单文档）
+content/home/home.en.json   英文个人主页（同一集合的第二份文档）
+content/projects/*.json     项目（中文 projects.json + 英文 projects.en.json）
+content/notes/*.json        笔记（同上）
+content/reading/*.json      阅读（同上）
 public/uploads/             媒体库
 public/admin/               tinacms build 生成的编辑器 SPA
-src/app/                    路由（主页 / 列表页 / 详情页 / 履历 / 关于）
+src/app/[lang]/             路由（`/zh/...` 与 `/en/...` 共用一棵树）
+src/i18n/                   locale 配置、中英字典、metadata / 日期工具
 src/components/tina-markdown.tsx    ★ 组件映射表（TinaMarkdown 渲染层）
 src/components/mdx/         自定义交互组件
 src/components/home/        主页区块（首屏 / 背景 / 关于 / 拉链履历）
+scripts/check-i18n.mjs      字典 key 对齐 + 中英内容配对门禁
 ```
 
 ---
 
-## 个人主页（`/`）
+## 多语言（`/zh` + `/en`）
+
+URL 是语言的唯一来源：**同一路径永远返回同一语言**，不做 cookie-only 切换。
+
+| 公共 URL | 说明 |
+| --- | --- |
+| `/` | 308 → `/zh` |
+| `/zh`、`/zh/posts`、`/zh/about` | 中文（默认语言） |
+| `/en`、`/en/posts`、`/en/about` | 英文 |
+| `/posts`、`/about`、`/rss.xml` 等旧地址 | 308 → `/zh/...`（`next.config.ts`） |
+| `/zh/rss.xml`、`/en/rss.xml` | 两套 RSS |
+| `/sitemap.xml` | 一份 sitemap，含双语 URL 与 hreflang |
+
+### 内容配对规则
+
+- **同一相对路径 = 同一篇内容**：`content/posts/hello-tinacms.mdx` ↔ `content/posts-en/hello-tinacms.mdx`，因此 `/zh/posts/hello-tinacms` ↔ `/en/posts/hello-tinacms`。
+- 文章和页面的英文集合在 `tina/config.ts` 中是独立的 `postEn` / `pageEn`，编辑器的「Blog posts (English)」「Pages (English)」里维护。
+- 首页 / 项目 / 笔记 / 阅读仍是**单文档 JSON 集合**，英文是同一目录下的 `*.en.json`；Tina 的 `match: '*'` 让两份文档都出现在编辑器里。
+- 标签、系列名是**内容**，中英可以不同；语言切换在标签/系列详情页会回到该语言的索引页，避免 404。
+- 英文文章缺失时：不出现在 `/en/posts`；直接访问 `/en/posts/<slug>` 若中文存在则回到 `/en/posts`，否则 404。必需页面（首页 / 关于 / Now / Uses / Start here）缺失会让 `check:i18n --strict` 失败。
+
+### 新增/修改内容的流程
+
+1. 中文内容照旧在 `content/` 或 `/admin/index.html` 里写。
+2. 英文内容写对应文件（同 slug）：`content/posts-en/`、`content/pages-en/`、`*.en.json`。
+3. UI 文案改 `src/i18n/messages/zh.ts`，同时在 `en.ts` 补同样的 key（TypeScript 会强制）。
+4. 跑 `npm run check:i18n -- --strict` 和 `npm run typecheck`。
+
+### 新增第三种语言时
+
+1. `src/i18n/config.ts` 的 `locales` / `htmlLang` / `ogLocale` / `localeName` 加一项。
+2. `src/i18n/messages/` 加字典并加入 `index.ts`。
+3. `src/app/[lang]/layout.tsx` 的 `generateStaticParams` 会自动覆盖新语言；`localePath` 会生成 `/<locale>/...`。
+4. `content/` 加新语言集合或在 `tina/config.ts` 加对应 collection。
+5. `next.config.ts` 加旧地址重定向；`scripts/check-i18n.mjs` 的 `LOCALES`/必需文档清单同步。
+6. 更新 `scripts/http-status-smoke.mjs`、`motion-smoke.mjs`、`language-switch-smoke.mjs` 的 locale 列表。
+
+---
+
+## 个人主页（`/zh`、`/en`）
 
 首页不是文章列表，而是一份可以编辑的个人档案：
 
@@ -74,7 +124,7 @@ src/components/home/        主页区块（首屏 / 背景 / 关于 / 拉链履�
 | 技术栈 | 首页滚动带 + 关于页 3/4 列小方块 | `techStack` |
 | 履历 | 整幅磨砂玻璃拉链 + 无边框铺开的履历 | `timeline` |
 
-以上全部来自 **一个** 文档：`content/home/home.json`，在 `/admin/index.html` 的
+以上全部来自 **一个** 文档：`content/home/home.json`（英文为 `content/home/home.en.json`），在 `/admin/index.html` 的
 「个人主页」集合里编辑（该集合是 JSON 格式的单文档，编辑器里禁用了新建/删除）。
 `siteName` 同时用于顶部导航、浏览器标题与 Open Graph，改一处即可。
 
@@ -99,7 +149,7 @@ src/components/home/        主页区块（首屏 / 背景 / 关于 / 拉链履�
 > 手机、`prefers-reduced-motion`、无 JS 时**不渲染顶层玻璃**，直接显示完整履历（R1）。
 > 履历正文始终在预渲染 HTML 里，拉链只是提升层，不是内容可见性的前提。
 >
-> 顶栏的「履历」是独立页 **`/resume`**：纯列表、无动画，和首页读取同一份 `timeline` 数据。
+> 顶栏的「履历」是独立页 **`/zh/resume` / `/en/resume`**：纯列表、无动画，和首页读取同一份 `timeline` 数据。
 > 首页的拉链履历负责表现，`/resume` 负责可扫读的完整清单。
 
 ### 技术栈
@@ -124,23 +174,26 @@ src/components/home/        主页区块（首屏 / 背景 / 关于 / 拉链履�
 站点是「个人品牌页」而不是纯文章列表：主入口 4 个（文章 / 项目 / 履历 / 关于），
 其余内容在页脚和文章页内的次级导航。
 
+> 下表省略 `/<lang>` 前缀：中文是 `/zh/...`，英文是 `/en/...`；根路径 `/` 只做 308。
+> 英文数据来自同名的 `*-en` 目录或 `*.en.json`。
+
 | 路由 | 作用 | 数据 |
 | --- | --- | --- |
-| `/` | 个人档案：首屏、介绍、拉链履历 | `content/home/home.json` |
-| `/posts` + `/posts/page/[page]` | 文章列表，每页 8 篇 | `content/posts` |
-| `/posts/[...filename]` | 文章详情：目录、上一篇/下一篇、相关阅读、标签、系列、阅读时长、JSON-LD | `content/posts` |
-| `/tags` + `/tags/[tag]` | 标签索引 / 标签聚合 | 从文章 tags 派生 |
-| `/archive` | 按年份归档 | 从文章日期派生 |
-| `/projects` | 项目卡片页 | `content/projects/projects.json` |
-| `/notes` | 短记流（正文用 Tina 富文本） | `content/notes/notes.json` |
-| `/series` + `/series/[series]` | 系列索引 / 系列聚合 | 文章的 `series` 字段 |
-| `/start-here` | 入门页 + 精选文章（`featured`） | `content/pages/start-here.mdx` + posts |
-| `/now` | 最近在做什么 | `content/pages/now.mdx` |
-| `/reading` | 阅读清单 | `content/reading/reading.json` |
-| `/uses` | 工具 / 硬件 | `content/pages/uses.mdx` |
-| `/about` | 长关于：个人介绍 + 正文 + 社交 | `content/pages/about.mdx` + home |
-| `/resume` | 纯列表履历 | `content/home/home.json` |
-| `/rss.xml` `/sitemap.xml` `/opengraph-image` | 订阅 / 站点地图 / 默认分享图 | — |
+| `/`（308 → `/zh`） | 个人档案：首屏、介绍、拉链履历 | `content/home/home.json` / `home.en.json` |
+| `/posts` + `/posts/page/[page]` | 文章列表，每页 8 篇 | `content/posts` / `content/posts-en` |
+| `/posts/[...filename]` | 文章详情：目录、上一篇/下一篇、相关阅读、标签、系列、阅读时长、JSON-LD | 同上 |
+| `/tags` + `/tags/[tag]` | 标签索引 / 标签聚合 | 从当前语言文章的 tags 派生 |
+| `/archive` | 按年份归档 | 从当前语言文章日期派生 |
+| `/projects` | 项目卡片页 | `content/projects/projects.json` / `projects.en.json` |
+| `/notes` | 短记流（正文用 Tina 富文本） | `content/notes/notes.json` / `notes.en.json` |
+| `/series` + `/series/[series]` | 系列索引 / 系列聚合 | 当前语言文章的 `series` 字段 |
+| `/start-here` | 入门页 + 精选文章（`featured`） | `content/pages/start-here.mdx` / `pages-en` + posts |
+| `/now` | 最近在做什么 | `content/pages/now.mdx` / `pages-en` |
+| `/reading` | 阅读清单 | `content/reading/reading.json` / `reading.en.json` |
+| `/uses` | 工具 / 硬件 | `content/pages/uses.mdx` / `pages-en` |
+| `/about` | 长关于：个人介绍 + 正文 + 社交 | `content/pages/about.mdx` / `pages-en` + home |
+| `/resume` | 纯列表履历 | `content/home/home.json` / `home.en.json` |
+| `/rss.xml` `/sitemap.xml` `/opengraph-image` | 订阅 / 站点地图 / 默认分享图 | RSS 两种语言；sitemap 双语 |
 
 - `project` / `note` / `reading` 都是**单文档 JSON 集合**（`match` + 禁用新建/删除），
   在 `/admin` 的表单里编辑。
@@ -417,6 +470,22 @@ npm run check:content -- --strict # 原始 HTML 也视为失败
 
 因为读文件而不是查 API，这个检查是**确定性且离线**的，生产构建里也能跑。
 
+### 多语言内容校验（构建前置门禁）
+
+```bash
+npm run check:i18n            # 报告缺失翻译
+npm run check:i18n -- --strict # 任何中英不配对都失败（build 使用）
+```
+
+检查内容：
+
+- `src/i18n/messages/zh.ts` 与 `en.ts` 的 key 完全一致；
+- 必需的英文 JSON / MDX 文档存在；
+- 每篇中文文章 / 页面都有同 slug 的英文版本；
+- `home` / `projects` / `notes` / `reading` 都有对应的 `*.en.json`。
+
+它同样挂在 `npm run build` 与 `npm run build:local` 上。
+
 ---
 
 ### 编辑保存会重写整个文件（正常现象）
@@ -441,26 +510,28 @@ npm run check:content -- --strict # 原始 HTML 也视为失败
 
 ## 编辑器与交互自动化冒烟测试
 
-三个 Playwright 脚本在真实浏览器（本机 Chrome）里验证 curl 无法验证的行为：
+多个 Playwright 脚本在真实浏览器（本机 Chrome）里验证 curl 无法验证的行为：
 
 | 脚本 | 验证内容 |
 | --- | --- |
-| `npm run smoke:admin` | 编辑器启动、连上本地内容 API、打开文档、自定义组件作为 embed 出现、**「插入组件」菜单里有它们** |
-| `npm run smoke:visual` | 站点页面 `?edit=true` 的**可视化编辑**：编辑器挂载、内容正常渲染、`[data-tina-field]` 点击跳转 handle 指向自定义区块 |
-| `npm run smoke:interaction` | 已发布页面上的**交互行为**：计数器加减、刷新后从 localStorage 恢复、标签页切换、提示框嵌套富文本 |
+| `npm run smoke:admin` | 编辑器启动、连上本地内容 API、打开文档、自定义组件作为 embed 出现、**「插入组件」菜单里有它们**；中英集合都可见 |
+| `npm run smoke:visual` | 站点页面 `?edit=true` 的**可视化编辑**：中文 + 英文文章都验证编辑器挂载、内容渲染、`[data-tina-field]` 点击跳转 handle |
+| `npm run smoke:interaction` | 已发布页面上的**交互行为**：计数器加减、刷新后从 localStorage 恢复、标签页切换、提示框嵌套富文本；英文 aria 标签 |
+| `npm run smoke:language` | **语言切换**：同 slug 跳转、标签页回索引、`<html lang>`、360/390px 页头不溢出 |
 | `npm run smoke:draft` | **内容门禁 + 草稿不外泄**：构造坏 MDX 断言校验器失败；构造 `draft: true` 断言不为它生成页面 |
 | `npm run smoke:save` | **写入路径**：在编辑器里改标题并 Save，断言改动真的落到 `.mdx` 文件，然后改回去 |
-| `npm run smoke:http` | **HTTP 状态码**：各路由 200；不存在的文章必须是 **404 而不是 500** |
-| `npm run check:routes` | **路由契约**：列表页/首页/sitemap/RSS 发出的每个文章 URL，都必须有对应的预渲染页面（离线，读构建产物，捕获子目录文章链接错位这类问题） |
-| `npm run check:runtime` | **运行时不依赖 CMS**：正文已烘焙进静态 HTML，客户端 chunk 里不含内容 API / API key / 内容查询；路由是静态而非动态 |
+| `npm run smoke:http` | **HTTP 状态码**：中英路由 200、旧地址 308、不存在的文章必须是 **404 而不是 500** |
+| `npm run check:routes` | **路由契约**：中英列表页/首页/sitemap/RSS 发出的每个文章 URL，都必须有对应的预渲染页面（离线，读构建产物） |
+| `npm run check:runtime` | **运行时不依赖 CMS**：中英正文已烘焙进静态 HTML，客户端 chunk 里不含内容 API / API key / 内容查询 |
+| `npm run check:i18n` | **双语内容门禁**：字典 key 对齐、必需英文文档存在、文章/页面同 slug 配对 |
 | `npm run check:artifacts` | **产物校验**：生成的 client 不能指向 localhost、admin 不能是 dev 版标记 |
-| `npm run test:unit` | **单元测试**：图片主机白名单匹配（`.ts` 直接跑，无需构建） |
+| `npm run test:unit` | **单元测试**：图片主机白名单、站点地址、locale 路径/日期格式化（`.ts` 直接跑，无需构建） |
 | `npm run smoke:prod` | **生产模式全量验证**：起 `next start` 跑上面所有浏览器套件（历史上两个缺陷只在生产构建下暴露） |
 
 ```bash
 npm run dev                      # 终端 1：必须用这个（见下方注意事项）
 npm install --no-save playwright # 首次运行需要（用本机 Chrome，不下载浏览器）
-npm run smoke                    # 终端 2：依次跑三个脚本
+npm run smoke                    # 终端 2：依次跑 http / admin / visual / interaction / language / motion / save
 npm run smoke:draft              # 内容门禁 + 草稿
 ```
 

@@ -1,5 +1,6 @@
 import Image from 'next/image';
 import { TiltCard } from '@/components/site/tilt-card';
+import type { Messages } from '@/i18n/messages';
 import type { ProjectItem } from '@/lib/projects';
 
 function isExternal(url: string) {
@@ -18,7 +19,13 @@ function ProjectLink({ href, children }: { href: string; children: React.ReactNo
   );
 }
 
-export function ProjectCard({ project }: { project: ProjectItem }) {
+export function ProjectCard({
+  project,
+  labels,
+}: {
+  project: ProjectItem;
+  labels: Messages['projects'];
+}) {
   return (
     <TiltCard
       lift={4}
@@ -45,7 +52,7 @@ export function ProjectCard({ project }: { project: ProjectItem }) {
 
         {project.featured ? (
           <span className="absolute top-3 left-3 rounded-full border-2 border-ink bg-sun px-2.5 py-0.5 text-[0.62rem] font-black tracking-[0.14em] text-ink shadow-brutal-xs dark:border-chalk">
-            精选
+            {labels.featured}
           </span>
         ) : null}
       </div>
@@ -71,7 +78,7 @@ export function ProjectCard({ project }: { project: ProjectItem }) {
         ) : null}
 
         {project.stack.length > 0 ? (
-          <ul className="mt-4 flex flex-wrap gap-1.5" aria-label="技术栈">
+          <ul className="mt-4 flex flex-wrap gap-1.5" aria-label={labels.stackAria}>
             {project.stack.map((item) => (
               <li
                 key={item}
@@ -85,8 +92,8 @@ export function ProjectCard({ project }: { project: ProjectItem }) {
 
         {project.link || project.repo ? (
           <div className="mt-auto flex flex-wrap gap-2 pt-5">
-            {project.link ? <ProjectLink href={project.link}>在线访问 ↗</ProjectLink> : null}
-            {project.repo ? <ProjectLink href={project.repo}>代码 ↗</ProjectLink> : null}
+            {project.link ? <ProjectLink href={project.link}>{labels.live}</ProjectLink> : null}
+            {project.repo ? <ProjectLink href={project.repo}>{labels.code}</ProjectLink> : null}
           </div>
         ) : null}
       </div>

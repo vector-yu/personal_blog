@@ -1,27 +1,11 @@
 /**
  * Offline check that the deployed site carries no runtime dependency on TinaCMS.
  *
- * This matters for the Vercel deployment: the public pages must work even if the content API is
- * unreachable, slow, or rate-limited. If a client bundle fetched content, visitors would see
- * failures caused entirely by the CMS backend.
- *
- * Evidence checked, all from the build output (no server or network needed):
- *  1. the prerendered post HTML already contains the post's real content
- *  2. no client bundle references the content API, sends an API key, or issues a content query
- *  3. the routes are recorded as static/SSG with a revalidate window, not as dynamic
- *
- * IMPORTANT (this check once broke a Vercel deploy): the client-bundle location must be derived
- * from Next's own build manifest rather than hardcoded. On Vercel the hardcoded `.next/static/chunks`
- * path yielded zero files, and the check failed the build for an artifact that was present — a
- * wrong assumption about layout, not a real defect. The manifest is authoritative and
- * layout-independent, and a missing bundle set is now reported as a warning (with `--strict`)
- * rather than failing a deployment.
- *
- * Run `npm run build:local` first.
+ * The site now has two static trees, `/zh/...` and `/en/...`; both must have
+ * their content baked into the prerendered HTML and must not fetch content from
+ * the browser. Run `npm run build:local` first.
  *
  * Usage: node scripts/runtime-independence-smoke.mjs [slug] [--require-bundles] [--no-bundles]
- *   --require-bundles  treat "no client bundles found" as a failure (used by build:local)
- *   --no-bundles       simulate a filesystem without client bundles (for testing this script)
  */
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
@@ -29,6 +13,7 @@ import { join } from 'node:path';
 const APP_DIR = '.next/server/app';
 const BUILD_MANIFEST = '.next/build-manifest.json';
 const MANIFEST = '.next/prerender-manifest.json';
+const LOCALES = ['zh', 'en'];
 
 const args = process.argv.slice(2);
 const requireBundles = args.includes('--require-bundles');
@@ -49,18 +34,11 @@ function allJsFiles(dir) {
   });
 }
 
-/**
- * Client bundles, located via the build manifest.
- *
- * The manifest lists client files relative to `.next` (e.g. `static/chunks/x.js`), so this works
- * regardless of how the bundler lays the directory out.
- */
+/** Client bundles, located via the build manifest (layout-independent). */
 function findClientBundles() {
-  // Test hook: simulates a filesystem that only kept prerendered output (what CI/Vercel does).
   if (args.includes('--no-bundles')) return [];
 
   const candidates = [];
-
   if (existsSync(BUILD_MANIFEST)) {
     try {
       const manifest = JSON.parse(readFileSync(BUILD_MANIFEST, 'utf8'));
@@ -75,11 +53,10 @@ function findClientBundles() {
         if (existsSync(absolute)) candidates.push(absolute);
       }
     } catch {
-      /* fall through to the conventional locations */
+      /* fall through */
     }
   }
 
-  // Conventional locations as a fallback (covers a manifest change or a prebuilt deployment).
   for (const fallback of ['.next/static/chunks', '.next/static', '.next/static/chunks/app']) {
     candidates.push(...allJsFiles(fallback));
   }
@@ -87,23 +64,32 @@ function findClientBundles() {
   return [...new Set(candidates)];
 }
 
+const MARKERS = {
+  zh: ['欢迎', '提示框组件', '交互组件'],
+  en: ['Welcome', 'Callout component', 'Interactive components'],
+};
+
 try {
-  // --- 1. content is baked into the HTML ------------------------------------
-  const postHtmlPath = join(APP_DIR, 'posts', `${slug}.html`);
-  if (!existsSync(postHtmlPath)) {
-    check(`prerendered HTML exists for /posts/${slug}`, false, 'run npm run build:local first');
-  } else {
+  // --- 1. content is baked into the HTML for each locale --------------------
+  for (const locale of LOCALES) {
+    const route = `/${locale}/posts/${slug}`;
+    const postHtmlPath = join(APP_DIR, locale, 'posts', `${slug}.html`);
+    if (!existsSync(postHtmlPath)) {
+      check(`prerendered HTML exists for ${route}`, false, 'run npm run build:local first');
+      continue;
+    }
+
     const html = readFileSync(postHtmlPath, 'utf8');
-    check(`prerendered HTML exists for /posts/${slug}`, true);
-    // The demo post's own strings: if content were fetched at runtime these would be absent.
-    const baked = ['欢迎', '提示框组件', '交互组件'].filter((needle) => html.includes(needle));
+    check(`prerendered HTML exists for ${route}`, true);
+
+    const found = MARKERS[locale].filter((needle) => html.includes(needle));
     check(
-      'post content is present in the static HTML',
-      baked.length >= 2,
-      `found ${baked.length}/3 markers`
+      `${locale} post content is present in the static HTML`,
+      found.length >= 2,
+      `found ${found.length}/${MARKERS[locale].length} markers`
     );
     check(
-      'no loading placeholder is rendered instead of content',
+      `${locale} post has no loading placeholder`,
       !/正在加载|loading\.\.\.|Loading post/i.test(html)
     );
   }
@@ -119,18 +105,13 @@ try {
   ];
 
   if (chunks.length === 0) {
-    // Failing here once broke a Vercel deployment over a local artifact-layout assumption. Not
-    // locating the bundles means "not checked", not "the site is broken" — the assertions that
-    // actually prove runtime independence (content baked into the HTML, routes declared static)
-    // still run and still fail the build if they regress.
     const detail = 'no client bundles located via .next/build-manifest.json';
     if (requireBundles) {
       check('client bundles located', false, `${detail} — run npm run build:local first`);
     } else {
       console.warn(
         `⚠  ${detail} — the bundle-cleanliness checks were NOT evaluated.\n` +
-          '   Expected on a CI filesystem that keeps only prerendered output. Use\n' +
-          '   --require-bundles to treat this as a failure (that is what build:local does).'
+          '   Use --require-bundles to treat this as a failure (that is what build:local does).'
       );
       results.push({ name: 'client bundles located', passed: true, detail: 'not found — skipped' });
     }
@@ -155,25 +136,27 @@ try {
     const routes = manifest.routes ?? {};
     const dynamic = manifest.dynamicRoutes ?? {};
 
-    const postRoute = `/posts/${slug}`;
-    check(
-      `${postRoute} is prerendered (static or SSG)`,
-      Boolean(routes[postRoute]),
-      Object.keys(routes).includes(postRoute) ? '' : 'not in manifest.routes'
-    );
-    check(
-      `${postRoute} declares a revalidate window`,
-      typeof routes[postRoute]?.initialRevalidateSeconds === 'number',
-      String(routes[postRoute]?.initialRevalidateSeconds)
-    );
-    check(
-      'the post route is not served by a dynamic handler',
-      !dynamic[postRoute],
-      dynamic[postRoute] ? 'present in dynamicRoutes' : 'not dynamic'
-    );
+    for (const locale of LOCALES) {
+      const route = `/${locale}/posts/${slug}`;
+      check(
+        `${route} is prerendered (static or SSG)`,
+        Boolean(routes[route]),
+        Object.keys(routes).includes(route) ? '' : 'not in manifest.routes'
+      );
+      check(
+        `${route} declares a revalidate window`,
+        typeof routes[route]?.initialRevalidateSeconds === 'number',
+        String(routes[route]?.initialRevalidateSeconds)
+      );
+      check(
+        `${route} is not served by a dynamic handler`,
+        !dynamic[route],
+        dynamic[route] ? 'present in dynamicRoutes' : 'not dynamic'
+      );
+    }
 
-    const staticRoutes = [
-      '/',
+    const staticSuffixes = [
+      '',
       '/posts',
       '/resume',
       '/about',
@@ -186,10 +169,19 @@ try {
       '/uses',
       '/start-here',
       '/series',
-      '/sitemap.xml',
       '/rss.xml',
     ];
-    const missing = staticRoutes.filter((route) => !routes[route] && !dynamic[route]);
+    const missing = [];
+    for (const locale of LOCALES) {
+      for (const suffix of staticSuffixes) {
+        const route = `/${locale}${suffix}`;
+        if (!routes[route] && !dynamic[route]) missing.push(route);
+      }
+    }
+    for (const route of ['/sitemap.xml', '/robots.txt', '/opengraph-image']) {
+      if (!routes[route] && !dynamic[route]) missing.push(route);
+    }
+
     check(
       'all static content routes are in the manifest',
       missing.length === 0,

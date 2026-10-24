@@ -1,4 +1,5 @@
 import Image from 'next/image';
+import { formatMessage } from '@/i18n/format';
 import { isUrlAllowedForOptimizer } from '@/lib/image-hosts';
 import type { HomeProfile } from '@/lib/home';
 
@@ -14,7 +15,13 @@ import type { HomeProfile } from '@/lib/home';
  * phones and under reduced motion (see globals.css), where everything is simply
  * present.
  */
-export function ProfileSection({ profile }: { profile: HomeProfile }) {
+export function ProfileSection({
+  profile,
+  avatarAlt,
+}: {
+  profile: HomeProfile;
+  avatarAlt: string;
+}) {
   return (
     <section
       id="about"
@@ -25,7 +32,11 @@ export function ProfileSection({ profile }: { profile: HomeProfile }) {
         <div className="scroll-reveal mx-auto w-56 sm:mx-0 sm:w-full">
           <div className="relative -rotate-2 rounded-[2.5rem] border-[3px] border-ink bg-white/60 p-2.5 shadow-brutal-xl backdrop-blur-xl backdrop-saturate-125 dark:border-chalk/25 dark:bg-white/[0.05] dark:shadow-chalk-lg">
             <div className="relative aspect-square overflow-hidden rounded-[2rem] border-2 border-ink/80 bg-gradient-to-br from-iris/30 via-blush/30 to-sun/30 dark:border-chalk/20">
-              <Avatar src={profile.avatar} name={profile.name} />
+              <Avatar
+                src={profile.avatar}
+                name={profile.name}
+                alt={formatMessage(avatarAlt, { name: profile.name })}
+              />
             </div>
 
             <span
@@ -76,7 +87,7 @@ export function ProfileSection({ profile }: { profile: HomeProfile }) {
   );
 }
 
-function Avatar({ src, name }: { src: string | null; name: string }) {
+function Avatar({ src, name, alt }: { src: string | null; name: string; alt: string }) {
   if (!src) {
     return (
       <span className="grid h-full w-full place-items-center bg-gradient-to-br from-iris via-blush to-sun text-5xl font-black text-white">
@@ -99,7 +110,7 @@ function Avatar({ src, name }: { src: string | null; name: string }) {
     return (
       <Image
         src={src}
-        alt={`${name} 的头像`}
+        alt={alt}
         fill
         sizes="(max-width: 640px) 14rem, 22rem"
         className="object-cover"
@@ -111,7 +122,7 @@ function Avatar({ src, name }: { src: string | null; name: string }) {
     // eslint-disable-next-line @next/next/no-img-element
     <img
       src={src}
-      alt={`${name} 的头像`}
+      alt={alt}
       className="h-full w-full object-cover"
       loading="lazy"
     />

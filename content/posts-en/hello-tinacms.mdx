@@ -1,0 +1,74 @@
+---
+title: Building a static blog with TinaCMS
+date: 2026-01-15T00:00:00.000Z
+description: A demo of how MDX content and custom interactive components work together inside a visual editor.
+tags:
+  - TinaCMS
+  - Next.js
+  - MDX
+featured: true
+draft: false
+---
+
+# Welcome
+
+This post checks that **MDX rendering** and **custom interactive components** both work.
+
+## Callout component
+
+<Callout type="info" title="How rendering works">
+  This site does not use an MDX compiler. TinaCMS parses the content into an
+  AST and hands it to the official `TinaMarkdown` component.
+</Callout>
+
+<Callout type="warning" title="Note" body="This is plain text passed as an attribute." />
+
+## Interactive components
+
+The counter below is a purely client-side component that still works on a static site:
+
+<Counter label="Clicks" initialValue={0} step={1} />
+
+## Tabs
+
+<Tabs
+  tabs={[
+    {
+      label: "TypeScript",
+      content: "interface Post {\n  title: string;\n  date: string;\n}"
+    },
+    { label: "Install", content: "npm install tinacms @tinacms/cli" },
+    {
+      label: "Note",
+      content: "Use the editor's Insert component menu to add this tabs block."
+    }
+  ]}
+/>
+
+## Images and video
+
+<Figure src="/uploads/sample-image.svg" alt="Sample image" caption="The caption comes from the editor; the image lives in the media library." width={1200} height={675} />
+
+<VideoEmbed provider="youtube" videoId="dQw4w9WgXcQ" title="Sample video" caption="YouTube and Bilibili are supported; paste an ID or a full URL." />
+
+## Code blocks
+
+```ts
+export default defineConfig({
+  schema: {
+    collections: [
+      { name: 'post', path: 'content/posts', format: 'mdx', fields: [] },
+    ],
+  },
+});
+```
+
+## Tables and quotes
+
+| Capability        | Supported |
+| ----------------- | --------- |
+| Visual editing    | ✅        |
+| MDX components    | ✅        |
+| Static deployment | ✅        |
+
+> Content lives in the Git repository; saving in the editor creates a commit.

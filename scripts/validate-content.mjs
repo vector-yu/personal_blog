@@ -24,7 +24,9 @@ const strict = process.argv.includes('--strict');
 
 const COLLECTIONS = [
   { name: 'post', label: '博客文章', dir: 'content/posts' },
+  { name: 'postEn', label: 'Blog posts (English)', dir: 'content/posts-en' },
   { name: 'page', label: '独立页面', dir: 'content/pages' },
+  { name: 'pageEn', label: 'Pages (English)', dir: 'content/pages-en' },
 ];
 
 /**

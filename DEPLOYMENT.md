@@ -160,7 +160,8 @@ Vercel 会自动提供项目域名，所以线上会用 `https://<项目名>.ver
 5. **上传一张图片**并保存 → 确认提交里出现 `public/uploads/<文件>`，
    且在重新部署完成后能正常显示。
    > 仓库内媒体在构建产物里；保存后需要等这次重新部署完成，编辑器预览才会显示新图。
-6. 检查 `https://<域名>/sitemap.xml`、`/robots.txt`、`/rss.xml` 中的地址是**你的域名**而不是 localhost。
+6. 检查 `https://<域名>/sitemap.xml`、`/robots.txt`、`/zh/rss.xml`、`/en/rss.xml` 中的地址是**你的域名**而不是 localhost；
+   并确认 `/zh`、`/en` 的 canonical / hreflang 互相对应。
    之后若绑定自定义域名，记得把 `NEXT_PUBLIC_SITE_URL` 改过去，否则这些文件仍指向 `.vercel.app`。
 
 ---

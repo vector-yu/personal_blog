@@ -1,0 +1,17 @@
+{
+  "intro": "Shorter notes: what I am tinkering with, what I saw, what I figured out (or did not). Unlike the long posts, these do not aim to be complete.",
+  "items": [
+    {
+      "date": "2026-10-23T00:00:00.000Z",
+      "title": "Added a table of contents to posts",
+      "tags": ["Next.js", "Design"],
+      "body": "Long posts are hard to read without an outline. From the `lg` breakpoint there is now a sticky table of contents on the right, highlighting the current section as you scroll; on phones it collapses into an expandable \"On this page\" block.\n\nHeading anchors come from the heading text, and the outline and the body share the same slug rule, so a link cannot point at a section that does not exist."
+    },
+    {
+      "date": "2026-10-18T00:00:00.000Z",
+      "title": "Why the blog became a personal archive instead of a post list",
+      "tags": ["TinaCMS", "Writing"],
+      "body": "A post list works well for a site with a lot of content. For a personal site, the first screen should answer \"who is this person, and what are they doing?\" So the homepage became an introduction, a résumé, and recent writing, while the full archive moved to /posts.\n\nThat change also made me realize navigation should not stuff every page into the header. The header now holds four main entries; everything else lives in the footer and in section-level navigation."
+    }
+  ]
+}

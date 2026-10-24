@@ -1,0 +1,300 @@
+import type { Messages } from './zh';
+
+/**
+ * English UI copy.
+ *
+ * Typed as `Messages` on purpose: adding or renaming a key in `zh.ts` makes
+ * this file fail `npm run typecheck`, so the two dictionaries cannot drift.
+ */
+export const en: Messages = {
+  common: {
+    siteDescription: 'A static personal blog built with TinaCMS and Next.js',
+    contentNav: 'Section navigation',
+    all: 'All',
+    rss: 'RSS',
+    rssSubscribe: 'Subscribe via RSS',
+    postsCount: '{count} posts',
+    itemsCount: '{count} items',
+    booksCount: '{count} books',
+    seriesCount: '{count} series',
+    tagsCount: '{count} tags',
+    sectionsCount: '{count} sections',
+    minutesRead: '{minutes} min read',
+    page: 'Page {page}',
+    draft: 'Draft',
+    series: 'Series',
+    tags: 'Tags',
+    previous: 'Previous',
+    next: 'Next',
+    related: 'Keep reading',
+    backToPosts: 'Back to all posts',
+    updated: 'Last updated {date}',
+  },
+
+  nav: {
+    posts: 'Writing',
+    projects: 'Projects',
+    resume: 'Résumé',
+    about: 'About',
+    tags: 'Tags',
+    archive: 'Archive',
+    notes: 'Notes',
+    series: 'Series',
+    startHere: 'Start here',
+    now: 'Now',
+    reading: 'Reading',
+    uses: 'Uses',
+    rss: 'RSS',
+    openMenu: 'Open navigation',
+  },
+
+  footer: {
+    browse: 'Browse',
+    content: 'Content',
+    more: 'More',
+    builtWith: 'Built with Next.js & TinaCMS',
+  },
+
+  theme: {
+    toggle: 'Toggle light and dark theme',
+  },
+
+  language: {
+    switchToEnglish: 'EN',
+    switchToChinese: '中文',
+    switchLabel: 'Switch language',
+    switchToLabel: 'Switch to {language}',
+  },
+
+  home: {
+    avatarAlt: 'Portrait of {name}',
+    readArticles: 'Read the writing →',
+    present: 'Now',
+    emptyTimeline: 'No résumé entries yet. Add the first one in the Homepage collection in /admin.',
+    techStackAria: 'Tech stack',
+  },
+
+  posts: {
+    metaTitle: 'Writing',
+    metaDescription: 'Everything published here, newest first.',
+    eyebrow: 'Writing',
+    title: 'Writing',
+    pageSuffix: ' · Page {page}',
+    navAll: 'All posts',
+    navTags: 'Tags',
+    navArchive: 'Archive',
+    navNotes: 'Notes',
+    navSeries: 'Series',
+    navStart: 'Start here',
+    empty: 'No posts yet. Create the first one in /admin/index.html.',
+    all: 'All',
+    searchLabel: 'Search posts',
+    searchPlaceholder: 'Search titles or summaries',
+    noResults: 'No matching posts. Try another keyword.',
+    noTagPosts: 'No posts under this tag yet.',
+    viewAllTagged: 'See all posts tagged “{tag}”',
+  },
+
+  pagination: {
+    aria: 'Post pagination',
+    previous: 'Previous',
+    next: 'Next',
+    page: 'Page {page}',
+  },
+
+  toc: {
+    title: 'On this page',
+    sections: '{count} sections',
+    aria: 'Table of contents',
+  },
+
+  post: {
+    minutes: '{minutes} min read',
+    draft: 'Draft',
+    series: 'Series',
+    tags: 'Tags',
+    previous: '← Previous',
+    next: 'Next →',
+    prevNextAria: 'Previous and next posts',
+    related: 'Keep reading',
+    back: 'Back to all posts',
+    notFoundTitle: 'Post not found',
+    unavailableTitle: 'Post temporarily unavailable',
+  },
+
+  archive: {
+    metaTitle: 'Archive',
+    metaDescription: 'Browse every post by year.',
+    eyebrow: 'Archive',
+    title: 'Archive',
+    summary: '{count} posts, grouped by year.',
+    emptySummary: 'No posts yet. The first one will appear here.',
+    count: '{count} posts',
+    empty: 'No posts yet. Create the first one in /admin.',
+    undated: 'Undated',
+    navAll: 'All posts',
+    navTags: 'Tags',
+  },
+
+  tags: {
+    metaTitle: 'Tags',
+    metaDescription: 'Browse every post by tag.',
+    eyebrow: 'Taxonomy',
+    title: 'Tags',
+    summary: '{tagCount} tags across {postCount} posts. Open one to see everything on that topic.',
+    emptySummary: 'No tags yet. Add tags to a post and the pages appear automatically.',
+    empty: 'No tags yet. Add them to a post in /admin.',
+    navAll: 'All posts',
+    navArchive: 'Archive',
+  },
+
+  tag: {
+    metaTitle: 'Tag: {tag}',
+    metaDescription: 'All posts tagged “{tag}”.',
+    eyebrow: 'Tag',
+    taggedCount: '{count} posts carry this tag.',
+    allTags: 'All tags',
+    navAllPosts: 'All posts',
+    navArchive: 'Archive',
+  },
+
+  series: {
+    metaTitle: 'Series',
+    metaDescription: 'Posts grouped into thematic series.',
+    eyebrow: 'Series',
+    title: 'Series',
+    summary: '{count} series. Read in order, or jump into whichever catches your eye.',
+    emptySummary: 'No series yet. Set a series on a post and this page fills in.',
+    count: '{count} posts',
+    empty: 'No series yet. Set a series name on a post.',
+    navAll: 'All posts',
+    navTags: 'Tags',
+    navArchive: 'Archive',
+  },
+
+  seriesDetail: {
+    metaTitle: 'Series: {series}',
+    metaDescription: 'Every post in the “{series}” series.',
+    eyebrow: 'Series',
+    count: '{count} posts',
+    allSeries: 'All series',
+    allPosts: 'All posts',
+    tags: 'Tags',
+  },
+
+  projects: {
+    metaTitle: 'Projects',
+    metaDescription: 'Projects, experiments, and things I maintain.',
+    eyebrow: 'Work',
+    title: 'Projects',
+    empty: 'No projects yet. Add the first one in the Projects collection in /admin.',
+    featured: 'Featured',
+    live: 'Visit ↗',
+    code: 'Code ↗',
+    stackAria: 'Tech stack',
+    navPosts: 'Writing',
+    navNotes: 'Notes',
+    navStart: 'Start here',
+  },
+
+  notes: {
+    metaTitle: 'Notes',
+    metaDescription: 'Shorter notes: what I am tinkering with, what I saw, what I figured out (or did not).',
+    eyebrow: 'Notes',
+    title: 'Notes',
+    empty: 'No notes yet. Write one in the Notes collection in /admin.',
+    navPosts: 'Writing',
+    navProjects: 'Projects',
+    navStart: 'Start here',
+  },
+
+  reading: {
+    metaTitle: 'Reading',
+    metaDescription: 'Books I have read, am reading, and want to read.',
+    eyebrow: 'Reading',
+    title: 'Reading',
+    statusReading: 'Reading',
+    statusFinished: 'Finished',
+    statusWishlist: 'Wishlist',
+    rating: 'Rated {value} out of 5',
+    viewBook: 'View book ↗',
+    count: '{count} books',
+    empty: 'The shelf is empty. Add the first book in the Reading collection in /admin.',
+    navNotes: 'Notes',
+    navProjects: 'Projects',
+    navAbout: 'About',
+  },
+
+  resume: {
+    metaTitle: 'Résumé',
+    metaDescription: 'A chronological résumé, sharing the same content as the homepage timeline.',
+    title: 'Résumé',
+    empty: 'No résumé entries yet. Add the first one in the Homepage collection in /admin.',
+    present: 'Now',
+  },
+
+  about: {
+    metaTitle: 'About',
+    eyebrow: 'About',
+    toolbox: 'Toolbox',
+    items: '{count} items',
+    rssNote: 'This site keeps growing. Subscribe to the RSS feed to catch new posts.',
+    rssCta: 'Subscribe via RSS',
+  },
+
+  startHere: {
+    metaTitle: 'Start here',
+    metaDescription: 'New here? Start with these posts.',
+    eyebrow: 'Start here',
+    featured: 'Featured posts',
+    recent: 'Recent posts',
+    count: '{count} posts',
+    navAll: 'All posts',
+    navProjects: 'Projects',
+    navNotes: 'Notes',
+    navTags: 'Tags',
+  },
+
+  now: {
+    metaTitle: 'Now',
+    metaDescription: 'What I am doing, learning, and thinking about lately.',
+    eyebrow: 'Now',
+  },
+
+  uses: {
+    metaTitle: 'Uses',
+    metaDescription: 'The hardware, software, and tools I use every day.',
+    eyebrow: 'Uses',
+  },
+
+  notFound: {
+    title: 'This page wandered off',
+    description: 'There is nothing at this address. The link may be mistyped, or the content may have moved or been deleted.',
+    home: 'Back home',
+    posts: 'Browse all posts',
+  },
+
+  mdx: {
+    calloutInfo: 'Info',
+    calloutWarning: 'Note',
+    calloutSuccess: 'Success',
+    calloutDanger: 'Warning',
+    copy: 'Copy',
+    copied: 'Copied',
+    zoomImage: 'Zoom image',
+    zoomImageAlt: 'Zoom image: {alt}',
+    imagePreview: 'Image preview',
+    closePreview: 'Close image preview',
+    increase: 'Increase',
+    decrease: 'Decrease',
+    counterSeparator: ': ',
+    videoFallback: 'Embedded video',
+    invalidTitle: 'This content cannot be rendered right now',
+    invalidBody: 'Please contact the site owner or try again later.',
+    invalidDevTitle: '⚠ MDX parsing failed; the body has fallen back to raw source',
+    invalidDevBody: 'Common causes: a misspelled attribute, an attribute whose type does not match tina/config.ts, or a component name that is not registered in richTextTemplates.',
+    showSource: 'Show raw source',
+    hideSource: 'Hide raw source',
+    tabFallback: 'Tab {index}',
+  },
+};

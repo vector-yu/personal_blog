@@ -1,5 +1,8 @@
 import Body from '@/components/tina-markdown';
 import { SectionLink } from '@/components/site/section-link';
+import { localePath, type Locale } from '@/i18n/config';
+import { formatMessage } from '@/i18n/format';
+import type { Messages } from '@/i18n/messages';
 import type { PageDoc } from '@/lib/pages';
 import { formatDate } from '@/lib/site';
 
@@ -7,7 +10,17 @@ import { formatDate } from '@/lib/site';
  * A simple editorial page: eyebrow, title, optional last-updated date, then the
  * authored rich text. Used by Now and Uses; Start here has its own post list.
  */
-export function ProsePage({ page, eyebrow }: { page: PageDoc; eyebrow: string }) {
+export function ProsePage({
+  page,
+  eyebrow,
+  locale,
+  messages,
+}: {
+  page: PageDoc;
+  eyebrow: string;
+  locale: Locale;
+  messages: Messages;
+}) {
   return (
     <main className="relative z-10 mx-auto w-full max-w-3xl px-4 py-14 sm:py-16">
       <header className="animate-rise">
@@ -21,19 +34,23 @@ export function ProsePage({ page, eyebrow }: { page: PageDoc; eyebrow: string })
               dateTime={page.date}
               className="text-xs font-bold text-ink/40 tabular-nums dark:text-slate-500"
             >
-              最后更新于 {formatDate(page.date)}
+              {formatMessage(messages.common.updated, {
+                date: formatDate(page.date, locale),
+              })}
             </time>
           ) : null}
         </div>
-        <nav aria-label="内容导航" className="mt-6 flex flex-wrap gap-2">
-          <SectionLink href="/posts">文章</SectionLink>
-          <SectionLink href="/projects">项目</SectionLink>
-          <SectionLink href="/about">关于</SectionLink>
+        <nav aria-label={messages.common.contentNav} className="mt-6 flex flex-wrap gap-2">
+          <SectionLink href={localePath(locale, '/posts')}>{messages.nav.posts}</SectionLink>
+          <SectionLink href={localePath(locale, '/projects')}>
+            {messages.nav.projects}
+          </SectionLink>
+          <SectionLink href={localePath(locale, '/about')}>{messages.nav.about}</SectionLink>
         </nav>
       </header>
 
       <div className="prose prose-slate mt-10 max-w-none animate-rise dark:prose-invert prose-headings:font-black prose-headings:tracking-tight prose-strong:font-black prose-li:marker:text-iris">
-        <Body content={page.body} />
+        <Body content={page.body} locale={locale} />
       </div>
     </main>
   );

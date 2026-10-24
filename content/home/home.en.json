@@ -1,0 +1,86 @@
+{
+  "siteName": "Vector Yu's Blog",
+  "tagline": "Since you're here, take a look.",
+  "scrollHint": "Scroll down to meet me",
+  "background": {
+    "kind": "gradient",
+    "dim": 52,
+    "blur": 20
+  },
+  "profile": {
+    "avatar": "/uploads/avatar_color.png",
+    "name": "Vector Yu",
+    "school": "Nanyang Technological University",
+    "bio": "At least I have been here.",
+    "facts": [
+      {
+        "label": "Major",
+        "value": "Data Science and Artificial Intelligence"
+      },
+      {
+        "label": "Focus",
+        "value": "Data Science · Machine Learning"
+      },
+      {
+        "label": "Based in",
+        "value": "Singapore"
+      },
+      {
+        "label": "Email",
+        "value": "jyu044@e.ntu.edu.sg"
+      }
+    ]
+  },
+  "socials": [
+    {
+      "label": "GitHub",
+      "url": "https://github.com/vector-yu",
+      "kind": "github"
+    },
+    {
+      "label": "Email",
+      "url": "mailto:jyu044@e.ntu.edu.sg",
+      "kind": "email"
+    }
+  ],
+  "techStack": [
+    { "name": "Python", "icon": "python" },
+    { "name": "React", "icon": "react" },
+    { "name": "PHP", "icon": "php" },
+    { "name": "TypeScript", "icon": "typescript" },
+    { "name": "Next.js", "icon": "nextdotjs" },
+    { "name": "Tailwind CSS", "icon": "tailwindcss" },
+    { "name": "Node.js", "icon": "nodedotjs" },
+    { "name": "D3.js", "icon": "d3" },
+    { "name": "Figma", "icon": "figma" },
+    { "name": "Git", "icon": "git" },
+    { "name": "Docker", "icon": "docker" },
+    { "name": "MySQL", "icon": "mysql" }
+  ],
+  "timeline": [
+    {
+      "period": "2026 — Now",
+      "title": "Started writing this blog seriously",
+      "place": "Personal project · This site",
+      "description": "Building a corner of the web with Next.js and TinaCMS: notes on code, reading, and whatever I am working on, with the discipline of explaining what I learn.",
+      "tags": ["Next.js", "TinaCMS"],
+      "current": true
+    },
+    {
+      "period": "2024 — 2026",
+      "title": "Undergraduate · Your major",
+      "place": "Your university",
+      "description": "Coursework, research directions, projects, or results worth keeping.",
+      "tags": ["Study", "Projects"],
+      "current": false
+    },
+    {
+      "period": "2022 — 2024",
+      "title": "High school",
+      "place": "Your school",
+      "description": "An experience, a turning point, or the first time you finished something properly.",
+      "tags": ["Starting point"],
+      "current": false
+    }
+  ]
+}

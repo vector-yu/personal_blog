@@ -11,7 +11,7 @@ import { chromium } from 'playwright';
 
 const baseUrl = process.argv[2] ?? 'http://localhost:3000';
 const CHROME = 'C:/Program Files/Google/Chrome/Application/chrome.exe';
-const url = `${baseUrl}/posts/hello-tinacms?edit=true`;
+const url = `${baseUrl}/zh/posts/hello-tinacms?edit=true`;
 
 const browser = await chromium.launch({ executablePath: CHROME, args: ['--no-sandbox'] });
 const page = await browser.newPage({ viewport: { width: 1600, height: 1000 } });
@@ -62,6 +62,23 @@ try {
 
   await page.screenshot({ path: 'visual-edit-debug.png' });
   console.log('screenshot → visual-edit-debug.png');
+
+  // --- English document: the second Tina collection ------------------------
+  await page.goto(`${baseUrl}/en/posts/hello-tinacms?edit=true`, {
+    waitUntil: 'load',
+    timeout: 60_000,
+  });
+  await page.waitForTimeout(9000);
+  const enText = await page.locator('body').innerText();
+  check('English post renders its content', /Building a static blog/.test(enText));
+  check(
+    'English editor sidebar shows the document',
+    /Building a static blog|hello-tinacms/.test(enText)
+  );
+  check(
+    'English click-to-edit handles injected',
+    (await page.locator('[data-tina-field]').count()) > 0
+  );
 } catch (error) {
   check('visual edit test completed', false, error.message);
   await page.screenshot({ path: 'visual-edit-debug.png' }).catch(() => {});

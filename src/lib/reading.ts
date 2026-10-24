@@ -1,4 +1,5 @@
 import { cache } from 'react';
+import type { Locale } from '@/i18n/config';
 import { sanitizeUrl } from '@/components/mdx/sanitize-url';
 import { client } from '@/lib/tina';
 
@@ -20,16 +21,16 @@ export type ReadingContent = {
 };
 
 export const READING_RELATIVE_PATH = 'reading.json';
+export const READING_RELATIVE_PATH_EN = 'reading.en.json';
 
 export const DEFAULT_READING: ReadingContent = {
   intro: '最近读过的书，以及在读和想读的清单。',
   books: [],
 };
 
-export const READING_STATUS_LABELS: Record<ReadingStatus, string> = {
-  reading: '在读',
-  finished: '读完',
-  wishlist: '想读',
+export const DEFAULT_READING_EN: ReadingContent = {
+  intro: 'Books I have read, am reading, and want to read.',
+  books: [],
 };
 
 function asRecord(value: unknown): Record<string, unknown> {
@@ -44,12 +45,15 @@ function asStatus(value: unknown): ReadingStatus {
   return value === 'reading' || value === 'finished' || value === 'wishlist' ? value : 'wishlist';
 }
 
-export function normaliseReading(value: unknown): ReadingContent {
+export function normaliseReading(
+  value: unknown,
+  defaults: ReadingContent = DEFAULT_READING
+): ReadingContent {
   const record = asRecord(value);
   const books = Array.isArray(record.books) ? record.books : [];
 
   return {
-    intro: asText(record.intro) || DEFAULT_READING.intro,
+    intro: asText(record.intro) || defaults.intro,
     books: books
       .map((entry) => {
         const book = asRecord(entry);
@@ -68,12 +72,15 @@ export function normaliseReading(value: unknown): ReadingContent {
   };
 }
 
-export const getReading = cache(async (): Promise<ReadingContent> => {
+export const getReading = cache(async (locale: Locale = 'zh'): Promise<ReadingContent> => {
+  const isEn = locale === 'en';
   try {
-    const { data } = await client.queries.reading({ relativePath: READING_RELATIVE_PATH });
-    return normaliseReading(data?.reading);
+    const { data } = await client.queries.reading({
+      relativePath: isEn ? READING_RELATIVE_PATH_EN : READING_RELATIVE_PATH,
+    });
+    return normaliseReading(data?.reading, isEn ? DEFAULT_READING_EN : DEFAULT_READING);
   } catch (error) {
-    console.error('Failed to load the reading document:', error);
-    return DEFAULT_READING;
+    console.error(`Failed to load the reading document (${locale}):`, error);
+    return isEn ? DEFAULT_READING_EN : DEFAULT_READING;
   }
 });

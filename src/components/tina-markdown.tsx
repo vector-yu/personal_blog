@@ -4,6 +4,8 @@ import { isValidElement, type ReactNode } from 'react';
 import { tinaField } from 'tinacms/dist/react';
 import type { Components, TinaMarkdownContent } from 'tinacms/dist/rich-text';
 import { TinaMarkdown } from 'tinacms/dist/rich-text';
+import { LocaleProvider } from '@/i18n/client';
+import type { Locale } from '@/i18n/config';
 import { Callout } from '@/components/mdx/callout';
 import { Counter } from '@/components/mdx/counter';
 import { CopyButton } from '@/components/mdx/copy-button';
@@ -303,8 +305,18 @@ const components = {
  */
 const typedComponents = components as unknown as Components<Record<string, never>>;
 
-export function Body({ content }: { content: TinaMarkdownContent | TinaMarkdownContent[] }) {
-  return <TinaMarkdown content={content} components={typedComponents} />;
+export function Body({
+  content,
+  locale = 'zh',
+}: {
+  content: TinaMarkdownContent | TinaMarkdownContent[];
+  locale?: Locale;
+}) {
+  return (
+    <LocaleProvider locale={locale}>
+      <TinaMarkdown content={content} components={typedComponents} />
+    </LocaleProvider>
+  );
 }
 
 export default Body;

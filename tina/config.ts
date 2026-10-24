@@ -200,6 +200,25 @@ const postFields: TinaField[] = [
   },
 ];
 
+/** Shared by the Chinese and English page collections. */
+const pageFields: TinaField[] = [
+  { type: 'string', name: 'title', label: '标题', isTitle: true, required: true },
+  {
+    type: 'datetime',
+    name: 'date',
+    label: '更新日期（可选）',
+    description: '用于 Now / Uses 这类需要显示「最后更新」的页面。',
+    ui: { dateFormat: 'YYYY-MM-DD' },
+  },
+  {
+    type: 'rich-text',
+    name: 'body',
+    label: '正文',
+    isBody: true,
+    templates: richTextTemplates,
+  },
+];
+
 export default defineConfig({
   branch,
   // Both are required for TinaCloud. Provided through environment variables.
@@ -225,16 +244,17 @@ export default defineConfig({
          * The homepage is STRUCTURED DATA, not a rich-text page: a headline, a
          * handful of profile rows and a résumé list. JSON keeps every one of
          * those a first-class, editable field instead of making the owner edit
-         * MDX by hand. There is exactly one document (`match`), so the editor
-         * disables create/delete and the server reads a fixed `home.json`.
+         * MDX by hand. Each locale has one document (`home.json` /
+         * `home.en.json`) in the same folder; `match: '*'` exposes both, while
+         * create/delete stay disabled so the keys stay fixed.
          */
         name: 'home',
         label: '个人主页',
         path: 'content/home',
         format: 'json',
-        match: { include: 'home' },
+        match: { include: '*' },
         ui: {
-          // Exactly one document, so the editor never offers create/delete.
+          // Two locale documents, never create/delete.
           // NOTE: deliberately no `router` here. A collection-level router of
           // `() => '/'` made the admin redirect the collection LIST away to the
           // site root (`#/~ /`), so the homepage document could not be opened at
@@ -438,6 +458,24 @@ export default defineConfig({
         fields: postFields,
       },
       {
+        name: 'postEn',
+        label: 'Blog posts (English)',
+        path: 'content/posts-en',
+        format: 'mdx',
+        ui: {
+          filename: {
+            readonly: false,
+            slugify: (values) =>
+              `${values?.title ?? ''}`
+                .trim()
+                .toLowerCase()
+                .replace(/[^\p{L}\p{N}]+/gu, '-')
+                .replace(/^-+|-+$/g, '') || 'untitled',
+          },
+        },
+        fields: postFields,
+      },
+      {
         name: 'page',
         label: '独立页面',
         path: 'content/pages',
@@ -453,27 +491,29 @@ export default defineConfig({
                 .replace(/^-+|-+$/g, '') || 'untitled',
           },
         },
-        fields: [
-          { type: 'string', name: 'title', label: '标题', isTitle: true, required: true },
-          {
-            type: 'datetime',
-            name: 'date',
-            label: '更新日期（可选）',
-            description: '用于 Now / Uses 这类需要显示「最后更新」的页面。',
-            ui: { dateFormat: 'YYYY-MM-DD' },
+        fields: pageFields,
+      },
+      {
+        name: 'pageEn',
+        label: 'Pages (English)',
+        path: 'content/pages-en',
+        format: 'mdx',
+        ui: {
+          filename: {
+            readonly: false,
+            slugify: (values) =>
+              `${values?.title ?? ''}`
+                .trim()
+                .toLowerCase()
+                .replace(/[^\p{L}\p{N}]+/gu, '-')
+                .replace(/^-+|-+$/g, '') || 'untitled',
           },
-          {
-            type: 'rich-text',
-            name: 'body',
-            label: '正文',
-            isBody: true,
-            templates: richTextTemplates,
-          },
-        ],
+        },
+        fields: pageFields,
       },
       {
         /*
-         * Structured project index. One JSON document, like the homepage: a
+         * Structured project index. Two JSON documents, like the homepage: a
          * personal-brand site needs the cards to stay visually consistent, not a
          * free-form page where every edit can break the layout.
          */
@@ -481,7 +521,7 @@ export default defineConfig({
         label: '项目',
         path: 'content/projects',
         format: 'json',
-        match: { include: 'projects' },
+        match: { include: '*' },
         ui: { allowedActions: { create: false, delete: false } },
         fields: [
           {
@@ -521,14 +561,14 @@ export default defineConfig({
       },
       {
         /*
-         * A short-note stream. One JSON document with a list, because notes are
+         * A short-note stream. Two JSON documents with a list, because notes are
          * short and do not need their own URLs; the page renders them inline.
          */
         name: 'note',
         label: '笔记 / 短记',
         path: 'content/notes',
         format: 'json',
-        match: { include: 'notes' },
+        match: { include: '*' },
         ui: { allowedActions: { create: false, delete: false } },
         fields: [
           {
@@ -577,7 +617,7 @@ export default defineConfig({
         label: '阅读',
         path: 'content/reading',
         format: 'json',
-        match: { include: 'reading' },
+        match: { include: '*' },
         ui: { allowedActions: { create: false, delete: false } },
         fields: [
           {

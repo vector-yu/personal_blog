@@ -7,7 +7,7 @@
       "role": "设计 / 开发",
       "summary": "用 Next.js + TinaCMS 搭建的静态个人站：可编辑内容、拉链履历、磨砂玻璃和右侧目录。",
       "stack": ["Next.js", "TinaCMS", "Tailwind CSS"],
-      "link": "/",
+      "link": "/zh",
       "repo": "https://github.com/yourname/personal-blog",
       "featured": true
     },

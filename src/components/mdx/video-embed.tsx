@@ -1,5 +1,7 @@
 'use client';
 
+import { useLocaleCopy } from '@/i18n/client';
+
 export type VideoProvider = 'youtube' | 'bilibili';
 
 export interface VideoEmbedProps {
@@ -45,6 +47,7 @@ export function toEmbedUrl(provider: VideoProvider, input: string): string | nul
  * a hand-written MDX value cannot inject an arbitrary iframe URL.
  */
 export function VideoEmbed({ provider, videoId, title, caption }: VideoEmbedProps) {
+  const { copy } = useLocaleCopy();
   const resolvedProvider = normalizeProvider(provider);
   const embedUrl = videoId ? toEmbedUrl(resolvedProvider, videoId) : null;
 
@@ -61,7 +64,7 @@ export function VideoEmbed({ provider, videoId, title, caption }: VideoEmbedProp
         <div className="relative aspect-video w-full overflow-hidden rounded-xl bg-ink/5 dark:bg-white/5">
           <iframe
             src={embedUrl}
-            title={title ?? caption ?? '嵌入式视频'}
+            title={title ?? caption ?? copy.videoFallback}
             loading="lazy"
             allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
             allowFullScreen

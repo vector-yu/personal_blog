@@ -1,23 +1,19 @@
 /**
- * Offline contract test: every post URL the site *emits* must match a page the site
- * *generates*.
+ * Offline contract test: every post URL the site *emits* must match a page the
+ * site *generates*, in both locales.
  *
- * This class of bug is invisible to the smoke suites, because they only ever request URLs the
- * test itself constructs. The concrete case this caught: the post detail route was a single
- * dynamic segment (`[filename]`) while lists/sitemap/RSS emitted the full path within the
- * collection. A post in a subfolder was therefore listed as `/posts/2026/nested-post` but
- * prerendered as `/posts/2026%2Fnested-post.html`, so the link 404'd.
+ * The site now prerenders `/zh/posts/...` and `/en/posts/...`; public URLs are
+ * the same (Chinese is no longer unprefixed), so the only translation needed is
+ * for legacy `/zh/...` references that might leak into markup.
  *
- * Runs against the build output only — no server, no API. Run `npm run build:local` first.
- *
- * Usage: node scripts/route-contract-smoke.mjs
+ * Runs against the build output only — no server, no API. Run
+ * `npm run build:local` first.
  */
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';
 
 const APP_DIR = '.next/server/app';
-const POSTS_DIR = join(APP_DIR, 'posts');
-/** Treat missing build output as a failure instead of a skip (build:local passes this). */
+const LOCALES = ['zh', 'en'];
 const requireArtifacts = process.argv.includes('--require-artifacts');
 
 const results = [];
@@ -26,80 +22,87 @@ const check = (name, passed, detail = '') => {
   console.log(`${passed ? 'PASS' : 'FAIL'}  ${name}${detail ? ` — ${detail}` : ''}`);
 };
 
-/** Every prerendered post page, as a URL path (e.g. "/posts/2026/nested-post"). */
-/**
- * Every prerendered post page, as a URL path (e.g. "/posts/2026/nested-post").
- *
- * IMPORTANT: a dynamic route with `dynamicParams` left at its default also writes entries here
- * for paths that were requested at runtime and resolved to 404 — serving the HTTP status test
- * leaves `/posts/definitely-not-a-real-post` behind. Those are NOT pages the site publishes, so
- * they must be excluded from the "everything generated is in the sitemap" direction.
- * Next records the distinction in the sibling `.meta` file as `"status":404`.
- */
 function isPublishedPage(dir, baseName) {
   const meta = join(dir, `${baseName}.meta`);
-  if (!existsSync(meta)) return true; // no metadata written -> treat as a real page
+  if (!existsSync(meta)) return true;
   try {
     const parsed = JSON.parse(readFileSync(meta, 'utf8'));
-    // Verified against real build output: a genuinely prerendered page omits `status`
-    // entirely, while a runtime-served 404 records `"status":404`. So only an explicit
-    // non-200 status excludes the route.
-    if (typeof parsed.status === 'number' && parsed.status !== 200) return false;
-    return true;
+    return !(typeof parsed.status === 'number' && parsed.status !== 200);
   } catch {
     return true;
   }
 }
 
-function prerenderedPostRoutes(dir = POSTS_DIR, prefix = '') {
+/** Internal and public routes are identical in the symmetric `/zh` + `/en` tree. */
+function toPublic(route) {
+  return route;
+}
+
+function prerenderedPostRoutes(locale) {
+  const dir = join(APP_DIR, locale, 'posts');
   if (!existsSync(dir)) return [];
   const routes = [];
-  for (const entry of readdirSync(dir, { withFileTypes: true })) {
-    if (entry.isDirectory()) {
-      routes.push(...prerenderedPostRoutes(join(dir, entry.name), `${prefix}/${entry.name}`));
-    } else if (entry.name.endsWith('.html')) {
-      const baseName = entry.name.replace(/\.html$/, '');
-      if (!isPublishedPage(dir, baseName)) continue;
-      routes.push(`/posts${prefix}/${baseName}`);
+  const walk = (current, prefix = '') => {
+    for (const entry of readdirSync(current, { withFileTypes: true })) {
+      if (entry.isDirectory()) {
+        walk(join(current, entry.name), `${prefix}/${entry.name}`);
+      } else if (entry.name.endsWith('.html')) {
+        const baseName = entry.name.replace(/\.html$/, '');
+        if (!isPublishedPage(current, baseName)) continue;
+        routes.push(toPublic(`/${locale}/posts${prefix}/${baseName}`));
+      }
     }
-  }
+  };
+  walk(dir);
   return routes;
 }
 
-/** Extract hrefs from a prerendered HTML file. */
-function hrefsFrom(file, pattern = /href="(\/posts\/[^"#?]*)"/g) {
+/** Extract hrefs from a prerendered HTML file, normalised to public paths. */
+function hrefsFrom(file, pattern = /href="(\/[^"#?]*)"/g) {
   if (!existsSync(file)) return [];
   const html = readFileSync(file, 'utf8');
-  return [...html.matchAll(pattern)].map((match) => match[1]);
+  return [...html.matchAll(pattern)]
+    .map((match) => match[1])
+    .filter((href) => href.includes('/posts/'))
+    .map(toPublic);
 }
 
 function locsFrom(file, tag = 'loc') {
   if (!existsSync(file)) return [];
   const xml = readFileSync(file, 'utf8');
-  return [...xml.matchAll(new RegExp(`<${tag}>([^<]*)</${tag}>`, 'g'))].map((match) => match[1]);
+  return [...xml.matchAll(new RegExp(`<${tag}>([^<]*)</${tag}>`, 'g'))]
+    .map((match) => match[1])
+    .map((value) => {
+      try {
+        return new URL(value).pathname;
+      } catch {
+        return value;
+      }
+    });
 }
 
 try {
-  const prerendered = prerenderedPostRoutes();
+  const byLocale = Object.fromEntries(
+    LOCALES.map((locale) => [locale, prerenderedPostRoutes(locale)])
+  );
+  const prerendered = [...new Set(LOCALES.flatMap((locale) => byLocale[locale]))];
 
-  // A sibling check once failed a Vercel deploy by treating "artifacts not where I assumed" as a
-  // site defect. The assertions below compare emitted URLs against generated pages, so they need
-  // the generated output; without it there is nothing to compare and this must not block a deploy.
   if (prerendered.length === 0 && !requireArtifacts) {
     console.warn(
-      `⚠  No prerendered post pages found under ${POSTS_DIR} — the route contract checks were\n` +
-        '   NOT evaluated. Expected on a CI filesystem that keeps only the deployment output.\n' +
-        '   Use --require-artifacts to treat this as a failure (that is what build:local does).'
+      `⚠  No prerendered post pages found under ${APP_DIR}/{zh,en}/posts — the route\n` +
+        '   contract checks were NOT evaluated. Expected on a CI filesystem that keeps only\n' +
+        '   the deployment output. Use --require-artifacts to treat this as a failure.'
     );
     console.log('\n0/0 checks passed (skipped)');
     process.exit(0);
   }
 
   console.log(`prerendered post routes: ${prerendered.join(', ') || '(none)'}`);
-  check('at least one post was prerendered', prerendered.length > 0);
+  for (const locale of LOCALES) {
+    check(`${locale} has at least one prerendered post`, byLocale[locale].length > 0);
+  }
 
-  // 1. No route may contain an encoded path separator. A `%2F` route means the dynamic
-  //    segment cannot match the emitted URL — this is the exact regression.
+  // 1. No route may contain an encoded path separator.
   const encoded = prerendered.filter((route) => /%2F/i.test(route));
   check(
     'no prerendered route contains an encoded slash',
@@ -107,37 +110,35 @@ try {
     encoded.join(', ') || 'none'
   );
 
-  // 2. Every link on the post list page must resolve to a prerendered route.
-  const listHrefs = [...new Set(hrefsFrom(join(APP_DIR, 'posts.html')))];
-  console.log(`links on /posts: ${listHrefs.join(', ') || '(none)'}`);
-  const unroutableList = listHrefs.filter((href) => !prerendered.includes(href));
-  check(
-    'every link on the post list page has a generated page',
-    unroutableList.length === 0,
-    unroutableList.join(', ') || 'all resolve'
-  );
+  // 2. Every link on each post list page must resolve.
+  for (const locale of LOCALES) {
+    const hrefs = [...new Set(hrefsFrom(join(APP_DIR, locale, 'posts.html')))];
+    console.log(`links on /${locale}/posts: ${hrefs.join(', ') || '(none)'}`);
+    const unroutable = hrefs.filter((href) => !prerendered.includes(href));
+    check(
+      `every link on the ${locale} post list has a generated page`,
+      unroutable.length === 0,
+      unroutable.join(', ') || 'all resolve'
+    );
+  }
 
-  // 3. Same for the home page's recent-posts links.
-  const homeHrefs = [...new Set(hrefsFrom(join(APP_DIR, 'index.html')))];
-  const unroutableHome = homeHrefs.filter((href) => !prerendered.includes(href));
-  check(
-    'every post link on the home page has a generated page',
-    unroutableHome.length === 0,
-    unroutableHome.join(', ') || 'all resolve'
-  );
+  // 3. Same for each home page.
+  for (const locale of LOCALES) {
+    const hrefs = [...new Set(hrefsFrom(join(APP_DIR, locale, 'index.html')))];
+    const unroutable = hrefs.filter((href) => !prerendered.includes(href));
+    check(
+      `every post link on the ${locale} home page has a generated page`,
+      unroutable.length === 0,
+      unroutable.join(', ') || 'all resolve'
+    );
+  }
 
   // 4. The sitemap must agree with the prerendered routes.
-  const sitemapPaths = locsFrom(join(APP_DIR, 'sitemap.xml.body'))
-    .map((loc) => {
-      try {
-        return new URL(loc).pathname;
-      } catch {
-        return loc;
-      }
-    })
-    .filter((path) => path.startsWith('/posts/'));
-  const unroutableSitemap = sitemapPaths.filter((path) => !prerendered.includes(path));
+  const sitemapPaths = locsFrom(join(APP_DIR, 'sitemap.xml.body')).filter((path) =>
+    path.includes('/posts/')
+  );
   console.log(`sitemap post paths: ${sitemapPaths.join(', ') || '(none)'}`);
+  const unroutableSitemap = sitemapPaths.filter((path) => !prerendered.includes(path));
   check(
     'every sitemap post URL has a generated page',
     unroutableSitemap.length === 0,
@@ -145,23 +146,19 @@ try {
   );
 
   // 5. RSS must agree too.
-  const rssPaths = locsFrom(join(APP_DIR, 'rss.xml.body'), 'link')
-    .map((link) => {
-      try {
-        return new URL(link).pathname;
-      } catch {
-        return link;
-      }
-    })
-    .filter((path) => path.startsWith('/posts/'));
-  const unroutableRss = rssPaths.filter((path) => !prerendered.includes(path));
-  check(
-    'every rss item URL has a generated page',
-    unroutableRss.length === 0,
-    unroutableRss.join(', ') || 'all resolve'
-  );
+  for (const locale of LOCALES) {
+    const rssPaths = locsFrom(join(APP_DIR, locale, 'rss.xml.body'), 'link')
+      .filter((path) => path.includes('/posts/'))
+      .map(toPublic);
+    const unroutable = rssPaths.filter((path) => !prerendered.includes(path));
+    check(
+      `every ${locale} rss item URL has a generated page`,
+      unroutable.length === 0,
+      unroutable.join(', ') || 'all resolve'
+    );
+  }
 
-  // 6. Nothing prerendered should be missing from the sitemap either (the reverse mismatch).
+  // 6. Nothing prerendered should be missing from the sitemap either.
   const missingFromSitemap = prerendered.filter((route) => !sitemapPaths.includes(route));
   check(
     'every prerendered post is present in the sitemap',

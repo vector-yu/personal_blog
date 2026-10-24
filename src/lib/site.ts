@@ -1,3 +1,5 @@
+import type { Locale } from '@/i18n/config';
+
 /**
  * Absolute site origin, used by sitemap/robots/RSS and by `metadataBase` in the root layout.
  *
@@ -27,18 +29,19 @@ export function siteUrl() {
 }
 
 /**
- * Format an ISO date for display.
+ * Format an ISO date for display in the visitor's language.
  *
  * `timeZone: 'UTC'` is required, not cosmetic: TinaCMS datetime fields are stored as UTC
  * midnight (e.g. 2026-01-15T00:00:00.000Z), and this helper is called from a client
  * component. Without a fixed timezone the server (UTC) prerenders "2026年1月15日" while a
  * visitor in UTC-5 hydrates "2026年1月14日" — a React hydration mismatch, plus an article
- * date that disagrees with the server-rendered list.
+ * date that disagrees with the server-rendered list. The locale must likewise be passed
+ * explicitly, never inferred from the browser, or the same mismatch returns for English.
  */
-export function formatDate(value?: string | null) {
+export function formatDate(value?: string | null, locale: Locale = 'zh') {
   const date = parseDate(value);
   if (!date) return '';
-  return date.toLocaleDateString('zh-CN', {
+  return date.toLocaleDateString(locale === 'zh' ? 'zh-CN' : 'en', {
     timeZone: 'UTC',
     year: 'numeric',
     month: 'long',

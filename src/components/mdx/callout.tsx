@@ -3,9 +3,9 @@
 import {
   type CalloutType,
   calloutAccents,
-  calloutLabels,
   calloutStyles,
 } from '@/components/mdx/callout-styles';
+import { useLocaleCopy } from '@/i18n/client';
 import type { TinaMarkdownContent } from 'tinacms/dist/rich-text';
 import { TinaMarkdown } from 'tinacms/dist/rich-text';
 
@@ -34,6 +34,13 @@ function normalizeType(value?: string | null): CalloutType {
  */
 export function Callout({ type, title, body, children }: CalloutProps) {
   const variant = normalizeType(type);
+  const { copy } = useLocaleCopy();
+  const label = {
+    info: copy.calloutInfo,
+    warning: copy.calloutWarning,
+    success: copy.calloutSuccess,
+    danger: copy.calloutDanger,
+  }[variant];
 
   // The parser always attaches `children` as `{ type: 'root', children: [] }`, even for
   // self-closing embeds, so checking for the node alone would render an empty block.
@@ -54,7 +61,7 @@ export function Callout({ type, title, body, children }: CalloutProps) {
           aria-hidden
           className={`h-2.5 w-2.5 shrink-0 rotate-45 rounded-[3px] ${calloutAccents[variant]}`}
         />
-        {calloutLabels[variant]}
+        {label}
         {title ? ` · ${title}` : ''}
       </p>
 

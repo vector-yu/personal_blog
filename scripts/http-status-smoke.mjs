@@ -1,14 +1,8 @@
 /**
- * Regression tests for HTTP status codes.
+ * Regression tests for HTTP status codes, now covering both `/zh` and `/en`.
  *
- * Why this exists: the Tina client's default `errorPolicy: 'throw'` rejects on ANY GraphQL
- * error, including the "Unable to find record" error a missing document produces. That made
- * every unknown post URL return **500 instead of 404**, because `notFound()` was never
- * reached. The client now uses `errorPolicy: 'include'` (see src/lib/tina.ts) so a missing
- * record resolves to a null post.
- *
- * Runs against whatever server the given base URL points at, so it works against both
- * `npm run dev` (default port 3000) and a production `next start`.
+ * Runs against whatever server the given base URL points at, so it works against
+ * `npm run dev`, `npm run build:local` + `next start`, and a preview.
  *
  * Usage: node scripts/http-status-smoke.mjs [baseUrl]
  */
@@ -20,46 +14,63 @@ const check = (name, passed, detail = '') => {
   console.log(`${passed ? 'PASS' : 'FAIL'}  ${name}${detail ? ` — ${detail}` : ''}`);
 };
 
-async function status(path) {
+async function request(path) {
   const response = await fetch(`${baseUrl}${path}`, { redirect: 'manual' });
-  // Drain the body so the connection can be reused.
   await response.text().catch(() => {});
-  return response.status;
+  return { status: response.status, location: response.headers.get('location') };
 }
 
 try {
   const cases = [
-    { path: '/', expected: 200, label: 'home' },
-    { path: '/posts', expected: 200, label: 'post list' },
-    { path: '/posts/hello-tinacms', expected: 200, label: 'published post' },
-    { path: '/resume', expected: 200, label: 'resume page' },
-    { path: '/about', expected: 200, label: 'about page' },
-    { path: '/tags', expected: 200, label: 'tags index' },
-    { path: '/archive', expected: 200, label: 'archive' },
-    { path: '/projects', expected: 200, label: 'projects' },
-    { path: '/notes', expected: 200, label: 'notes' },
-    { path: '/now', expected: 200, label: 'now' },
-    { path: '/reading', expected: 200, label: 'reading' },
-    { path: '/uses', expected: 200, label: 'uses' },
-    { path: '/start-here', expected: 200, label: 'start here' },
-    { path: '/series', expected: 200, label: 'series index' },
-    { path: '/rss.xml', expected: 200, label: 'rss feed' },
+    { path: '/', expected: 308, label: 'root redirects to /zh' },
+    { path: '/zh', expected: 200, label: 'zh home' },
+    { path: '/en', expected: 200, label: 'en home' },
+    { path: '/zh/posts', expected: 200, label: 'zh post list' },
+    { path: '/en/posts', expected: 200, label: 'en post list' },
+    { path: '/zh/posts/hello-tinacms', expected: 200, label: 'zh post' },
+    { path: '/en/posts/hello-tinacms', expected: 200, label: 'en post' },
+    { path: '/zh/resume', expected: 200, label: 'zh resume' },
+    { path: '/en/about', expected: 200, label: 'en about' },
+    { path: '/zh/tags', expected: 200, label: 'zh tags' },
+    { path: '/en/archive', expected: 200, label: 'en archive' },
+    { path: '/zh/projects', expected: 200, label: 'zh projects' },
+    { path: '/en/notes', expected: 200, label: 'en notes' },
+    { path: '/zh/now', expected: 200, label: 'zh now' },
+    { path: '/en/reading', expected: 200, label: 'en reading' },
+    { path: '/zh/uses', expected: 200, label: 'zh uses' },
+    { path: '/en/start-here', expected: 200, label: 'en start here' },
+    { path: '/zh/series', expected: 200, label: 'zh series' },
+    { path: '/zh/rss.xml', expected: 200, label: 'zh rss' },
+    { path: '/en/rss.xml', expected: 200, label: 'en rss' },
     { path: '/sitemap.xml', expected: 200, label: 'sitemap' },
     { path: '/robots.txt', expected: 200, label: 'robots' },
     { path: '/admin/index.html', expected: 200, label: 'tina admin' },
+    // Legacy unprefixed URLs must redirect, not 404.
+    { path: '/posts', expected: 308, label: 'legacy /posts redirects' },
+    { path: '/about', expected: 308, label: 'legacy /about redirects' },
+    { path: '/rss.xml', expected: 308, label: 'legacy /rss.xml redirects' },
   ];
 
   for (const testCase of cases) {
-    const actual = await status(testCase.path);
-    check(`${testCase.label} (${testCase.path}) → ${testCase.expected}`, actual === testCase.expected, `got ${actual}`);
+    const { status, location } = await request(testCase.path);
+    check(
+      `${testCase.label} (${testCase.path}) → ${testCase.expected}`,
+      status === testCase.expected,
+      `got ${status}${location ? ` → ${location}` : ''}`
+    );
   }
 
-  // The regression this file exists for.
-  const missing = await status('/posts/definitely-not-a-real-post');
-  check('unknown post returns 404, not 500', missing === 404, `got ${missing}`);
+  const missing = await request('/zh/posts/definitely-not-a-real-post');
+  check('unknown zh post returns 404, not 500', missing.status === 404, `got ${missing.status}`);
 
-  const missingNested = await status('/posts/nested/also-missing');
-  check('unknown nested post returns 404', missingNested === 404, `got ${missingNested}`);
+  const missingEn = await request('/en/posts/definitely-not-a-real-post');
+  check('unknown en post returns 404, not 500', missingEn.status === 404, `got ${missingEn.status}`);
+
+  const missingNested = await request('/zh/posts/nested/also-missing');
+  check('unknown nested post returns 404', missingNested.status === 404, `got ${missingNested.status}`);
+
+  const missingLocale = await request('/fr');
+  check('unknown locale returns 404', missingLocale.status === 404, `got ${missingLocale.status}`);
 } catch (error) {
   check('http status test completed', false, error.message);
 }

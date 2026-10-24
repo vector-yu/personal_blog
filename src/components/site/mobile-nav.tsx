@@ -4,44 +4,22 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useRef } from 'react';
 
-const GROUPS = [
-  {
-    label: '页面',
-    links: [
-      { label: '文章', href: '/posts' },
-      { label: '项目', href: '/projects' },
-      { label: '履历', href: '/resume' },
-      { label: '关于', href: '/about' },
-    ],
-  },
-  {
-    label: '内容',
-    links: [
-      { label: '标签', href: '/tags' },
-      { label: '归档', href: '/archive' },
-      { label: '笔记', href: '/notes' },
-      { label: '系列', href: '/series' },
-      { label: '从这开始', href: '/start-here' },
-    ],
-  },
-  {
-    label: '更多',
-    links: [
-      { label: 'Now', href: '/now' },
-      { label: '阅读', href: '/reading' },
-      { label: '工具', href: '/uses' },
-      { label: 'RSS', href: '/rss.xml' },
-    ],
-  },
-];
-
 /**
- * The header's four links do not fit at 360–390px together with the brand and
- * the theme toggle. Below `sm` they collapse into this menu; above `sm` the
- * normal nav is used. `<details>` keeps it JS-free apart from the active-link
- * highlight, and the panel is absolutely positioned under the header.
+ * The header's four links do not fit at 360–390px together with the brand,
+ * the theme toggle and the language switch. Below `sm` they collapse into this
+ * menu; above `sm` the normal nav is used. `<details>` keeps it JS-free apart
+ * from the active-link highlight.
+ *
+ * `groups` and `openLabel` are passed from the server layout because the link
+ * labels and hrefs depend on the current locale.
  */
-export function MobileNav() {
+export function MobileNav({
+  groups,
+  openLabel,
+}: {
+  groups: { label: string; links: { label: string; href: string }[] }[];
+  openLabel: string;
+}) {
   const pathname = usePathname();
   const menuRef = useRef<HTMLDetailsElement>(null);
 
@@ -52,7 +30,7 @@ export function MobileNav() {
   return (
     <details ref={menuRef} className="group relative sm:hidden">
       <summary
-        aria-label="打开导航"
+        aria-label={openLabel}
         className="grid h-9 w-9 cursor-pointer list-none place-items-center rounded-xl border-2 border-ink/20 bg-white/60 text-ink/70 shadow-brutal-xs backdrop-blur transition-colors hover:border-ink/60 hover:text-ink [&::-webkit-details-marker]:hidden dark:border-chalk/20 dark:bg-white/[0.05] dark:text-slate-300 dark:shadow-chalk-xs dark:hover:border-chalk/50 dark:hover:text-white"
       >
         <svg
@@ -69,7 +47,7 @@ export function MobileNav() {
       </summary>
 
       <div className="absolute top-full right-0 z-50 mt-3 max-h-[calc(100vh-5rem)] w-72 overflow-y-auto rounded-2xl border-2 border-ink/25 bg-white/95 p-4 shadow-brutal backdrop-blur-2xl dark:border-chalk/20 dark:bg-midnight/95 dark:shadow-chalk">
-        {GROUPS.map((group) => (
+        {groups.map((group) => (
           <div key={group.label} className="not-first:mt-5">
             <p className="text-[0.62rem] font-black tracking-[0.18em] text-ink/40 uppercase dark:text-slate-500">
               {group.label}

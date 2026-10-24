@@ -1,4 +1,6 @@
 import type { PostListItem } from '@/components/posts/post-card';
+import { localePath, type Locale } from '@/i18n/config';
+import { messages } from '@/i18n/messages';
 import { formatDate, parseDate, postSlug, type PostSummary } from '@/lib/site';
 
 export type TagCount = {
@@ -28,19 +30,27 @@ export function postTags(post: Pick<PostSummary, 'tags'>): string[] {
 }
 
 /** Turn a summary into the flattened shape the client cards need. */
-export function toPostListItem(post: PostSummary): PostListItem {
+export function toPostListItem(post: PostSummary, locale: Locale): PostListItem {
+  const slug = postSlug(post);
+  const tags = postTags(post);
+
   return {
-    slug: postSlug(post),
+    slug,
+    href: localePath(locale, `/posts/${slug}`),
     title: post.title,
     dateIso: post.date,
-    dateLabel: formatDate(post.date),
+    dateLabel: formatDate(post.date, locale),
     description: post.description,
-    tags: postTags(post),
+    tags,
+    tagLinks: tags.map((name) => ({
+      name,
+      href: localePath(locale, tagPath(name)),
+    })),
   };
 }
 
 /** Tags across all posts, most-used first, then alphabetically. */
-export function collectTags(posts: PostSummary[]): TagCount[] {
+export function collectTags(posts: PostSummary[], locale: Locale = 'zh'): TagCount[] {
   const counts = new Map<string, number>();
 
   for (const post of posts) {
@@ -51,10 +61,14 @@ export function collectTags(posts: PostSummary[]): TagCount[] {
 
   return [...counts.entries()]
     .map(([name, count]) => ({ name, count }))
-    .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name, 'zh-CN'));
+    .sort(
+      (a, b) =>
+        b.count - a.count ||
+        a.name.localeCompare(b.name, locale === 'zh' ? 'zh-CN' : 'en')
+    );
 }
 
-/** URL form of a tag. Tags are user content, so they must be encoded. */
+/** URL form of a tag, without a locale prefix. */
 export function tagPath(tag: string): string {
   return `/tags/${encodeURIComponent(tag)}`;
 }
@@ -69,7 +83,7 @@ export function decodeTagParam(tag: string): string {
 }
 
 /** Series across all posts, most-used first. Empty names are ignored. */
-export function collectSeries(posts: PostSummary[]): SeriesCount[] {
+export function collectSeries(posts: PostSummary[], locale: Locale = 'zh'): SeriesCount[] {
   const counts = new Map<string, number>();
 
   for (const post of posts) {
@@ -79,9 +93,14 @@ export function collectSeries(posts: PostSummary[]): SeriesCount[] {
 
   return [...counts.entries()]
     .map(([name, count]) => ({ name, count }))
-    .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name, 'zh-CN'));
+    .sort(
+      (a, b) =>
+        b.count - a.count ||
+        a.name.localeCompare(b.name, locale === 'zh' ? 'zh-CN' : 'en')
+    );
 }
 
+/** URL form of a series, without a locale prefix. */
 export function seriesPath(series: string): string {
   return `/series/${encodeURIComponent(series)}`;
 }
@@ -95,12 +114,13 @@ export function decodeSeriesParam(series: string): string {
 }
 
 /** Posts grouped by publication year, newest year first. */
-export function groupByYear(posts: PostSummary[]): YearGroup[] {
+export function groupByYear(posts: PostSummary[], locale: Locale = 'zh'): YearGroup[] {
   const groups = new Map<string, PostSummary[]>();
+  const undated = messages[locale].archive.undated;
 
   for (const post of posts) {
     const date = parseDate(post.date);
-    const year = date ? String(date.getUTCFullYear()) : '未标注日期';
+    const year = date ? String(date.getUTCFullYear()) : undated;
     const list = groups.get(year) ?? [];
     list.push(post);
     groups.set(year, list);
@@ -109,8 +129,8 @@ export function groupByYear(posts: PostSummary[]): YearGroup[] {
   return [...groups.entries()]
     .map(([year, list]) => ({ year, posts: list }))
     .sort((a, b) => {
-      if (a.year === '未标注日期') return 1;
-      if (b.year === '未标注日期') return -1;
+      if (a.year === undated) return 1;
+      if (b.year === undated) return -1;
       return Number(b.year) - Number(a.year);
     });
 }

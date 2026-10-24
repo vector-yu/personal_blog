@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
+import { useLocaleCopy } from '@/i18n/client';
+import { formatMessage } from '@/i18n/format';
 
 /**
  * Click-to-zoom wrapper for images in article bodies.
@@ -45,6 +47,7 @@ export function ZoomableImage({
   children: React.ReactNode;
   caption?: string | null;
 }) {
+  const { copy } = useLocaleCopy();
   const [open, setOpen] = useState(false);
   const trigger = useRef<HTMLButtonElement>(null);
   const dialog = useRef<HTMLDivElement>(null);
@@ -101,7 +104,7 @@ export function ZoomableImage({
         ref={trigger}
         type="button"
         onClick={() => setOpen(true)}
-        aria-label={alt ? `放大图片：${alt}` : '放大图片'}
+        aria-label={alt ? formatMessage(copy.zoomImageAlt, { alt }) : copy.zoomImage}
         className="block w-full cursor-zoom-in rounded-xl focus-visible:outline-3 focus-visible:outline-offset-4 focus-visible:outline-iris"
       >
         {children}
@@ -113,7 +116,7 @@ export function ZoomableImage({
               ref={dialog}
               role="dialog"
               aria-modal="true"
-              aria-label={alt || '图片预览'}
+              aria-label={alt || copy.imagePreview}
               onClick={close}
               className="fixed inset-0 z-[60] grid animate-pop cursor-zoom-out place-items-center bg-ink/85 p-4 backdrop-blur-md print:hidden sm:p-8"
             >
@@ -140,7 +143,7 @@ export function ZoomableImage({
                 ref={closeButton}
                 type="button"
                 onClick={close}
-                aria-label="关闭图片预览"
+                aria-label={copy.closePreview}
                 className="absolute top-4 right-4 grid h-11 w-11 place-items-center rounded-full border-2 border-chalk/40 bg-ink/70 text-lg font-black text-chalk backdrop-blur transition-colors hover:bg-ink"
               >
                 ✕

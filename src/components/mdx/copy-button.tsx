@@ -2,6 +2,7 @@
 
 import { useRef, useState } from 'react';
 import { m } from 'framer-motion';
+import { useLocaleCopy } from '@/i18n/client';
 
 /**
  * Copy-to-clipboard button used by the custom code_block renderer.
@@ -15,6 +16,7 @@ import { m } from 'framer-motion';
  * rather than a local `useReducedMotion()` branch, which is `null` during SSR.
  */
 export function CopyButton({ value }: { value: string }) {
+  const { copy } = useLocaleCopy();
   const [copied, setCopied] = useState(false);
   const timer = useRef<number | null>(null);
 
@@ -46,7 +48,7 @@ export function CopyButton({ value }: { value: string }) {
         transition={{ duration: 0.22, ease: 'easeOut' }}
         className="inline-block"
       >
-        {copied ? '已复制' : '复制'}
+        {copied ? copy.copied : copy.copy}
       </m.span>
     </m.button>
   );

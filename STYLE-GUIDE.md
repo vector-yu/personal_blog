@@ -54,13 +54,25 @@
 ### 深色模式策略
 
 **属性驱动，不是媒体查询**：`@custom-variant dark (&:where([data-theme='dark'], [data-theme='dark'] *))`。
-`layout.tsx` 里一段**阻塞内联脚本**在首屏绘制前把 `data-theme` 写到 `<html>` 上。
+`src/lib/theme.ts` 里的阻塞内联脚本在首屏绘制前把 `data-theme` 写到 `<html>` 上（`[lang]/layout.tsx` 与 `global-not-found.tsx` 共用）。
 
 主题按钮是**两态**（浅 ↔ 深），`src/components/site/theme-toggle.tsx`，**无 React state**：
 两个图标都在 DOM 里，由 `[[data-theme=dark]_&]:hidden` 决定显示哪个。
 
-> 存储键 `theme` 在 `layout.tsx` 的脚本与 `theme-toggle.tsx` 里**各写了一份**（脚本是无法 import 的纯字符串）。**改一处必须改另一处。**
+> 存储键 `theme` 在 `src/lib/theme.ts` 的脚本与 `theme-toggle.tsx` 里**各写了一份**（脚本是无法 import 的纯字符串）。**改一处必须改另一处。**
 > 没有点击过的访客仍然跟随系统：脚本会在没有存储值时读 `prefers-color-scheme`。
+
+### 语言切换控件
+
+`src/components/site/language-switch.tsx` 是**真实 `<a>`**（整页跳转），不是 `next/link`，
+因为切换 `[lang]` 后 `<html lang>` 必须由服务端重新输出。
+
+- 视觉：复用主题按钮的 pill —— `h-9 sm:h-10`、2px 透明边框、hover 上浮到 `-translate-y-0.5` +
+  `hover:border-ink`、`motion-reduce:hover:translate-y-0`；显示目标是 `EN` / `中文`。
+- 桌面放在四个导航链接之后、主题按钮之前；移动端与主题按钮、`MobileNav` 并排。
+- **360–390px 不能横向溢出**：`scripts/language-switch-smoke.mjs` 会同时检查
+  `header nav` 的 `scrollWidth <= clientWidth` 和文档级溢出。
+- 标签/系列详情页的切换目标是索引页（`switchLocalePath`），不要为了“同路径”硬拼 URL。
 
 ---
 

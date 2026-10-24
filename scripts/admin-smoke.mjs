@@ -48,6 +48,8 @@ try {
   await page.waitForTimeout(2500);
   check('collection "博客文章" listed', /博客文章/.test(await UI()));
   check('collection "独立页面" listed', /独立页面/.test(await UI()));
+  check('collection "Blog posts (English)" listed', /Blog posts \(English\)/.test(await UI()));
+  check('collection "Pages (English)" listed', /Pages \(English\)/.test(await UI()));
 
   // --- 2. open the demo document in the editor ------------------------------
   await page.getByText('博客文章', { exact: false }).first().click();

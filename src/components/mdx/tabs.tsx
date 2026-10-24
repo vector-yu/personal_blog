@@ -2,6 +2,8 @@
 
 import { useId, useState } from 'react';
 import { m } from 'framer-motion';
+import { useLocaleCopy } from '@/i18n/client';
+import { formatMessage } from '@/i18n/format';
 
 export interface TabItem {
   label?: string | null;
@@ -38,6 +40,7 @@ export interface TabsProps {
  * ────────────────────────────────────────────────────────────────────────────
  */
 export function Tabs({ tabs }: TabsProps) {
+  const { copy } = useLocaleCopy();
   const items = (tabs ?? []).filter((tab): tab is TabItem => Boolean(tab));
   const [active, setActive] = useState(0);
   const [hasSwitched, setHasSwitched] = useState(false);
@@ -122,7 +125,7 @@ export function Tabs({ tabs }: TabsProps) {
                   transition={{ type: 'spring', stiffness: 420, damping: 34 }}
                 />
               ) : null}
-              {tab.label ?? `标签 ${index + 1}`}
+              {tab.label ?? formatMessage(copy.tabFallback, { index: index + 1 })}
             </button>
           );
         })}

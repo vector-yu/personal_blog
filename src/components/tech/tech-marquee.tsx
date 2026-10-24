@@ -33,12 +33,18 @@ function TechGroup({
  * standing "no mobile motion" rule still holds. Hovering pauses the desktop loop
  * so a chip can actually be read.
  */
-export function TechMarquee({ techStack }: { techStack: HomeTech[] }) {
+export function TechMarquee({
+  techStack,
+  ariaLabel,
+}: {
+  techStack: HomeTech[];
+  ariaLabel: string;
+}) {
   if (techStack.length === 0) return null;
 
   return (
     <section
-      aria-label="技术栈"
+      aria-label={ariaLabel}
       className="relative z-10 mt-16 overflow-hidden border-y-2 border-ink/10 bg-white/35 py-4 backdrop-blur-xl backdrop-saturate-125 dark:border-chalk/10 dark:bg-white/[0.025]"
     >
       <div className="mx-auto flex max-w-7xl items-center gap-4 px-4 sm:px-6">
