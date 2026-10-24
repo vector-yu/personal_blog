@@ -1,0 +1,126 @@
+---
+title: Scope in Python
+date: 2025-08-21T07:20:42.124Z
+description: 'An brief introduction to scopes in python. '
+---
+
+In python, scope means the domain that a variable can be used. In total, there are five kinds of scope in python:
+
+* **local scope**, it means the variable is only defined in a function
+* **enclosed scope**, it means the variable is defined outside the inner function, but inside the outer function
+* **global scope**, it means the variable is defined through out the program
+* **built-in scope**, it means some variables are set by some python libraries by default.
+* **comprehension scope**, it is a special scope where variables are only valid inside the comprehension.
+  For example,
+
+```python
+import math
+
+var1 = "global"
+def func1():
+	var1 = "enclosed"
+	def func2():
+		var1 = "local"
+		return var1
+	var1 += func2()
+	return var1
+
+res = func1()
+print(var1,res,math.pi) # math.pi is a built-in variable
+```
+
+the output is `"global" "enclosedlocal" 3.141592653589793`
+
+# Why defined such scopes in python?
+
+Because scopes **restrict and limit the effective range of variables**, avoiding possible name conflicts.
+Normally, we only want to use local variables locally, and try to avoid changing global settings. Thus it is necessary to set boundaries between local functions and global environment.
+As you can see in the example, I mentioned `var1` for many times, each time it was assigned with a different value, and had different tasks. If there is no limit of scopes, the whole code will went to a mess.
+
+# Rules of Scope
+
+When program is executing, python finds what your variable name refers to in a specific order according to the scopes. It follows the \[\[LEGB rule]], search the local scope first, if not exist, then expand to enclosed, global, built-in. In fact, because of the \[\[Python files execution]] will detect and distribute whether a variable is or is not a local variable, and label it, this rule is seperated:
+
+* for those were labeled as local variables, they will be only treated as local variable.
+* for those were labeled as non-local variables, they will not be treated as local variable. But the execution program still start to find these variable at local scope
+  **If and only if you assigned a variable locally, no matter whether this name is used outside the local scope, it will be treated as local variable in this functions**.
+  For example:
+
+```python
+var1 = 10
+def func1():
+	print(var1)
+	var1 = 20 # var1 is defined as a local variable
+	print(var1)
+	return var1 + 1
+res = func1()
+print(res,func1())
+```
+
+the result is
+
+```python
+UnboundLocalError: cannot access local variable 'var1' where it is not associated with a value
+```
+
+\`
+Yes, although you just attempt to read global variable var1 ahead of the assignment, the program won't print the value of global var1, instead, rise an UnboundLocalError . That is because early in the first compiling, var1 is labeled as local variable in func1() because the assignment sentence var1 = 20 regardless of its local position. So, when really execute, error comes before the printing output.
+To fix it, you must declare that var1 is a global variable:
+
+```python
+var1 = 10
+def func1():
+	global var1
+	print(var1)
+	var1 = 20 # var1 is defined as a local variable
+	print(var1)
+	return var1 + 1
+res = func1()
+print(res,func1())
+```
+
+Then the correct output is:
+
+```python
+10
+20
+20
+20
+21 21
+```
+
+If you want to change global variables locally, or enclosed variables locally, you need to announce those variables with `global` or `nonlocal` respectively, like:
+
+```python
+var1 = 100
+def func1():
+	global var1
+	var1 += 1
+	var2 = var1 * 2
+	def func2():
+		nonlocal var2
+		var2 += 3
+		return var2
+	var2 += 1
+	return (var1,var2,func2())
+
+ans = func1()
+var1 += 1
+print(var1, ans, func1())
+```
+
+the output is `102 (101,203,206) (103,207,210)` . It may be a little complex, let's analyse together:
+
+* steps:
+  * first I assigned global variable var1 to 100. At this time, a global \[\[namespace]] is also created:  var1 -> object(100) \[global]
+  * then I defined a function, so a function object is also created: func1->function(func1()). All the steps inside function is inside the object func1()\[global]
+  * I assigned `ans` with the value of func1, so the program will go through func1
+  * var1 is announced as a global variable, so I can modify it locally
+  * var1 is add by 1, now var1 -> object(101) \[global]
+  * local variable in func1() is created, and i assigned it value as 2 times value of var1, so a new namespace was created: var2 -> object(202) \[local in func1()]
+  * then I defined func2() inside func1, so func2 -> function(func2())\[local in func1()] created, func2 is son of func1()
+  * var2 is increased by 1, now var2 -> object(203) \[local in func1()]
+  * time to return a tuple. first two value were assigned as var1, var2, like func1\_return\_value->(101, 203, ?), ? represent func2\_return\_value.
+  * dive into func2, I first declared var2 as a nonlocal variable, so var2 is an enclosed variable with respect to func2()
+  * var2 increased by 3, then var2 -> object(206) \[local in func1()]
+  * func2\\
