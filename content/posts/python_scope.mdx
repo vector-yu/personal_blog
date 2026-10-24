@@ -1,0 +1,183 @@
+---
+title: Python中的作用域
+date: 2025-08-21T07:19:22.949Z
+description: 介绍了Python中代码的5种作用域
+tags: []
+---
+
+在 Python 中，作用域指的是变量可以使用的范围。Python 中共有五种作用域：
+
+* **局部作用域**，指变量仅在函数内部定义。
+* **封闭作用域**，指变量在内部函数之外、外部函数之内定义。
+* **全局作用域**，指变量在整个程序中都有效。
+* **内置作用域**，指某些变量由 Python 库默认设置。
+* **推导式作用域**，是一种特殊的作用域，其中的变量仅在推导式内部有效。
+
+例如：
+
+```python
+
+import math
+
+var1 = "global"
+
+def func1():
+
+var1 = "enclosed"
+
+def func2():
+
+var1 = "local"
+
+return var1
+
+var1 += func2()
+
+return var1
+
+res = func1()
+
+print(var1,res,math.pi) # math.pi 是一个内置变量
+
+```
+
+输出结果为：`"global" "enclosedlocal" 3.141592653589793`
+
+# 为什么要在 Python 中定义作用域？
+
+因为作用域**限制变量的有效范围**，避免可能的名称冲突。
+
+通常，我们只想在局部范围内使用局部变量，并尽量避免修改全局设置。因此，有必要在局部函数和全局环境之间设置边界。
+
+正如示例中所示，我多次提到了 `var1`，每次都赋予它不同的值，并执行不同的任务。如果没有作用域的限制，整个代码将会变得一团糟。
+
+# 作用域规则
+
+程序执行时，Python 会根据作用域按特定顺序查找变量名所指代的对象。它遵循 LEGB 规则，首先搜索局部作用域，如果不存在，则依次扩展到外部作用域、全局作用域和内置作用域。实际上，由于 Python 文件执行过程中会检测并区分变量是局部变量还是非局部变量，并对其进行标记，因此这条规则被细分为：
+
+* 对于被标记为局部变量的变量，它们将仅被视为局部变量。
+* 对于被标记为非局部变量的变量，它们将不被视为局部变量。但是，执行程序仍然会在局部作用域中查找这些变量。
+
+**只有当您在局部作用域中赋值给一个变量时，无论该变量名是否在局部作用域之外使用，它都会在该函数中被视为局部变量。**
+
+例如：
+
+```python
+
+var1 = 10
+
+def func1():
+
+print(var1)
+
+var1 = 20 # var1 被定义为局部变量
+
+print(var1)
+
+return var1 + 1
+
+res = func1()
+
+print(res, func1())
+
+```
+
+结果是：
+
+```python
+
+UnboundLocalError: cannot access local variable 'var1' where it is not associated with a value
+
+```
+
+\`
+
+是的，即使您在赋值之前尝试读取全局变量 var1，程序也不会打印全局变量 var1 的值，而是会抛出 UnboundLocalError 异常。这是因为在第一次编译时，var1 在 func1() 函数中被标记为局部变量，因为赋值语句 var1 = 20 忽略了它在函数中的位置。所以，实际执行时，错误会在打印输出之前发生。
+
+要解决这个问题，你必须声明 `var1` 是一个全局变量：
+
+```python
+
+var1 = 10
+
+def func1():
+
+global var1
+
+print(var1)
+
+var1 = 20 # var1 被定义为局部变量
+
+print(var1)
+
+return var1 + 1
+
+res = func1()
+
+print(res, func1())
+
+```
+
+那么正确的输出应该是：
+
+```python
+
+10
+
+20
+
+20
+
+21 21
+
+```
+
+如果你想在局部范围内修改全局变量或局部范围内修改封闭变量，你需要分别使用 `global` 或 `nonlocal` 来声明这些变量，例如：
+
+```python
+
+var1 = 100
+
+def func1():
+
+global var1
+
+var1 += 1
+
+var2 = var1 * 2
+
+def func2():
+
+nonlocal var2
+
+var2 += 3
+
+return var2
+
+var2 += 1
+
+return (var1,var2,func2())
+
+ans = func1()
+
+var1 += 1
+
+print(var1, ans, func1())
+
+```
+
+输出结果为 `102 (101,203,206) (103,207,210)`。这可能有点复杂，我们一起来分析一下：
+
+* 步骤：
+* 首先，我将全局变量 var1 赋值为 100。此时，也创建了一个全局命名空间：var1 -> object(100) \[global]
+* 然后，我定义了一个函数，因此也创建了一个函数对象：func1->function(func1())。函数内部的所有步骤都在对象 func1()\[global] 内部。
+* 我将 `ans` 赋值为 func1 的值，因此程序会执行 func1。
+* var1 被声明为全局变量，因此我可以对其进行局部修改。
+* var1 的值加 1，现在 var1 -> object(101) \[global]。
+* func1() 内部创建了一个局部变量，我将其值赋为 var1 值的两倍，因此创建了一个新的命名空间：var2 -> object(202) \[local in func1()]。
+* 然后我在 func1 内部定义了 func2()，因此创建了 func2 -> function(func2())\[local in func1()]，func2 是 func1() 的子函数。
+* var2 的值加 1，现在 var2 -> object(203) \[local in func1()]。
+* 现在返回一个元组。前两个值分别赋值为 var1 和 var2，例如 func1\_return\_value->(101, 203, ?)，其中 ? 代表 func2\_return\_value。
+* 深入 func2，我首先将 var2 声明为非局部变量，因此 var2 相对于 func2() 是一个封闭变量。
+* var2 的值增加 3，然后 var2 -> object(206) \[在 func1() 中为局部变量]
+* func2\\
