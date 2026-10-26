@@ -1,0 +1,492 @@
+
+# 为什么需要二分查找？
+
+仅从刷题角度，有如下原因：
+
+1. 复杂度太高，我们需要把复杂度的一个n变为logn
+2. 有条件没用上。比如“有序”“单调”之类
+
+第一个原因是最主要的，极为常见的就是题目给出了十万级别的输入数据，这时最差就是nlogn的解法，摆明了要你使用树/堆/二分查找等带有logn的算法来优化
+
+<Callout
+  body="这里有一个及其不严谨的推导：
+  假设一刀将数组砍成了长度比例p:1-p两段(假定p ≤0.5)
+  那么，目标数字在左边的概率是p，右边的概率是1-p
+  最坏的情况，每次目标值刚好落在1-p这一个更大的区间里
+  假设再用k-1次能将这一区间全部搜索完毕，数组的长度n应满足：floor(n*(1-p)^k) = 0
+  即k = ceil(logn) / (1-p), 故时间复杂度是O(logn)
+
+  我们想要平均次数，1 + pf(np) + (1-p)f(n(1-p))，尽可能的小
+  f(n) ~ logn，因此
+  1 + pf(np) + (1-p)f(n(1-p)) = 1 + logn + (plogp + (1-p)log(1-p))
+  在p=0.5时取得最小值logn + 1 - log2
+
+  因此均分让平均表现最好
+
+  "
+  type="info"
+  title="为什么要二分？"
+/>
+
+# 最简单的情形
+
+给你一个严格单调递增的数组，想让你查找某个目标值（不一定在数组里）的位置，你会怎么办？
+
+思路一，线性扫描，从左到右，复杂度O(n)
+
+然而，正如我们前面所说，你没有利用上“有序”这一条件。对于任何一个数组而言，线性扫描都是一样的。每次操作，无非是把待搜索区间减1，太慢了
+
+有没有快速缩减搜索区间的方法？当然！二分查找横空出世！
+
+# 令人迷惑的细节
+
+然而，一旦开始动笔，这些细节难免会挡路。笔者在此列出常见的二分查找令人困惑的地方：
+
+1. 搜索区间的开闭？左闭右闭还是左开右闭还是左闭右开还是左开右开？这有四种情况
+2. 中间位置的选择：是左右边界之和除以二向下取整还是向上取整？这有2种情况
+3. 边界更新的条件：中间的位置对应的数值等于目标值时，是按照小于处理，还是大于？还是单独写一个分支处理？这有3种情况
+4. 边界收缩：是把边界更新为中间+-1还是中间？对于两个分支，有3^2=9种情况；三个分支则有3^3=27种情况
+5. 搜索终止条件：左右边界是否需要取等？这有2种情况
+6. 搜索结果：是左边界代表着结果还是右边界代表着结果？这有2种情况
+
+如果排列组合，那么总共4*2*(2\*9+27)*2*2=1440种写法。并不意味着每一种都是对的，但这意味着在考场上，遇到任何一道二分查找的题，如果瞎写，只有千分之一不到的概率一次性蒙对；如果调试，有一千种变化的可能。
+
+# 不必在意那些细节
+
+笔者在此输出一个暴论：**但凡是二分查找，有且仅有2种情况**
+
+你别不信。首先，笔者在本文中统一规定：
+
+* 使用闭区间
+* 中间位置向下取整
+* 边界收缩永远是left=mid+1或者right=mid-1
+* 搜索终止条件永远写成left≤right，即只有搜索区间里没有元素了才能终止！
+
+只剩下的两个细节：
+
+* 边界更新的条件
+* 搜索结果
+
+这就把所有可能的情况压缩到了4种
+
+# 从寻找数字到寻找分界
+
+想要将情况缩减到2种，首先要变换思路。
+
+举个例子，数组\[1,2,3,4,5], 我们想要查找2的位置。
+
+按照正常的思路，我们中间截断，完成二分
+
+慢着，真的是分成两份了吗？
+
+非也。一共有三份：mid左侧，mid本身，mid右侧。这不是二分
+
+于是，我们将目光转向了数字之间的分界线：分界线以左，分界线以右，刚好两份
+
+因此，对于这个问题，**我们实际上是在寻找一个分界线**：以哪一个分界线为界，数字开始大于等于2了？
+
+# 红蓝标记法
+
+数字是否大于2这一条件，将数组划为两部分。我们将左侧染成红色，右侧染成蓝色。红蓝交界处就是分界线。
+
+🟥 | 🟦🟦🟦🟦
+
+很显然，找到分界线之后，分界线右侧的第一个元素就是目标。
+
+## 分界线的性质
+
+“|”之所以被称作分界线，是因为：
+
+1. “|”左侧全是🟥
+2. “|”右侧全是🟦
+
+因此“|”是独一无二的，我们可以通过这两个性质准确的找到“|”
+
+## 寻找分界线
+
+想一次性找到满足性质1和性质2的分界线很难，因此我们可以先引入两个指针，left, right, 他们分别满足其中一条性质：
+
+* left左侧（不包括left）全都是🟥（或者为空）
+* right右侧（不包括right）全都是🟦（或者为空）
+
+这样，从left的左侧分界线开始，往右的所有分界线都是候选人，即：
+
+* …. | left | left + 1 | ….| n-1 | 画出的分界线全都是候选人
+
+从rihgt的右侧的分界线开始，往左的所有分界线全都是候选人，即：
+
+* \| 0 |…. | right - 1 | right | …. 画出的分界线全都是候选人
+
+因此，公共的候选人就是：
+
+* …. | left | left + 1 |…. | right - 1 | right | …
+
+恰好是闭区间\[left, right]具有的所有分界线。注意到分界线的数量为right-left+1
+
+## 搜索结束的标志
+
+什么时候能唯一的确认分界线? 当然是公共候选分界线的数量只有一个的时候，即：
+
+* 此时right-left+1=0， 即right = left - 1
+* **left左侧的分界线恰好是right右侧的分界线**
+* 停止状态是…right | left ….
+* 此时right为🟥且left为🟦
+
+而收缩边界的过程，就利用到了二分法
+
+## 收缩左右边界
+
+左右边界收缩的过程，可以看作探查红蓝领土边界的过程。
+
+* left代表红方，right代表蓝方。
+* left向右开拓，right向左开拓。
+* left, right本身的位置不重要，重要的是他们身旁的分界线的位置。形象的写，两个指针实际上应该写成”|left”和”right|”
+* \[left, right]框起来的闭区间，就是两色区域分界处可能存在的区间。
+
+每次操作，利用二分法，我们查看mid的领土颜色：
+
+* mid是🟥，是红方的领土，因此真正的边界一定在mid的右侧，mid以左的候选人全都不合格，需要排除，因此让left = mid+1
+* mid是🟦，是蓝方的领土，因此真正的边界一定在mid的左侧，mid以右的候选人全都不合格，需要排除，因此让right = mid-1
+* 当left越过right时，候选人只剩一个，剩下的正是红蓝边界线，终止循环
+
+## 谁是答案？
+
+本例中，与分界线”|“相邻的右侧元素，也就是left, 前面说过了
+
+## 总结
+
+我们真正关注的是什么？
+
+1. 红蓝领土的定义。这直接控制边界更新的条件
+2. 目标的选择。是找红色区域最右侧（边界线左侧）还是蓝色区域最左侧（边界线右侧）
+
+## 代码实现
+
+```python
+nums = [1,2,3,4,5,6,7]
+target = 5
+def binary_search(nums, target):
+    left, right = 0, len(nums) - 1 # 闭区间
+    while left <= right: # 只有区间内没有元素了才能退出
+        mid = (left+right) // 2 # 向下取整
+        if nums[mid] >= target: # mid是蓝色区域
+            right = mid - 1
+        else: # mid不是蓝色区域
+            left = mid + 1
+    return left # 分界线的右侧
+```
+
+# 寻找目标值的左右边界
+
+同样的思路，只需明确红蓝定义，以及要红右还是蓝左
+
+## 寻找左边界
+
+分三步走：
+
+1. 读题：要找大于等于target的最小元素
+2. 定义红蓝：大于等于target为蓝，反之为红
+3. 确定目标：分界线右侧/蓝左
+
+没有任何变化，刚才的代码可以直接拿来用
+
+```python
+def left_bound(nums, target):
+    left, right = 0, len(nums) - 1 # 闭区间
+    while left <= right: # 只有区间内没有元素了才能退出
+        mid = (left+right) // 2 # 向下取整
+        if nums[mid] >= target: # mid是蓝色区域
+            right = mid - 1
+        else: # mid不是蓝色区域
+            left = mid + 1
+    return left # 分界线的右侧
+```
+
+## 寻找右边界
+
+分三步走：
+
+1. 读题：要找小于等于target的最大元素
+2. 定义红蓝：小于等于target为红，反之为蓝
+3. 确定目标：分界线左侧/红右
+
+因此，代码会产生两处变化：
+
+```python
+def right_bound(nums, target):
+    left, right = 0, len(nums) - 1 
+    while left <= right:
+        mid = (left+right) // 2
+        if nums[mid] <= target: # 红色区域
+            left = mid + 1
+        else:
+            right = mid - 1
+    return right # 分界线的左侧
+```
+
+## 总结
+
+划分红蓝的依据是什么？**红色在左，蓝色在右**
+
+* 对于非递减的情况，大于（等于）某数划为蓝色，小于（等于）某数划为红色
+* 对于非递增的情况，小于（等于）某数划为蓝色，大于（等于）某数划为红色
+
+目标位置怎么选？
+
+* 找满足条件最小的就是蓝左
+* 找满足条件最大的就是红右
+
+# 反过来
+
+刚才给出了单调不递减的数组的二分查找代码，那单调不递增的数组该如何查找呢？
+
+## 查找左边界
+
+1. 查找目标：小于等于target的最大元素
+2. 蓝色：小于等于target
+3. 目标位置：分界线右侧/蓝左
+
+直接写出代码：
+
+```python
+def left_bound(nums, target):
+    left, right = 0, len(nums)-1
+    while left <= right:
+        mid = (left+right) // 2
+        if nums[mid] <= target: # 蓝色
+            right = mid - 1
+        else:
+            left = mid + 1
+    return left # 分界线右侧
+```
+
+## 查找右边界
+
+1. 查找目标：大于等于target的最小元素
+2. 红色：大于等于target
+3. 目标位置：分界线左侧/红右
+
+直接写出代码：
+
+```python
+def right_bound(nums, target):
+    left, right = 0, len(nums) - 1 
+    while left <= right:
+        mid = (left+right) // 2
+        if nums[mid] < target: # mid是蓝色区域
+            right = mid - 1
+        else:
+            left = mid + 1
+    return right # 分界线的左侧
+```
+
+# 一般的二分查找
+
+若将数组从索引到数值的映射看作一个函数，那么上述的根据数值查找索引的过程，就是根据函数值查找对应自变量的过程。同理，任意一个离散的单调函数，都可以给定任意一个y，应用二分查找，找寻使得f(x)与y满足某种关系的最大/最小x。
+
+## **例题1：875. Koko Eating Bananas**
+
+Koko loves to eat bananas. There are `n` piles of bananas, the `ith` pile has `piles[i]` bananas. The guards have gone and will come back in `h` hours.
+
+Koko can decide her bananas-per-hour eating speed of `k`. Each hour, she chooses some pile of bananas and eats `k` bananas from that pile. If the pile has less than `k` bananas, she eats all of them instead and will not eat any more bananas during this hour.
+
+Koko likes to eat slowly but still wants to finish eating all the bananas before the guards return.
+
+Return *the minimum integer* `k` *such that she can eat all the bananas within* `h` *hours*.
+
+此题中，吃香蕉所需时间是关于进食速度的非递增函数，因此可以使用二分查找
+
+题目要求查找使得f(k)小于等于h的**最小**k：
+
+* 颜色划分：小于等于h的为蓝色，大于h的为红色
+* 目标位置：蓝左
+
+于是代码呼之欲出：
+
+```python
+class Solution:
+    def minEatingSpeed(self, piles: list[int], h: int) -> int:
+        def time_cost(k):
+            return sum(((pile+k-1)//k for pile in piles))
+        lo, hi = 1, max(piles)
+        while lo <= hi:
+            mid = (lo + hi) // 2
+            if time_cost(mid) <= h:
+                hi = mid - 1
+            else:
+                lo = mid + 1
+        return lo
+```
+
+## **例题2：1011. Capacity To Ship Packages Within D Days**
+
+A conveyor belt has packages that must be shipped from one port to another within `days` days.
+
+The `ith` package on the conveyor belt has a weight of `weights[i]`. Each day, we load the ship with packages on the conveyor belt (in the order given by `weights`). We may not load more weight than the maximum weight capacity of the ship.
+
+Return the least weight capacity of the ship that will result in all the packages on the conveyor belt being shipped within `days` days.
+
+此题中，装载货物**最少**所需的天数 关于 船最大载货量 的函数是单调不增的，因此可以使用二分查找
+
+三步走：
+
+1. 查找目标：使得f(x)小于等于days的最小载货量x
+2. 蓝色：使得f(x)小于等于days的所有x
+3. 目标位置：蓝左
+
+正常写出代码：
+
+```python
+class Solution:
+    def shipWithinDays(self, weights: list[int], days: int) -> int:
+        def min_days_needed(max_capacity):
+            cur_capacity = 0
+            days = 0
+            for weight in weights:
+                if cur_capacity + weight <= max_capacity:
+                    cur_capacity += weight
+                else: 
+                    days += 1
+                    cur_capacity = weight
+            if cur_capacity > 0:
+                days += 1
+            return days
+    
+        left, right = max(weights), sum(weights)
+        while left <= right:
+            mid = (left+right) // 2
+            if min_days_needed(mid) <= days: # 蓝色
+                right = mid - 1
+            else:
+                left = mid + 1
+        return left # 蓝左
+```
+
+## **例题3：410. Split Array Largest Sum**
+
+Given an integer array `nums` and an integer `k`, split `nums` into `k` non-empty subarrays such that the largest sum of any subarray is **minimized**.
+
+Return *the minimized largest sum of the split*.
+
+A **subarray** is a contiguous part of the array.
+
+**Constraints:**
+
+* `1 <= nums.length <= 1000`
+* `0 <= nums[i] <= 106`
+* `1 <= k <= min(50, nums.length)`
+
+此题中，子数组最少的个数 是关于 子数组允许的最大的和 的单调不增函数，因此可以使用二分查找
+
+且慢，这题给出的条件是正好分成k个子数组，而根据函数的定义，我们求出的应是**最多分成k个子数组**，子数组中最大和的最小值。万一子数组的最大和取得最小值时，对应的分隔子数组数小于了k，岂不是不符合规则了？
+
+不必担心。二分查找找到的子数组最大和的最小值，保证了如下特征：
+
+* 查到的这个数字，就是蓝色区域的最右边。往左，所有小于当前值的自变量，对应的最少切分个数，一定不小于等于k。换言之，该数字左边的所有数字一定不符合要求
+* 查到的这个数字，即使对应的分割数量小于k，也能变成k. 题目规定k小于数组长度，就意味着，我可以通过拆散某些子数组，来让子数组的个数达到k。在这过程中，和最大的子数组，不会受影响。因为比和它小的都没法拆成k个及以内的子数组，因此和最大的子数组在此过程中保持不变
+* 这种“拆分后子集和必变小”的性质确保我们可以贪心的定义函数
+
+因此，把本题条件直接改成小于等于k个子数组，答案是不变的。本题和例2就完全一样了：
+
+```python
+class Solution:
+    def splitArray(self, nums: list[int], k: int) -> int:
+        def split_num(max_sum):
+            cur = 0
+            count = 0
+            for num in nums:
+                if num + cur <= max_sum:
+                    cur += num
+                else:
+                    cur = num
+                    count += 1
+            if cur > 0:
+                count += 1
+            return count
+        left, right = max(nums), sum(nums)
+        while left <= right:
+            mid = (left+right) // 2
+            if split_num(mid) <= k:
+                right = mid - 1
+            else:
+                left = mid + 1
+        return left
+```
+
+## 例题4：**1552. Magnetic Force Between Two Balls**
+
+In the universe Earth C-137, Rick discovered a special form of magnetic force between two balls if they are put in his new invented basket. Rick has `n` empty baskets, the `ith` basket is at `position[i]`, Morty has `m` balls and needs to distribute the balls into the baskets such that the **minimum magnetic force** between any two balls is **maximum**.
+
+Rick stated that magnetic force between two different balls at positions `x` and `y` is `|x - y|`.
+
+Given the integer array `position` and the integer `m`. Return *the required force*.
+
+这题里面所谓磁力，实际上就是两个球的距离。最短的距离，自然产生于相邻的两个球之间。因此，把球看作区间的端点，相当于问：（至少）有m-1个区间，这些区间长度的最小值，最大是多少？
+
+至少二字能添加上，原因在于，如果找到的结果区间数量大于m-1，可以合并若干区间，来让区间数量恰好为m-1。而提供最大区间长度的那个区间不会被合并，因为一旦合并，最大区间长度就会变大，而更大的区间长度不可能满足分割成m-1个区间这一条件。和例3 一样，利用“合并后区间长度必变大”的性质，可以把题目中的等号改成大于等于号
+
+定义函数f: 区间长度的最小值 → 区间最多的个数。显然，随着区间长度最小值的增加，能放置的区间个数会减少，因此，f是一个单调不增的函数。
+
+想要尽可能多的分隔区间，贪心策略就是从第一个可能的位置开始，每次区间长度刚刚大于等于x，就直接分隔。
+
+* 假设没有从第一个开始，而是从第k个元素开始，那么如果k到下一个节点的区间长度大于等于x, 1到这个节点的区间长度也必然大于等于x。因此，从第k个元素开始得到的区间个数，一定不大于从第一个元素开始得到的区间个数
+* 假设到中间某处n时，区间长度已经大于等于x了，可是迟迟没有分割，而是等到了后面某个位置m才分割。那么，从m开始到下一个节点的区间长度一定大于等于x，从n到下一节点的区间长度更要大于m了。因此，从m开始分割，得到的区间个数，一定不大于从刚开始可以分隔处，n，开始分割，得到的区间个数
+* 因此，这个贪心策略能保证尽可能多的分割区间
+
+然后是二分查找的个数，我们找单调不增函数大于等于某数的最大值，也就是把大于等于某数定义为红色后的红右。代码于是就很简单了：
+
+```python
+class Solution:
+    def maxDistance(self, position: list[int], m: int) -> int:
+        position.sort()
+        def max_count(min_dist):
+            pre = -min_dist
+            count = 0
+            for pos in position:
+                if pos - pre >= min_dist:
+                    pre = pos
+                    count += 1
+            return count
+        
+        left, right = 1, max(position)-min(position)
+        while left <= right:
+            mid = (left+right) // 2
+            if max_count(mid) >= m:
+                left = mid + 1
+            else:
+                right = mid - 1
+        return right
+```
+
+## 例题5：**2517. Maximum Tastiness of Candy Basket**
+
+You are given an array of positive integers `price` where `price[i]` denotes the price of the `ith` candy and a positive integer `k`.
+
+The store sells baskets of `k` **distinct** candies. The **tastiness** of a candy basket is the smallest absolute difference of the **prices** of any two candies in the basket.
+
+Return *the **maximum** tastiness of a candy basket.*
+
+与例四完全一样，不再赘述
+
+```python
+class Solution:
+    def maximumTastiness(self, price: list[int], k: int) -> int:
+        price.sort()
+        def max_num(tastiness):
+            pre = - tastiness
+            count = 0
+            for p in price:
+                if p - pre >= tastiness:
+                    count += 1
+                    pre = p
+            return count
+        
+        left, right = 1, max(price) - min(price)
+        while left <= right:
+            mid = (left+right) // 2
+            if max_num(mid) >= k:
+                left = mid + 1
+            else:
+                right = mid - 1
+        return right
+```
