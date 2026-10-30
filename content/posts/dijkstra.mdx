@@ -7,3 +7,490 @@ tags:
 featured: true
 ---
 
+# 应用条件
+
+Dijkstra算法用于求解**非负**有权图中**单源**最短路径。如果有负数权重，请出门左拐找更全能的Bellman-Ford算法
+
+# 思路
+
+## 主要思路
+
+Dijkstra算法的核心思想是贪心。3句话总结大致的思路：
+
+1. 初始化起点O到所有节点的距离为无穷大，除了O到O的距离设为零
+2. 每次从已知最短距离的节点A出发，探寻其相邻节点，B
+3. 如果目前已知的O到B的距离，要大于从O到A再到B的距离，就更新这个距离
+
+其中，“找到最短的路就更新”正是贪心的地方。因为我们知道，从O到A的最短距离途径的所有节点，比如说B，一定满足OB最短。假设O到B存在一条更短的路径，那么就会选择那条更短的路了，因此不存在更短的路。
+
+## 关键优化
+
+### 挑出最短距离
+
+然而，如何在若干未确定是否距离最短的节点中，挑出这个节点A，使得O到A的距离一定是最短的？
+
+很朴素的道理：只要OA在所有不确定的距离中最小即可。
+
+顾虑无非是：绕路从O到A可能会比现在的情况更近。然而从O出发，到达其他点的距离都要大于等于OA，更别提还要从其他点再回到A需要的额外距离了。因此，OA的距离可以保证是最小的
+
+于是，存储未确定距离的数据结构应该是一个优先队列，每次都弹出距离起点最近的那个节点
+
+没错，Dijkstra算法本质上就是BFS算法，只不过把队列换成了优先队列。
+
+## 剔除遗留数据
+
+然而，将新的距离送入队列中时，我们不知道队列中是否还存在过时的数据，记录着以前起点到该点的距离。显然，这个更大的距离会在更短距离之后弹出。此时，就要舍去这个更大的距离。换言之，如果到达同一节点的距离第二次第三次弹出，就要直接舍去，因为它一定不是最优的
+
+## 避免重复路径
+
+我们可以一如既往的维护一个visited数组，在确定该节点到起点距离最小时——也就是从优先队列里弹出来的那一刻，就可以立刻打上“已遍历”的标签
+
+visited数组不是必须的。因为被visited标注的节点，一定是已经有最短距离的节点。哪怕不标注，在探索新节点时，新的距离不会小于旧的距离；在堆中取到visited过的节点时，上面的那一步检测也可以把它剔除掉。写visited只是为了换取探索新节点时，节约下来的时间
+
+# 应用
+
+## 直接考察
+
+[https://leetcode.com/problems/network-delay-time](https://leetcode.com/problems/network-delay-time) 这题是Dijkstra算法的直接考察。顺着前面的思路，这题需要我们干这些事情：
+
+1. 把给的times数组转化成适合处理的形式（邻接表，邻接矩阵等）
+2. 初始化距离
+3. 进行BFS遍历，同步更新最小距离
+4. 如果能到达所有节点，返回最大距离，否则返回-1
+
+笔者选择将数组转化为邻接表：
+
+```python
+graph = [[] for _ in range(n)] 
+for u, v, w in times:
+    graph[u-1].append((v-1,w)) # 减1，让编号从0开始
+```
+
+初始化距离
+
+```python
+dist = [float('inf')]*n
+dist[k-1] = 0
+```
+
+初始化最小堆与visited数组
+
+```python
+pq = [(0, k-1)] # （距离，节点编号），因为heapq默认比较顺序是从前往后
+visited = [False] * (n)
+```
+
+进行BFS遍历
+
+```python
+while pq:
+    d, cur = heapq.heappop(pq)
+    if d > dist[cur]: # 剔除过时数据
+        continue
+    visited[cur] = True # 避免重复访问
+    for nxt, w in graph[cur]:
+        if visited[nxt]:
+            continue
+        if dist[nxt] > w + dist[cur]: # 如果更短，就更新
+            dist[nxt] = w + dist[cur]
+            heapq.heappush(pq, (dist[nxt], nxt))
+```
+
+即可得出答案
+
+## 重新定义距离
+
+其实，能被称作“距离”的状态量，只要满足如下三个性质即可：
+
+1. **无后效性：** 到达某个节点时，只需要关心“当前累计代价”这一个指标，不需要关心是怎么走过来的。
+2. **最优子结构：** 赢在起跑线上的路径，经过同一条边后，绝不会被落后的路径反超。
+3. **贪心单调性：** 路径每往前多走一步，产生的新代价相比于当前代价，只能朝着**远离优化目标**的方向发展（求最小则单调不减，求最大则单调不增）。
+
+### 最大的概率
+
+[https://leetcode.com/problems/path-with-maximum-probability/description/](https://leetcode.com/problems/path-with-maximum-probability/description/) 这题要求指定两点之间的最大概率。相较于前一题，有这些变化：
+
+1. 无法访问的节点，概率设置为0；一定能访问的节点，概率应为1
+2. 路径不再加和而是相乘
+3. 由于每条路的权重都在\[0,1]之间，因此路径越乘越小，而我们想要的是最大路径，刚好反过来了。因此需要一个大顶堆而非小顶堆
+4. 只求指定两点的距离，意味着不必算出所有单源距离
+
+变化1，dist数组初始化应该是0，出发点设为1
+
+变化2，直接把上面的代码更新距离处的加号变为乘号即可
+
+变化3，进入堆时，把距离取相反数
+
+变化4，可以提前中断循环返回
+
+因此，可以直接写出代码：
+
+```python
+class Solution:
+    def maxProbability(self, n: int, edges: list[list[int]], succProb: list[float], start_node: int, end_node: int) -> float:
+        graph = {i:[] for i in range(n)}
+        for i in range(len(edges)):
+            start, end = edges[i]
+            weight = succProb[i]
+            graph[start].append((end, weight))
+            graph[end].append((start, weight))
+        dist = [0] * n
+        dist[start_node] = 1
+        visited = set()
+        pq = [(-1, start_node)]
+        while pq:
+            d, cur = heapq.heappop(pq)
+            d = -d
+            if d < dist[cur]:
+                continue
+            if cur == end_node:
+                return d
+            visited.add(cur)
+            for nxt, weight in graph[cur]:
+                if nxt in visited:
+                    continue
+                if weight*dist[cur] > dist[nxt]:
+                    dist[nxt] = weight*dist[cur]
+                    heapq.heappush(pq, (-dist[nxt], nxt))
+        return 0
+```
+
+### 最小的最大差距
+
+[https://leetcode.com/problems/path-with-minimum-effort/description/](https://leetcode.com/problems/path-with-minimum-effort/description/) 这题乍一看，貌似是一道动态规划。但实际上不是。这题并没有固定只能向右向下移动，这意味着状态转移的方向是不定的
+
+再仔细看，此题关于距离的定义，满足我们之前的三个要求：
+
+1. 无后效性：不关心到达节点前是怎么走的，只关心到达节点前，最大的差距是多少
+2. 最优子结构：到达同一节点的不同路径，最大差距最小的那一个，即使放眼全局也是最优的
+3. 贪心单调性：从本节名字就能看出来，最小的最大差距，最大差距只增不减，而我们正好要求它的最小值
+
+因此此题可以使用Dijkstra算法
+
+相较于前两题，此题不同之处在于：
+
+1. 路径的累计方式变为了max，相邻两个单元格的权重是|h1-h2|
+2. 图具象成了网格
+
+对于第一点，我们修改距离的计算方式即可；第二点，则意味着图是现成的，每个网格的邻居也是现成的（上下左右），因此反而省事了
+
+代码如下：
+
+```python
+class Solution:
+    def minimumEffortPath(self, heights: list[list[int]]) -> int:
+        m, n = len(heights), len(heights[0])
+        dist = [[float('inf')]*n for _ in range(m)]
+        dist[0][0] = 0
+        pq = [(0, 0, 0)] # (distance, row, col)
+        visited = [[False]*n for _ in range(m)]
+        DIR = [0, 1, 0, -1, 0]
+        while pq:
+            d, i, j = heapq.heappop(pq)
+            if d > dist[i][j]:
+                continue
+            if i == m-1 and j == n-1:
+                return d
+            visited[i][j] = True
+            for k in range(4):
+                ni, nj = i + DIR[k], j + DIR[k+1]
+                if 0<= ni < m and 0 <= nj < n and not visited[ni][nj]:
+                    new_dist = max(d, abs(heights[i][j]-heights[ni][nj]))
+                    if dist[ni][nj] > new_dist:
+                        dist[ni][nj] = new_dist
+                        heapq.heappush(pq, (new_dist, ni, nj))
+        return dist[-1][-1] # 可以删掉 这行代码不可能被执行         
+```
+
+### 最小的最大数
+
+[https://leetcode.com/problems/swim-in-rising-water/description/](https://leetcode.com/problems/swim-in-rising-water/description/) 这题和上一题如出一辙，不再赘述。这里“距离”的定义依旧满足那三条性质，需要更改的，也只是距离的计算方式
+
+```python
+class Solution:
+    def swimInWater(self, grid: list[list[int]]) -> int:
+        m, n = len(grid), len(grid[0])
+        max_num = [[float('inf')]*n for _  in range(m)]
+        max_num[0][0] = grid[0][0]
+        pq = [(grid[0][0], 0, 0)]
+        DIR = [0, 1, 0, -1, 0]
+        while pq:
+            cur_max_num, i, j = heapq.heappop(pq)
+            if cur_max_num > max_num[i][j]:
+                continue
+            if i == m-1 and j == n-1:
+                return cur_max_num
+            for k in range(4):
+                new_i, new_j = i+DIR[k], j+DIR[k+1]
+                if 0<= new_i <m and 0 <= new_j < n:
+                    new_max_num = max(max_num[i][j], grid[new_i][new_j])
+                    if max_num[new_i][new_j] > new_max_num:
+                        max_num[new_i][new_j] = new_max_num
+                        heapq.heappush(pq, (new_max_num, new_i, new_j))
+```
+
+### 最少的路径用时
+
+[https://leetcode.com/problems/find-minimum-time-to-reach-last-room-i/description/](https://leetcode.com/problems/find-minimum-time-to-reach-last-room-i/description/) 和上一题相似：
+
+1. 加入了移动的时间
+2. 移动的代价不止取决于到达当前单元格的最小时间，还取决于相邻单元格开启的时间。
+
+注意，这里的“时间”才是我们应该优化的“距离”. 时间同样满足这三条性质：
+
+1. 无后效性：到达任意一个节点，不关心前面具体怎么走，只关心前面用了多少时间和从现在到下一个需要多长时间。
+2. 最优子结构：到达任意一个节点，用时最少的方案在后续寻路中，不可能被其他方案超过
+3. 贪心单调性：时间随着行进越来越大，而我们要求的正好是这个总的最大时间的最小值
+
+假设到达当前单元格的时间为t0, 而相邻的一个单元格标记的时间是t1:
+
+* 如果t1≤t0, 那么无需等待可以直接过去，到达相邻单元格最终的时间是t0+1
+* 如果t1>t0, 那么需要一直等到t1才能过去，到达相邻单元格最终的时间是t1+1
+
+因此时间的更新公式是min(t0,t1)+1。这题的无后效性岌岌可危，但是依旧可以解决
+
+```python
+class Solution:
+    def minTimeToReach(self, moveTime: List[List[int]]) -> int:
+        m, n = len(moveTime), len(moveTime[0])
+        min_time = [[float('inf')]*n for _ in range(m)]
+        min_time[0][0] = 0
+        visited = [[False]*n for _ in range(m)]
+        pq = [(0, 0, 0)]
+        DIR = [0, 1, 0, -1, 0]
+        while pq:
+            cur_min_time, i, j = heapq.heappop(pq)
+            if cur_min_time > min_time[i][j]:
+                continue
+            if i == m-1 and j == n-1:
+                return cur_min_time
+            visited[i][j] = True
+            for k in range(4):
+                new_i, new_j = i+DIR[k], j+DIR[k+1]
+                if 0<= new_i < m and 0<= new_j < n and not visited[new_i][new_j]:
+                    new_min_time = min(max(cur_min_time,moveTime[new_i][new_j])+1, min_time[new_i][new_j])
+                    if min_time[new_i][new_j] > new_min_time:
+                        min_time[new_i][new_j] = new_min_time
+                        heapq.heappush(pq, (new_min_time, new_i, new_j))
+```
+
+还有一道姊妹题，[https://leetcode.com/problems/find-minimum-time-to-reach-last-room-ii/description/，](https://leetcode.com/problems/find-minimum-time-to-reach-last-room-ii/description/%EF%BC%8C) 移动消耗的时间在1，2之间来回变化。变化的周期，恰好与横纵坐标之和模2的周期是一样的，因此除了时间更新方式有一点点变化外，其他全都一样。这时数学上的技巧，与Dijkstra关系不大
+
+```python
+class Solution:
+    def minTimeToReach(self, moveTime: List[List[int]]) -> int:
+        m, n = len(moveTime), len(moveTime[0])
+        min_time = [[float('inf')]*n for _ in range(m)]
+        min_time[0][0] = 0
+        visited = [[False]*n for _ in range(m)]
+        pq = [(0, 0, 0)]
+        DIR = [0, 1, 0, -1, 0]
+        while pq:
+            cur_min_time, i, j = heapq.heappop(pq)
+            if cur_min_time > min_time[i][j]:
+                continue
+            if i == m-1 and j == n-1:
+                return cur_min_time
+            visited[i][j] = True
+            for k in range(4):
+                new_i, new_j = i+DIR[k], j+DIR[k+1]
+                if 0<= new_i < m and 0<= new_j < n and not visited[new_i][new_j]:
+                    new_min_time = min(max(cur_min_time,moveTime[new_i][new_j])+1+(i+j)%2, min_time[new_i][new_j])
+                    if min_time[new_i][new_j] > new_min_time:
+                        min_time[new_i][new_j] = new_min_time
+                        heapq.heappush(pq, (new_min_time, new_i, new_j))
+```
+
+### 最少的逆行次数
+
+[https://leetcode.com/problems/minimum-cost-to-make-at-least-one-valid-path-in-a-grid/description/](https://leetcode.com/problems/minimum-cost-to-make-at-least-one-valid-path-in-a-grid/description/) 这题的“路径”是逆行的次数之和。同样满足三条性质：
+
+* 最优子结构：到达同一个节点，逆行次数越少越好
+* 无后效性：到达同一个节点，不管之后逆行几次，只看当前逆行几次
+* 贪心单调性：逆行次数随着行进单调不减，而我们求的就是其最小值
+
+因此可以应用Dijkstra算法。唯一的变化点就是判断是否逆行。逆行给cost+1，否则不变：
+
+```python
+class Solution:
+    def minCost(self, grid: list[list[int]]) -> int:
+        m, n = len(grid), len(grid[0])
+        cost = [[float('inf')]*n for _ in range(m)]
+        cost[0][0] = 0
+        visited = [[False]*n for _ in range(m)]
+        pq = [(0, 0, 0)]
+        DIR = [(0, 1), (0, -1), (1, 0), (-1, 0)]
+        while pq:
+            cur_cost, i, j = heapq.heappop(pq)
+            if cur_cost > cost[i][j]:
+                continue
+            if i == m-1 and j == n-1:
+                return cur_cost
+            visited[i][j] = True
+            for k in range(4):
+                new_i, new_j = i + DIR[k][0], j + DIR[k][1]
+                if 0<= new_i < m and 0<= new_j < n and not visited[new_i][new_j]:
+                    if cost[new_i][new_j] > cur_cost + int(k != grid[i][j]-1):
+                        cost[new_i][new_j] = cur_cost + int(k != grid[i][j]-1)
+                        heapq.heappush(pq, (cost[new_i][new_j], new_i, new_j))
+                
+            
+```
+
+## 引入其他状态量
+
+如果状态量不唯一，那么“距离”可能就丧失了那三个性质。为了使用Dijkstra算法，必须增加记录的状态量。
+
+比如，还是求最短路径，不过多了体力的限制，可能走某条路距离很短，但是体力消耗很大，不足以支撑到最后了。所以说，两个状态综合考虑，才能满足那三条性质。
+
+### 最少的消费+最多k个中间节点
+
+[https://leetcode.com/problems/cheapest-flights-within-k-stops/description/](https://leetcode.com/problems/cheapest-flights-within-k-stops/description/) 这题为走过的节点数量增加了上限。这意味着仅凭花费最少来贪心的选择路径不够。比如，飞到某个机场很便宜，但是要转机多次，走过的机场数量反而增加了。
+
+因此，我们应该同时考虑（花费，经过的节点数），这样这个二元性质就满足：
+
+1. 无后效性：确定了到达某节点经过的节点数，只关心之前的消费和中转机场数，而不在意具体是怎么飞的
+2. 最优子结构：确定了到达某节点经过的节点数，消费最少的方案，在后续的飞行中，依旧比其他方案要更好
+3. 贪心单调性：随着行进，花费只增不减，而我们求的恰好是最少花费
+
+```python
+class Solution:
+    def findCheapestPrice(self, n: int, flights: list[list[int]], src: int, dst: int, k: int) -> int:
+        graph = [[] for _ in range(n)]
+        for start, end, p in flights:
+            graph[start].append((end, p))
+        price = [[float('inf')]*(k+2) for _ in range(n)]
+        price[src][0] = 0
+        pq = [(0, src, 0)] # price, idx, k
+        while pq:
+            cur_price, cur, count = heapq.heappop(pq)
+            if cur_price > price[cur][count]:
+                continue
+            if cur == dst:
+                return cur_price
+            if count > k:
+                continue
+            for nxt, new_price in graph[cur]:
+                if price[nxt][count+1] > cur_price + new_price:
+                    price[nxt][count+1] = cur_price + new_price
+                    heapq.heappush(pq, (price[nxt][count+1], nxt, count+1))
+        return -1
+        
+```
+
+### 最短的距离+最多k个连续相同字母
+
+[https://leetcode.com/problems/shortest-path-with-at-most-k-consecutive-identical-characters/description/?envType=daily-question\&envId=2026-10-30](https://leetcode.com/problems/shortest-path-with-at-most-k-consecutive-identical-characters/description/?envType=daily-question\&envId=2026-10-30) 这题换汤不换药，和上一题极为相似。不同的地方在于，连续相同字母个数是可以刷新的。因此，在探路时，要分别计算这一状态量。除此之外，没有别的不同了
+
+```python
+class Solution:
+    def shortestPath(self, n: int, edges: List[List[int]], labels: str, k: int) -> int:
+        graph = [[] for _ in range(n)]
+        for start, end, weight in edges:
+            graph[start].append((end, weight))
+        dist = [[float('inf')]*(k+1) for _ in range(n)]
+        dist[0][1] = 0
+        heap = [] # weight, index, count
+        heapq.heappush(heap, (0, 0, 1))
+        while heap:
+            total_weight, index, count = heapq.heappop(heap)
+            if total_weight > dist[index][count]:
+                continue
+            if index == n-1:
+                return total_weight
+            for next_index, weight in graph[index]:
+                next_count = count + 1 if labels[next_index] == labels[index] else 1
+                if next_count > k:
+                    continue
+                if total_weight + weight < dist[next_index][next_count]:
+                    dist[next_index][next_count] = total_weight + weight
+                    heapq.heappush(heap, (total_weight + weight, next_index, next_count))
+        return -1                
+
+```
+
+### 最少的时间+电量约束
+
+[https://leetcode.cn/problems/DFPeFJ/description/这题引入的自行车电量。言外之意，就是要求在寻路过程中：](https://leetcode.cn/problems/DFPeFJ/description/%E8%BF%99%E9%A2%98%E5%BC%95%E5%85%A5%E7%9A%84%E8%87%AA%E8%A1%8C%E8%BD%A6%E7%94%B5%E9%87%8F%E3%80%82%E8%A8%80%E5%A4%96%E4%B9%8B%E6%84%8F%EF%BC%8C%E5%B0%B1%E6%98%AF%E8%A6%81%E6%B1%82%E5%9C%A8%E5%AF%BB%E8%B7%AF%E8%BF%87%E7%A8%8B%E4%B8%AD%EF%BC%9A)
+
+* 电量非负
+* 还得充电
+
+这和前一题“最多k个中转机场”不同。前一题写死了，而这一题，你可以充电，只要不打破这个规矩就可以
+
+那么，何尝不把“充电”当成寻路的一部分？每到一个点，就尝试充电一次；如果充电后的时间是更短的，就扔到堆里面去。这样后续肯定会再取出来，接着充电。
+
+这样，（时间，剩余电量）这一性质就满足这三条：
+
+1. 后无关性：在确定的节点确定的剩余电量，不关心之前具体怎么充电往哪里走，只关心到达这一状态需要的时间与剩余的电量
+2. 最优子结构：在确定的节点确定的剩余电量，花费时间最少的那一个，往后走，依旧是最优的
+3. 贪心单调性：随着行进，时间只增不减，而我们求的正好是最少的时间
+
+综上，代码里无非是多了“充电”这一过程，设问和上一题是一样的（就好像在每个机场，你可以选择聘请开销不同的“黑客”来帮你骇入航司系统抹去你买中转机票的事实，不过现实中没人这么做就是了）
+
+```python
+class Solution(object):
+    def electricCarPlan(self, paths: List[List[int]], cnt: int, start: int, end: int, charge:List[int]):
+        graph = {}
+        for u, v, cost in paths:
+            if u not in graph:
+                graph[u] = []
+            if v not in graph:
+                graph[v] = []
+            graph[u].append((v, cost))
+            graph[v].append((u, cost))
+        n = len(graph)
+        time = [[float('inf')]*(cnt+1) for _ in range(n)]
+        time[start][0] = 0
+        pq = [(0, 0, start)] # 时间，电量，城市
+        while pq:
+            cur_time, elec, cur = heapq.heappop(pq)
+            if cur_time > time[cur][elec]:
+                continue
+            if cur == end:
+                return cur_time
+            if elec < cnt and time[cur][elec+1] > cur_time + charge[cur]:
+                time[cur][elec+1] = cur_time + charge[cur]
+                heapq.heappush(pq, (time[cur][elec+1], elec+1, cur))
+            for nxt, nxt_time in graph[cur]:
+                new_elec = elec - nxt_time
+                if new_elec >= 0 and time[nxt][new_elec] > cur_time + nxt_time:
+                    time[nxt][new_elec] = cur_time + nxt_time
+                    heapq.heappush(pq, (time[nxt][new_elec], new_elec, nxt))
+```
+
+## 统计最短/最长距离以外的参数
+
+### 最短路径的个数
+
+[https://leetcode.com/problems/number-of-ways-to-arrive-at-destination/description/](https://leetcode.com/problems/number-of-ways-to-arrive-at-destination/description/) 需要我们额外记录最短路径的个数。之前的代码都维持不变，只需要在找到相等的路径时，将路径数量加上去即可
+
+```python
+class Solution:
+    def countPaths(self, n: int, roads: list[list[int]]) -> int:
+        MOD = 10**9 + 7
+        graph = [[] for _ in range(n)]
+        for u, v, t in roads:
+            graph[u].append((v, t))
+            graph[v].append((u, t))
+        dist = [[float('inf'), 0]]*n
+        dist[0] = [0, 1]
+        pq = [(0, 0)] # time, idx
+        while pq:
+            cur_time, cur = heapq.heappop(pq)
+            if cur_time > dist[cur][0]:
+                continue
+            for nxt, nxt_time in graph[cur]:
+                if dist[nxt][0] == cur_time + nxt_time:
+                    dist[nxt][1] = (dist[cur][1] + dist[nxt][1])%MOD
+                elif dist[nxt][0] > cur_time + nxt_time:
+                    dist[nxt] = [cur_time+nxt_time, dist[cur][1]]
+                    heapq.heappush(pq, (dist[nxt][0], nxt))
+        return dist[-1][1] % MOD
+```
+
+### 第二短的耗时
+
+[https://leetcode.com/problems/second-minimum-time-to-reach-destination/description/](https://leetcode.com/problems/second-minimum-time-to-reach-destination/description/)
+
+把这题留作作业，笔者今天一口气刷完了上面的十道题，有点小累
