@@ -39,8 +39,9 @@
 > 投影，配一个拉链底部止口。**根容器必须是 `overflow-x-clip`**（只裁横向），不能改回
 > `overflow-hidden`，否则下摆会被切平；也不要移除下摆。
 > 顶栏没有「履历」入口：完整履历嵌在 `/zh/about` / `/en/about` 的 `#resume` 段，与首页共用 `timeline`；
-> 旧的 `/zh/resume`、`/en/resume` 308 到 `/about#resume`。关于页把 Toolbox + 正文放进一个原生
-> `<details>` 折叠框（默认收起，无 JS 可展开），不要再加回独立的履历页。
+> 旧的 `/zh/resume`、`/en/resume` 308 到 `/about#resume`。关于页只把履历放进一个原生
+> `<details>` 折叠框（默认收起，无 JS 可展开），位置在 Toolbox 与正文之间；
+> 个人介绍、技术栈、正文保持可见，不要再加回独立的履历页。
 > 阅读页由 `home.showReading` 控制：关闭时页脚无链接、`/reading` 404、sitemap 不收录。
 > 详见 `README.md` 的「个人主页」一节。
 

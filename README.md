@@ -162,8 +162,8 @@ URL 是语言的唯一来源：**同一路径永远返回同一语言**，不做
 >
 > 顶栏不再有独立的「履历」入口：完整履历已经嵌进 `/zh/about` / `/en/about` 的 `#resume` 段，
 > 与首页共用同一份 `timeline` 数据。旧的 `/resume` 地址会 308 到 `/about#resume`。
-> 关于页把 **Toolbox + 正文**收进一个原生 `<details>` 折叠框（默认收起，无 JS 也能展开），
-> 打开页面先看到个人介绍与履历。
+> 关于页把 **履历**放进一个原生 `<details>` 折叠框（默认收起，无 JS 也能展开），位置在
+> Toolbox 与正文之间；个人介绍、技术栈和正文保持默认可见。
 
 ### 技术栈
 
@@ -202,7 +202,7 @@ URL 是语言的唯一来源：**同一路径永远返回同一语言**，不做
 | `/series` + `/series/[series]` | 系列索引 / 系列聚合 | 当前语言文章的 `series` 字段 |
 | `/start-here` | 入门页 + 精选文章（`featured`） | `content/pages/start-here.mdx` / `pages-en` + posts |
 | `/reading` | 阅读清单；`home.showReading = false` 时页面 404、页脚链接隐藏 | `content/reading/reading.json` / `reading.en.json` |
-| `/about` | 长关于：个人介绍 + 履历 + 可折叠的 Toolbox / 正文 + 社交 | `content/pages/about.mdx` / `pages-en` + home |
+| `/about` | 长关于：个人介绍 + Toolbox + 可折叠履历 + 正文 + 社交 | `content/pages/about.mdx` / `pages-en` + home |
 | `/rss.xml` `/sitemap.xml` `/opengraph-image` | 订阅 / 站点地图 / 默认分享图 | RSS 两种语言；sitemap 双语 |
 
 - `project` / `note` / `reading` 都是**单文档 JSON 集合**（`match` + 禁用新建/删除），

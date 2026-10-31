@@ -112,103 +112,92 @@ export default async function AboutPage() {
         <SocialLinks socials={socials} className="mt-7" />
       </header>
 
-      {/*
-        The résumé lives here now: the top navigation no longer has its own
-        "Résumé" tab. `/resume` 308-redirects to `/about#resume`, so old links
-        keep working. The markup is the same static list the standalone page
-        used, just embedded in the About page.
-      */}
-      <section aria-labelledby="resume-title" id="resume" className="mt-16 scroll-mt-24">
-        <div className="flex items-baseline justify-between gap-3 border-t-2 border-dashed border-ink/20 pt-8 dark:border-chalk/20">
-          <h2 id="resume-title" className="text-title">
-            {messages.resume.title}
-          </h2>
-          {timeline.length > 0 ? (
+      {techStack.length > 0 ? (
+        <section aria-labelledby="about-tech" className="mt-10">
+          <div className="flex items-baseline justify-between gap-3 border-t-2 border-dashed border-ink/20 pt-6 dark:border-chalk/20">
+            <h2
+              id="about-tech"
+              className="text-[0.62rem] font-black tracking-[0.18em] text-ink/45 uppercase dark:text-slate-500"
+            >
+              {messages.about.toolbox}
+            </h2>
             <span className="text-xs font-bold text-ink/40 dark:text-slate-500">
-              {formatMessage(messages.common.itemsCount, { count: timeline.length })}
+              {formatMessage(messages.about.items, { count: techStack.length })}
             </span>
-          ) : null}
-        </div>
-
-        {timeline.length === 0 ? (
-          <p className="mt-8 rounded-2xl border-2 border-dashed border-ink/25 bg-white/40 p-6 text-center text-sm font-medium text-ink/60 dark:border-chalk/20 dark:bg-white/[0.03] dark:text-slate-400">
-            {messages.resume.empty}
-          </p>
-        ) : (
-          <ol className="mt-2 divide-y-2 divide-dashed divide-ink/15 dark:divide-chalk/15">
-            {timeline.map((entry, index) => (
-              <ResumeEntryRow
-                key={`${entry.period}-${entry.title}`}
-                entry={entry}
-                index={index}
-                presentLabel={messages.resume.present}
-              />
-            ))}
-          </ol>
-        )}
-      </section>
+          </div>
+          <TechStackGrid techStack={techStack} className="mt-4" />
+        </section>
+      ) : null}
 
       {/*
-        Toolbox + long-form intro are folded into ONE native <details> so the
-        page opens with the person and the résumé, not a wall of text. Native
-        <details>/<summary> keeps it usable without JavaScript, and the content
-        is still in the prerendered HTML (hidden, not removed) for search
-        engines. Closed by default, as requested.
+        The résumé is the COLLAPSED block, sitting between the Toolbox and the
+        long-form intro. The top navigation no longer has its own "Résumé" tab;
+        `/resume` 308-redirects to `/about#resume`, so old links land here.
+        Native <details>/<summary> keeps it usable without JavaScript, and the
+        list stays in the prerendered HTML (hidden, not removed) for crawlers.
+        Closed by default.
       */}
-      <details className="group mt-14 overflow-hidden rounded-blob border-2 border-ink/15 bg-white/55 shadow-brutal-sm backdrop-blur-xl dark:border-chalk/15 dark:bg-white/[0.03] dark:shadow-chalk-sm">
+      <details
+        id="resume"
+        className="group mt-12 scroll-mt-24 overflow-hidden rounded-blob border-2 border-ink/15 bg-white/55 shadow-brutal-sm backdrop-blur-xl dark:border-chalk/15 dark:bg-white/[0.03] dark:shadow-chalk-sm"
+      >
         <summary className="flex cursor-pointer list-none items-center justify-between gap-4 px-5 py-5 transition-colors hover:bg-white/40 sm:px-7 dark:hover:bg-white/[0.05] [&::-webkit-details-marker]:hidden">
           <span className="min-w-0">
-            <span className="block text-[0.62rem] font-black tracking-[0.18em] text-ink/45 uppercase dark:text-slate-500">
-              {messages.about.toolbox}
-            </span>
-            <span className="mt-1 block text-lg font-black tracking-tight">
-              {messages.about.details}
+            <span className="block text-lg font-black tracking-tight">
+              {messages.resume.title}
             </span>
             <span className="mt-0.5 block text-xs font-medium text-ink/45 group-open:hidden dark:text-slate-500">
-              {messages.about.detailsHint}
+              {messages.resume.detailsHint}
             </span>
           </span>
-          <span
-            aria-hidden
-            className="grid h-9 w-9 shrink-0 place-items-center rounded-full border-2 border-ink/20 bg-white/60 transition-transform duration-300 group-open:rotate-180 dark:border-chalk/20 dark:bg-white/[0.06]"
-          >
-            <svg
-              viewBox="0 0 24 24"
-              className="h-4 w-4"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.5"
-              strokeLinecap="round"
-              strokeLinejoin="round"
+          <span className="flex shrink-0 items-center gap-3">
+            {timeline.length > 0 ? (
+              <span className="text-xs font-bold text-ink/40 dark:text-slate-500">
+                {formatMessage(messages.common.itemsCount, { count: timeline.length })}
+              </span>
+            ) : null}
+            <span
+              aria-hidden
+              className="grid h-9 w-9 place-items-center rounded-full border-2 border-ink/20 bg-white/60 transition-transform duration-300 group-open:rotate-180 dark:border-chalk/20 dark:bg-white/[0.06]"
             >
-              <path d="m6 9 6 6 6-6" />
-            </svg>
+              <svg
+                viewBox="0 0 24 24"
+                className="h-4 w-4"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="m6 9 6 6 6-6" />
+              </svg>
+            </span>
           </span>
         </summary>
 
-        <div className="border-t-2 border-dashed border-ink/15 px-5 pt-6 pb-8 sm:px-7 dark:border-chalk/15">
-          {techStack.length > 0 ? (
-            <section aria-labelledby="about-tech">
-              <div className="flex items-baseline justify-between gap-3">
-                <h2
-                  id="about-tech"
-                  className="text-[0.62rem] font-black tracking-[0.18em] text-ink/45 uppercase dark:text-slate-500"
-                >
-                  {messages.about.toolbox}
-                </h2>
-                <span className="text-xs font-bold text-ink/40 dark:text-slate-500">
-                  {formatMessage(messages.about.items, { count: techStack.length })}
-                </span>
-              </div>
-              <TechStackGrid techStack={techStack} className="mt-4" />
-            </section>
-          ) : null}
-
-          <div className="prose prose-slate mt-10 max-w-none dark:prose-invert prose-headings:font-black prose-headings:tracking-tight prose-h1:border-b-0 prose-strong:font-black prose-li:marker:text-iris">
-            <Body content={page.body} locale={locale} />
-          </div>
+        <div className="border-t-2 border-dashed border-ink/15 px-2 pt-2 pb-4 sm:px-5 dark:border-chalk/15">
+          {timeline.length === 0 ? (
+            <p className="m-4 rounded-2xl border-2 border-dashed border-ink/25 bg-white/40 p-6 text-center text-sm font-medium text-ink/60 dark:border-chalk/20 dark:bg-white/[0.03] dark:text-slate-400">
+              {messages.resume.empty}
+            </p>
+          ) : (
+            <ol className="divide-y-2 divide-dashed divide-ink/15 dark:divide-chalk/15">
+              {timeline.map((entry, index) => (
+                <ResumeEntryRow
+                  key={`${entry.period}-${entry.title}`}
+                  entry={entry}
+                  index={index}
+                  presentLabel={messages.resume.present}
+                />
+              ))}
+            </ol>
+          )}
         </div>
       </details>
+
+      <div className="prose prose-slate mt-12 max-w-none dark:prose-invert prose-headings:font-black prose-headings:tracking-tight prose-h1:border-b-0 prose-strong:font-black prose-li:marker:text-iris">
+        <Body content={page.body} locale={locale} />
+      </div>
 
       <div className="mt-14 flex flex-wrap items-center justify-between gap-4 border-t-2 border-dashed border-ink/20 pt-6 text-sm dark:border-chalk/20">
         <p className="font-medium text-ink/60 dark:text-slate-400">{messages.about.rssNote}</p>
