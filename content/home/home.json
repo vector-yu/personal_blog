@@ -49,10 +49,6 @@
       "icon": "python"
     },
     {
-      "name": "React",
-      "icon": "react"
-    },
-    {
       "name": "PHP",
       "icon": "php"
     },
@@ -69,18 +65,6 @@
       "icon": "tailwindcss"
     },
     {
-      "name": "Node.js",
-      "icon": "nodedotjs"
-    },
-    {
-      "name": "D3.js",
-      "icon": "d3"
-    },
-    {
-      "name": "Figma",
-      "icon": "figma"
-    },
-    {
       "name": "Git",
       "icon": "git"
     },
@@ -91,6 +75,10 @@
     {
       "name": "MySQL",
       "icon": "mysql"
+    },
+    {
+      "name": "JavaScript",
+      "icon": "javascript"
     }
   ],
   "timeline": [
