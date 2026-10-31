@@ -35,6 +35,8 @@
 > 首页没有「关于我」「履历」小标题。履历是 `blueprint-timeline.tsx` 的**工程蓝图**：
 > 桌面 sticky + 滚动绘线，卡片始终在 HTML 里且始终可见；不要用遮罩把内容藏起来。
 > 手机、reduced-motion、无 JS 取消 sticky/绘线，直接显示同一份完整履历。
+> 蓝图的遥测读数（`blueprint-telemetry.tsx`）和网格光点（`grid-streaks.tsx`）都是
+> `aria-hidden` 的装饰；手机/reduced 不跑，卡片不依赖它们。
 > 顶栏没有「履历」入口：完整履历嵌在 `/zh/about` / `/en/about` 的 `#resume` 段，与首页共用 `timeline`；
 > 旧的 `/zh/resume`、`/en/resume` 308 到 `/about#resume`。关于页只把履历放进一个原生
 > `<details>` 折叠框（默认收起，无 JS 可展开），位置在 Toolbox 与正文之间；

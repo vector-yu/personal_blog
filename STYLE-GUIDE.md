@@ -134,6 +134,7 @@ class="animate-flow animate-tumble"
 | 新增可插入组件必须同步 **4 处** | 见 `AGENTS.md` 第二节 | 内容门禁 |
 | `.scroll-reveal` 必须留在 `(width >= 48rem)` + `prefers-reduced-motion: no-preference` + `@supports (animation-timeline: view())` 的合围内 | `globals.css` | 手机零动效；不支持的浏览器/无 JS 时内容立即可见 |
 | 蓝图履历的卡片必须始终渲染且可见；sticky/绘线只是装饰，手机与 reduced-motion 不 sticky | `blueprint-timeline.tsx` | no-JS、手机、爬虫看到完整履历 |
+| 遥测 HUD 与网格光点只做装饰：`aria-hidden`、手机/reduced 不更新、不承载内容 | `blueprint-telemetry.tsx` + `grid-streaks.tsx` | 动画影响可读性 / 手机发热 |
 | 表格必须保持「外层 `overflow-hidden` 圆角 + 内层 `overflow-x-auto`」，且 `table` 的 margin 为 0 | `tina-markdown.tsx` | 否则表头/表尾出现空隙，圆角处露出方角 |
 | 代码块 token 颜色类必须是 `highlight-code.ts` 里的字面量 | `highlight-code.ts` | Tailwind 扫描不到动态拼接的类名 |
 | 文章 h1/h2/h3 的 `id` 与右侧 TOC 必须共用 `slugifyHeading` | `tina-markdown.tsx` + `toc.ts` | 目录锚点对不上，点了不跳 |

@@ -154,6 +154,9 @@ URL 是语言的唯一来源：**同一路径永远返回同一语言**，不做
 > 履历是一张**工程蓝图**（`blueprint-timeline.tsx`）：桌面 sticky 住整屏，滚动时一条制图线
 > 依次穿过节点，节点和卡片随之点亮；卡片本身始终在 HTML 里、始终可见。手机、
 > `prefers-reduced-motion`、无 JS 时取消 sticky 和绘线，直接显示同一份完整履历。
+> 蓝图上还有两层纯装饰：`BlueprintTelemetry` 的遥测数字/迷你曲线（`aria-hidden`，仅 xl+，
+> 手机和 reduced-motion 不更新），以及 `GridStreaks` 的 canvas 光点——沿 120px 主网格滑行，
+> 带拖尾并偶尔在交点转弯。它们不承载内容，关掉也不影响履历。
 > 关于页仍用 `ResumeEntryRow` 的普通列表，两处共用同一份 `timeline`。
 >
 > 顶栏不再有独立的「履历」入口：完整履历已经嵌进 `/zh/about` / `/en/about` 的 `#resume` 段，

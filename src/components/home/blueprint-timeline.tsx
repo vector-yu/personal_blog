@@ -18,6 +18,8 @@ import {
   useSpring,
   useTransform,
 } from 'framer-motion';
+import { BlueprintTelemetry } from '@/components/home/blueprint-telemetry';
+import { GridStreaks } from '@/components/home/grid-streaks';
 import type { HomeTimelineEntry } from '@/lib/home';
 
 type Point = { x: number; y: number };
@@ -244,8 +246,11 @@ export function BlueprintTimeline({
         <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
           <m.div
             style={{ x: gridX, y: gridY }}
-            className="blueprint-grid absolute -inset-8 opacity-90"
-          />
+            className="absolute -inset-8"
+          >
+            <div className="blueprint-grid absolute inset-0 opacity-90" />
+            <GridStreaks active={!staticMode} />
+          </m.div>
           <m.div style={{ background: spotlight }} className="absolute inset-0" />
 
           {/* A faint technical orbit keeps the empty upper-right from reading
@@ -279,6 +284,8 @@ export function BlueprintTimeline({
           </span>
         </div>
 
+        <BlueprintTelemetry enabled={!staticMode} />
+
         <div className="relative z-10 flex min-h-full flex-col py-6">
           <header className="flex items-start justify-between gap-6">
             <div>
@@ -310,7 +317,7 @@ export function BlueprintTimeline({
 
             <svg
               aria-hidden
-              className="pointer-events-none absolute inset-0 z-[1] hidden h-full w-full md:block"
+              className="pointer-events-none absolute inset-0 z-[2] hidden h-full w-full md:block"
               viewBox={`0 0 ${size.width} ${size.height}`}
               preserveAspectRatio="none"
             >
@@ -478,10 +485,10 @@ function BlueprintNode({
   return (
     <div
       aria-hidden
-      className={`blueprint-node relative grid h-14 w-14 shrink-0 place-items-center rounded-full border-2 transition-all duration-500 ${
+      className={`blueprint-node relative grid h-14 w-14 shrink-0 place-items-center rounded-full border-2 bg-paper transition-all duration-500 ${
         active
-          ? 'border-iris bg-white/85 text-iris-text shadow-[0_0_0_7px_rgb(109_92_255_/_0.11)] dark:border-iris/60 dark:bg-white/[0.08] dark:text-indigo-200'
-          : 'border-ink/25 bg-white/45 text-ink/45 dark:border-chalk/20 dark:bg-white/[0.03] dark:text-slate-400'
+          ? 'border-iris text-iris-text shadow-[0_0_0_7px_rgb(109_92_255_/_0.11)] dark:border-iris/60 dark:bg-midnight dark:text-indigo-200'
+          : 'border-ink/25 text-ink/45 dark:border-chalk/20 dark:bg-midnight dark:text-slate-400'
       }`}
     >
       <span

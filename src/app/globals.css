@@ -578,14 +578,14 @@
 
   .blueprint-node {
     border-color: var(--color-iris);
-    background-color: rgb(255 255 255 / 0.85);
+    background-color: var(--color-paper);
     color: var(--color-iris-text);
     box-shadow: 0 0 0 7px rgb(109 92 255 / 0.11);
   }
 
   [data-theme='dark'] .blueprint-node {
     border-color: color-mix(in oklab, var(--color-iris) 60%, transparent);
-    background-color: rgb(255 255 255 / 0.08);
+    background-color: var(--color-midnight);
     color: #c7d2fe;
   }
 }
@@ -608,6 +608,29 @@
 
   .blueprint-hint {
     display: none;
+  }
+}
+
+/* A one-shot flicker when a telemetry value changes; not a loop. */
+@keyframes hud-tick {
+  0% {
+    opacity: 0.25;
+    transform: translateY(-1px);
+  }
+
+  100% {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.hud-tick {
+  animation: hud-tick 280ms ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hud-tick {
+    animation: none;
   }
 }
 
