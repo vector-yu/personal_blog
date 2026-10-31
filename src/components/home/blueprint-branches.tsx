@@ -262,7 +262,7 @@ function BranchNode({ index }: { index: number }) {
   return (
     <div
       aria-hidden
-      className="relative grid h-14 w-14 place-items-center rounded-full border-2 border-iris bg-paper text-iris-text shadow-[0_0_0_7px_rgb(109_92_255_/_0.10)] transition-colors duration-300 group-hover:border-iris group-hover:bg-white dark:border-iris/60 dark:bg-midnight dark:text-indigo-200 dark:group-hover:bg-white/[0.07]"
+      className="relative grid h-14 w-14 place-items-center rounded-full border-2 border-iris bg-paper text-iris-text shadow-[0_0_0_7px_rgb(109_92_255_/_0.10)] transition-all duration-300 group-hover:border-iris group-hover:bg-white group-hover:shadow-[0_0_0_9px_rgb(109_92_255_/_0.14)] dark:border-iris/60 dark:bg-midnight dark:text-indigo-200 dark:group-hover:border-iris dark:group-hover:bg-midnight"
     >
       <span className="absolute inset-2 rounded-full border border-dashed border-current opacity-30" />
       <span className="font-mono text-[0.68rem] font-black tracking-tight tabular-nums">
