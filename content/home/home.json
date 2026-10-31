@@ -88,6 +88,9 @@
     },
     {
       "name": "Pandas"
+    },
+    {
+      "name": "Numpy"
     }
   ],
   "timeline": [
