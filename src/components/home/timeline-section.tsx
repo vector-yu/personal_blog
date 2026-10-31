@@ -1,25 +1,23 @@
-import Link from 'next/link';
+import { BlueprintBranches, type BranchCard } from '@/components/home/blueprint-branches';
+import { BlueprintField } from '@/components/home/blueprint-field';
 import { BlueprintTimeline } from '@/components/home/blueprint-timeline';
 import type { HomeTimelineEntry } from '@/lib/home';
 
 /**
- * The homepage résumé section.
+ * The homepage résumé world.
  *
- * `BlueprintTimeline` owns the sticky technical sheet (and its static mobile /
- * reduced-motion fallback); this wrapper adds the normal-flow link that follows
- * the pinned scroll track.
+ * One grid field runs behind the pinned timeline and the three exit branches,
+ * continuing into the footer's top margin. The branch cards replace the old
+ * "read the writing" pill: About / Start here / Notes.
  */
 export function TimelineSection({
   entries,
-  readArticlesHref,
-  readArticlesLabel,
   emptyText,
   presentLabel,
   labels,
+  branches,
 }: {
   entries: HomeTimelineEntry[];
-  readArticlesHref: string;
-  readArticlesLabel: string;
   emptyText: string;
   presentLabel: string;
   labels: {
@@ -28,9 +26,18 @@ export function TimelineSection({
     hint: string;
     end: string;
   };
+  branches: {
+    eyebrow: string;
+    title: string;
+    hint: string;
+    open: string;
+    cards: BranchCard[];
+  };
 }) {
   return (
-    <>
+    <div className="blueprint-world relative">
+      <BlueprintField />
+
       <BlueprintTimeline
         entries={entries}
         emptyText={emptyText}
@@ -38,14 +45,7 @@ export function TimelineSection({
         labels={labels}
       />
 
-      <div className="scroll-reveal mx-auto flex w-full max-w-7xl justify-center px-6 pt-10 pb-24 sm:pt-14">
-        <Link
-          href={readArticlesHref}
-          className="rounded-full border-[3px] border-ink/85 bg-white/70 px-5 py-2.5 font-bold text-ink/80 shadow-brutal backdrop-blur transition-all duration-200 hover:-translate-y-0.5 hover:bg-sun hover:text-ink hover:shadow-brutal-sm motion-reduce:hover:translate-y-0 dark:border-chalk/25 dark:bg-white/[0.06] dark:text-slate-200 dark:shadow-chalk dark:hover:bg-white/15 dark:hover:text-white"
-        >
-          {readArticlesLabel}
-        </Link>
-      </div>
-    </>
+      <BlueprintBranches cards={branches.cards} labels={branches} />
+    </div>
   );
 }

@@ -72,6 +72,16 @@ export const zh = {
     blueprintTitle: '履历轨迹',
     blueprintHint: '滚动展开履历',
     blueprintEnd: '记录结束',
+    branchEyebrow: 'Blueprint / Exit',
+    branchTitle: '继续探索',
+    branchHint: '选择一条路',
+    branchAbout: '关于本人',
+    branchAboutDesc: '个人介绍、技术栈和完整履历',
+    branchStart: '从这开始',
+    branchStartDesc: '第一次来？按推荐顺序读',
+    branchNotes: '碎碎念',
+    branchNotesDesc: '短篇、随记和未整理的想法',
+    branchOpen: '打开',
   },
 
   posts: {

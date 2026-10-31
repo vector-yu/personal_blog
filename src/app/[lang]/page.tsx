@@ -52,8 +52,6 @@ export default async function HomePage() {
 
       <TimelineSection
         entries={home.timeline}
-        readArticlesHref={localePath(locale, '/posts')}
-        readArticlesLabel={messages.home.readArticles}
         emptyText={messages.home.emptyTimeline}
         presentLabel={messages.home.present}
         labels={{
@@ -61,6 +59,32 @@ export default async function HomePage() {
           title: messages.home.blueprintTitle,
           hint: messages.home.blueprintHint,
           end: messages.home.blueprintEnd,
+        }}
+        branches={{
+          eyebrow: messages.home.branchEyebrow,
+          title: messages.home.branchTitle,
+          hint: messages.home.branchHint,
+          open: messages.home.branchOpen,
+          cards: [
+            {
+              title: messages.home.branchAbout,
+              description: messages.home.branchAboutDesc,
+              href: localePath(locale, '/about'),
+              kicker: 'ABOUT',
+            },
+            {
+              title: messages.home.branchStart,
+              description: messages.home.branchStartDesc,
+              href: localePath(locale, '/start-here'),
+              kicker: 'START',
+            },
+            {
+              title: messages.home.branchNotes,
+              description: messages.home.branchNotesDesc,
+              href: localePath(locale, '/notes'),
+              kicker: 'NOTES',
+            },
+          ],
         }}
       />
     </main>

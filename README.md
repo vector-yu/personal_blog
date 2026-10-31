@@ -157,7 +157,11 @@ URL 是语言的唯一来源：**同一路径永远返回同一语言**，不做
 > 蓝图上还有两层纯装饰：`BlueprintTelemetry` 的遥测数字/迷你曲线（`aria-hidden`，仅 xl+，
 > 手机和 reduced-motion 不更新），以及 `GridStreaks` 的 canvas 光点——沿 120px 主网格滑行，
 > 带拖尾并偶尔在交点转弯。它们不承载内容，关掉也不影响履历。
-> 关于页仍用 `ResumeEntryRow` 的普通列表，两处共用同一份 `timeline`。
+>
+> 网格由 world 级的 `BlueprintField` 从履历顶部一直铺到页脚（桌面 sticky，手机/reduced 铺满），
+> 不再在每个 section 各切一段。履历末端的制图线更粗，内部渐变缓慢流动，在页面底部汇成一条总线，
+> 再分成三条岔路，分别指向 **关于本人 / 从这开始 / 碎碎念** 三张卡；这三张卡是真实链接，
+> 替换了原来的「去读文章」胶囊。关于页仍用 `ResumeEntryRow` 的普通列表，两处共用同一份 `timeline`。
 >
 > 顶栏不再有独立的「履历」入口：完整履历已经嵌进 `/zh/about` / `/en/about` 的 `#resume` 段，
 > 与首页共用同一份 `timeline` 数据。旧的 `/resume` 地址会 308 到 `/about#resume`。

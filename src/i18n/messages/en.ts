@@ -73,6 +73,16 @@ export const en: Messages = {
     blueprintTitle: 'Career track',
     blueprintHint: 'Scroll to trace the record',
     blueprintEnd: 'End of record',
+    branchEyebrow: 'Blueprint / Exit',
+    branchTitle: 'Continue exploring',
+    branchHint: 'Choose a path',
+    branchAbout: 'About me',
+    branchAboutDesc: 'Profile, stack and the full résumé',
+    branchStart: 'Start here',
+    branchStartDesc: 'New here? Follow the guided path',
+    branchNotes: 'Musings',
+    branchNotesDesc: 'Short notes and half-formed thoughts',
+    branchOpen: 'Open',
   },
 
   posts: {

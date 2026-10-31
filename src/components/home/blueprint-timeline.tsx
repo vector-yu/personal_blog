@@ -19,7 +19,6 @@ import {
   useTransform,
 } from 'framer-motion';
 import { BlueprintTelemetry } from '@/components/home/blueprint-telemetry';
-import { GridStreaks } from '@/components/home/grid-streaks';
 import type { HomeTimelineEntry } from '@/lib/home';
 
 type Point = { x: number; y: number };
@@ -103,8 +102,6 @@ export function BlueprintTimeline({
   const mouseY = useMotionValue(0);
   const springX = useSpring(mouseX, { stiffness: 90, damping: 22 });
   const springY = useSpring(mouseY, { stiffness: 90, damping: 22 });
-  const gridX = useTransform(springX, [-1, 1], [-12, 12]);
-  const gridY = useTransform(springY, [-1, 1], [-10, 10]);
   const spotX = useTransform(springX, [-1, 1], [18, 82]);
   const spotY = useTransform(springY, [-1, 1], [16, 84]);
   const spotlight = useMotionTemplate`radial-gradient(42rem circle at ${spotX}% ${spotY}%, rgb(109 92 255 / 0.11), transparent 62%)`;
@@ -244,13 +241,6 @@ export function BlueprintTimeline({
       >
         {/* --- blueprint sheet: grid, spotlight, orbit, corner marks -------- */}
         <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
-          <m.div
-            style={{ x: gridX, y: gridY }}
-            className="absolute -inset-8"
-          >
-            <div className="blueprint-grid absolute inset-0 opacity-90" />
-            <GridStreaks active={!staticMode} />
-          </m.div>
           <m.div style={{ background: spotlight }} className="absolute inset-0" />
 
           {/* A faint technical orbit keeps the empty upper-right from reading
@@ -328,14 +318,28 @@ export function BlueprintTimeline({
                   x1="0"
                   y1="0"
                   x2="0"
-                  y2={size.height}
+                  y2="240"
+                  spreadMethod="repeat"
                 >
-                  <stop offset="0%" stopColor="var(--color-iris)" />
-                  <stop offset="55%" stopColor="var(--color-blush)" />
-                  <stop offset="100%" stopColor="var(--color-sun)" />
+                  <stop offset="0" stopColor="var(--color-iris)" />
+                  <stop offset="0.22" stopColor="var(--color-blush)" />
+                  <stop offset="0.46" stopColor="var(--color-sun)" />
+                  <stop offset="0.7" stopColor="var(--color-mint)" />
+                  <stop offset="1" stopColor="var(--color-iris)" />
+                  {staticMode ? null : (
+                    <animateTransform
+                      attributeName="gradientTransform"
+                      type="translate"
+                      from="0 0"
+                      to="0 -240"
+                      dur="14s"
+                      repeatCount="indefinite"
+                      className="motion-reduce:hidden"
+                    />
+                  )}
                 </linearGradient>
-                <filter id="blueprint-glow" x="-20%" y="-20%" width="140%" height="140%">
-                  <feGaussianBlur stdDeviation="3" result="blur" />
+                <filter id="blueprint-glow" x="-30%" y="-30%" width="160%" height="160%">
+                  <feGaussianBlur stdDeviation="4" result="blur" />
                   <feMerge>
                     <feMergeNode in="blur" />
                     <feMergeNode in="SourceGraphic" />
@@ -361,7 +365,7 @@ export function BlueprintTimeline({
                     d={path}
                     fill="none"
                     stroke="currentColor"
-                    strokeWidth="1.5"
+                    strokeWidth="1.8"
                     strokeDasharray="5 9"
                     strokeLinejoin="round"
                     className="text-ink/15 dark:text-chalk/15"
@@ -371,7 +375,7 @@ export function BlueprintTimeline({
                     d={path}
                     fill="none"
                     stroke="url(#blueprint-line)"
-                    strokeWidth="2.5"
+                    strokeWidth="7"
                     strokeLinecap="round"
                     strokeLinejoin="round"
                     filter="url(#blueprint-glow)"
@@ -383,7 +387,7 @@ export function BlueprintTimeline({
                     d={path}
                     fill="none"
                     stroke="url(#blueprint-line)"
-                    strokeWidth="2.5"
+                    strokeWidth="7"
                     strokeLinecap="round"
                     strokeLinejoin="round"
                     filter="url(#blueprint-glow)"
@@ -399,9 +403,9 @@ export function BlueprintTimeline({
                     className="motion-reduce:hidden"
                     filter="url(#blueprint-glow)"
                   >
-                    <circle r="8" className="fill-iris/25" />
-                    <circle r="3" className="fill-iris" />
-                    <circle r="1.2" className="fill-white/90" />
+                    <circle r="10" className="fill-iris/25" />
+                    <circle r="3.2" className="fill-iris" />
+                    <circle r="1.3" className="fill-white/90" />
                   </g>
                 </>
               ) : null}

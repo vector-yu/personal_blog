@@ -37,6 +37,9 @@
 > 手机、reduced-motion、无 JS 取消 sticky/绘线，直接显示同一份完整履历。
 > 蓝图的遥测读数（`blueprint-telemetry.tsx`）和网格光点（`grid-streaks.tsx`）都是
 > `aria-hidden` 的装饰；手机/reduced 不跑，卡片不依赖它们。
+> 网格由 world 级 `blueprint-field.tsx` 连续铺到页脚；制图线在底部汇成总线、分三岔，
+> 指向 About / Start here / Notes 三张真实链接卡（替换旧的「去读文章」按钮）。
+> 加粗的流动线与节点必须有明确层级：节点圆盘实心，不能透出线。
 > 顶栏没有「履历」入口：完整履历嵌在 `/zh/about` / `/en/about` 的 `#resume` 段，与首页共用 `timeline`；
 > 旧的 `/zh/resume`、`/en/resume` 308 到 `/about#resume`。关于页只把履历放进一个原生
 > `<details>` 折叠框（默认收起，无 JS 可展开），位置在 Toolbox 与正文之间；

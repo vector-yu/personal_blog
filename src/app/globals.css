@@ -547,12 +547,23 @@
     position: relative;
   }
 
+  .blueprint-field-inner {
+    position: absolute;
+    inset: 0;
+  }
+
   @media (min-width: 48rem) and (prefers-reduced-motion: no-preference) {
     .blueprint-track[data-enhanced='true'] {
       height: calc(100vh + var(--blueprint-steps, 3) * 52vh);
     }
 
     .blueprint-track[data-enhanced='true'] .blueprint-stage {
+      position: sticky;
+      top: 4.5rem;
+      height: calc(100vh - 4.5rem);
+    }
+
+    .blueprint-field-inner {
       position: sticky;
       top: 4.5rem;
       height: calc(100vh - 4.5rem);
@@ -628,8 +639,22 @@
   animation: hud-tick 280ms ease-out both;
 }
 
+@keyframes blueprint-energy {
+  to {
+    stroke-dashoffset: -64;
+  }
+}
+
+.blueprint-energy {
+  animation: blueprint-energy 7s linear infinite;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .hud-tick {
+    animation: none;
+  }
+
+  .blueprint-energy {
     animation: none;
   }
 }
