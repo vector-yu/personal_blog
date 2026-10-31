@@ -85,6 +85,9 @@
     },
     {
       "name": "Matplotlib"
+    },
+    {
+      "name": "Pandas"
     }
   ],
   "timeline": [
