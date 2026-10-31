@@ -1,3 +1,4 @@
+import Image from 'next/image';
 import type { HomeTimelineEntry } from '@/lib/home';
 
 /**
@@ -34,8 +35,20 @@ export function ResumeEntryRow({
         />
       ) : null}
 
-      {/* Decorative index in the margin; hidden on phones. */}
-      <div className="hidden pl-5 sm:block">
+      {/* Decorative index (and optional school/company logo) in the margin. */}
+      <div className="flex items-center gap-3 pl-1 sm:flex-col sm:items-start sm:gap-4 sm:pl-5">
+        {entry.logo ? (
+          <span className="grid h-16 w-16 shrink-0 place-items-center overflow-hidden rounded-2xl border-2 border-ink/15 bg-white/80 p-2 shadow-brutal-xs backdrop-blur dark:border-chalk/15 dark:bg-white/10 dark:shadow-chalk-xs">
+            <Image
+              src={entry.logo}
+              alt=""
+              width={64}
+              height={64}
+              unoptimized
+              className="h-full w-full object-contain"
+            />
+          </span>
+        ) : null}
         <span className="text-sm font-black tracking-[0.22em] text-ink/30 tabular-nums dark:text-chalk/25">
           {String(index + 1).padStart(2, '0')}
         </span>

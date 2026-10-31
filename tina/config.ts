@@ -454,6 +454,13 @@ export default defineConfig({
               { type: 'string', name: 'title', label: '标题', required: true },
               { type: 'string', name: 'place', label: '学校 / 公司 / 地点' },
               {
+                type: 'image',
+                name: 'logo',
+                label: '学校 / 公司图标',
+                description:
+                  '可选。建议用方形 PNG / SVG（如 128×128）；填写后显示在履历左侧，留空则显示序号。',
+              },
+              {
                 type: 'string',
                 name: 'description',
                 label: '描述',

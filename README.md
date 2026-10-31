@@ -122,7 +122,7 @@ URL 是语言的唯一来源：**同一路径永远返回同一语言**，不做
 | 个人介绍 | 头像、姓名、学校、自我介绍、逐条信息（横向铺开） | `profile` |
 | 社交 | 页脚 / 关于页的图标链接 | `socials` |
 | 技术栈 | 首页滚动带 + 关于页 3/4 列小方块 | `techStack` |
-| 履历 | 整幅磨砂玻璃拉链 + 无边框铺开的履历 | `timeline` |
+| 履历 | 整幅磨砂玻璃拉链 + 无边框铺开的履历；每条可填学校 / 公司图标（`timeline[].logo`） | `timeline` |
 | 阅读页开关 | 关掉后页脚链接隐藏、`/reading` 返回 404 | `showReading` |
 
 以上全部来自 **一个** 文档：`content/home/home.json`（英文为 `content/home/home.en.json`），在 `/admin/index.html` 的
@@ -213,7 +213,7 @@ URL 是语言的唯一来源：**同一路径永远返回同一语言**，不做
 - 文章 h1/h2/h3 的 `id` 与右侧 TOC 都走 `src/lib/toc.ts` 的 `slugifyHeading`；新增标题渲染
   不要绕过它。
 - 默认分享图由 `src/app/opengraph-image.tsx` 生成（Latin hostname，`next/og` 默认字体不含
-  中文）；文章有 `cover` 时覆盖。
+  中文）；文章有 `cover` 时覆盖分享图，并作为文章页顶部的 16:9 插图显示。
 - 页脚社交链接来自 `home.socials`；RSS 始终展示。
 
 ---
@@ -410,9 +410,9 @@ export const ALLOWED_IMAGE_HOSTS = ['assets.tina.io', '**.vercel.app', 'i.exampl
 
 `src/app/layout.tsx` 设置 `metadataBase`，文章页输出 **绝对 URL** 的 canonical、`og:url`、
 `og:image`、`twitter:image`。没有 `metadataBase` 时这些是相对路径（`/posts/x`），crawler 与社交平台
-无法使用，分享出去只是一条裸链接。文章有 `cover` 字段时自动作为 `og:image`；没有封面时使用
-根级的 `/opengraph-image`（`src/app/opengraph-image.tsx`，`next/og` 生成），并始终使用
-`summary_large_image`。
+无法使用，分享出去只是一条裸链接。文章有 `cover` 字段时，会自动作为文章页顶部的 16:9 插图显示，
+并同时用作 `og:image`；没有封面时使用根级的 `/opengraph-image`（`src/app/opengraph-image.tsx`，`next/og` 生成），
+并始终使用 `summary_large_image`。
 
 文章页同时输出 `BlogPosting` JSON-LD（headline / description / image / datePublished /
 author / keywords / mainEntityOfPage），作者来自 `home.profile.name`。

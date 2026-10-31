@@ -1,5 +1,6 @@
 'use client';
 
+import Image from 'next/image';
 import Link from 'next/link';
 import { m, useScroll, useSpring } from 'framer-motion';
 import { useTina } from 'tinacms/dist/react';
@@ -135,6 +136,27 @@ export default function PostClient(props: {
               className="mt-9 h-0.5 border-0 bg-gradient-to-r from-ink/15 via-ink/8 to-transparent dark:from-chalk/20 dark:via-chalk/10"
             />
           </header>
+
+          {/*
+            The `cover` field used to feed only og:image/JSON-LD, so setting an
+            illustration in the editor changed nothing visible on the page.
+            Render it as the article hero; the aspect box keeps arbitrary
+            uploads from changing the layout.
+          */}
+          {post.cover ? (
+            <figure className="mt-8 animate-rise overflow-hidden rounded-blob border-[3px] border-ink/85 bg-white/50 shadow-brutal dark:border-chalk/20 dark:bg-white/[0.04] dark:shadow-chalk-sm">
+              <div className="relative aspect-[16/9] w-full">
+                <Image
+                  src={post.cover}
+                  alt={post.title}
+                  fill
+                  sizes="(max-width: 768px) 100vw, 768px"
+                  priority
+                  className="object-cover"
+                />
+              </div>
+            </figure>
+          ) : null}
 
           {hasToc ? (
             <TableOfContents

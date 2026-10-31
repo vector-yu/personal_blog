@@ -81,6 +81,8 @@ export type HomeProfile = {
 export type HomeTimelineEntry = {
   period: string;
   title: string;
+  /** Optional school/company logo shown in the résumé's left column. */
+  logo: string | null;
   place: string;
   description: string;
   tags: string[];
@@ -156,6 +158,7 @@ export const DEFAULT_HOME: HomeContent = {
     {
       period: '2026 — 现在',
       title: '开始认真写这个博客',
+      logo: null,
       place: '个人项目 · 这个站点',
       description:
         '用 Next.js 与 TinaCMS 搭起自己的角落：记录技术笔记、阅读和正在做的事，也逼自己把学过的东西讲清楚。',
@@ -165,6 +168,7 @@ export const DEFAULT_HOME: HomeContent = {
     {
       period: '2024 — 2026',
       title: '本科 · 你的专业',
+      logo: null,
       place: '你的大学',
       description: '把课程、研究方向、参与过的项目或值得一提的成果写在这里。',
       tags: ['学习', '项目'],
@@ -173,6 +177,7 @@ export const DEFAULT_HOME: HomeContent = {
     {
       period: '2022 — 2024',
       title: '高中',
+      logo: null,
       place: '你的中学',
       description: '一段经历、一个转折，或者第一次认真做成一件事。',
       tags: ['起点'],
@@ -232,6 +237,7 @@ export const DEFAULT_HOME_EN: HomeContent = {
     {
       period: '2026 — Now',
       title: 'Started writing this blog seriously',
+      logo: null,
       place: 'Personal project · This site',
       description:
         'Building a corner of the web with Next.js and TinaCMS: notes on code, reading, and whatever I am working on, with the discipline of explaining what I learn.',
@@ -241,6 +247,7 @@ export const DEFAULT_HOME_EN: HomeContent = {
     {
       period: '2024 — 2026',
       title: 'Undergraduate · Your major',
+      logo: null,
       place: 'Your university',
       description: 'Coursework, research directions, projects, or results worth keeping.',
       tags: ['Study', 'Projects'],
@@ -249,6 +256,7 @@ export const DEFAULT_HOME_EN: HomeContent = {
     {
       period: '2022 — 2024',
       title: 'High school',
+      logo: null,
       place: 'Your school',
       description: 'An experience, a turning point, or the first time you finished something properly.',
       tags: ['Starting point'],
@@ -384,6 +392,7 @@ function normaliseTimeline(value: unknown): HomeTimelineEntry[] {
       return {
         period: asText(record.period),
         title: asText(record.title),
+        logo: asOptionalText(record.logo),
         place: asText(record.place),
         description: asText(record.description),
         tags: asStringList(record.tags),
