@@ -49,20 +49,16 @@
       "icon": "python"
     },
     {
-      "name": "PHP",
-      "icon": "php"
-    },
-    {
       "name": "TypeScript",
       "icon": "typescript"
     },
     {
-      "name": "Next.js",
-      "icon": "nextdotjs"
+      "name": "JavaScript",
+      "icon": "javascript"
     },
     {
-      "name": "Tailwind CSS",
-      "icon": "tailwindcss"
+      "name": "MySQL",
+      "icon": "mysql"
     },
     {
       "name": "Git",
@@ -73,12 +69,19 @@
       "icon": "docker"
     },
     {
-      "name": "MySQL",
-      "icon": "mysql"
+      "name": "Next.js",
+      "icon": "nextdotjs"
     },
     {
-      "name": "JavaScript",
-      "icon": "javascript"
+      "name": "Tailwind CSS",
+      "icon": "tailwindcss"
+    },
+    {
+      "name": "PHP",
+      "icon": "php"
+    },
+    {
+      "name": "PyTorch"
     }
   ],
   "timeline": [
