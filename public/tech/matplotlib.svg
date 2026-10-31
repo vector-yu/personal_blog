@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 180" width="180" height="180" fill="currentColor">
+  <!-- 极坐标背景网格与轴线（纯镂空描边） -->
+  <g fill="none" stroke="currentColor" stroke-width="2.5" opacity="0.45">
+    <circle cx="90" cy="90" r="88" />
+    <circle cx="90" cy="90" r="66" />
+    <circle cx="90" cy="90" r="44" />
+    <circle cx="90" cy="90" r="22" />
+    <path d="M90 2v176 M152 152L28 28 M152 28L28 152 M178 90H2" />
+  </g>
+  <!-- 数据扇形部分（实体填充） -->
+  <g fill="currentColor">
+    <path d="m90,90h18a18,18 0 0,0 0-5z" />
+    <path d="m90,90 34-43a55,55 0 0,0-15-8z" />
+    <path d="m90,90-16-72a74,74 0 0,0-31,15z" />
+    <path d="m90,90-58-28a65,65 0 0,0-5,39z" />
+    <path d="m90,90-33,16a37,37 0 0,0 2,5z" />
+    <path d="m90,90-10,45a46,46 0 0,0 18,0z" />
+    <path d="m90,90 46,58a74,74 0 0,0 12-12z" />
+  </g>
+</svg>

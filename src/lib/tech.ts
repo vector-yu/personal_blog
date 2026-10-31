@@ -26,6 +26,13 @@ const CATALOG = {
   mysql: { label: 'MySQL', light: '#3B6A8F', dark: '#7FB6D9' },
   postgresql: { label: 'PostgreSQL', light: '#3457C9', dark: '#8FA8F0' },
   vite: { label: 'Vite', light: '#5A5FE0', dark: '#A5A8FF' },
+  cpp: { label: 'C++', light: '#00599C', dark: '#659AD2' },
+  matplotlib: { label: 'Matplotlib', light: '#11557C', dark: '#5AA9E6' },
+  networkx: { label: 'NetworkX', light: '#1B6488', dark: '#5EB7E0' },
+  numpy: { label: 'NumPy', light: '#013243', dark: '#4DABCF' },
+  pandas: { label: 'Pandas', light: '#150458', dark: '#9B8AFB' },
+  pytorch: { label: 'PyTorch', light: '#EE4C2C', dark: '#FF7557' },
+  seaborn: { label: 'Seaborn', light: '#2E6B82', dark: '#76C4D4' },
 } as const;
 
 export type TechIconKey = keyof typeof CATALOG;

@@ -1,5 +1,5 @@
 {
-  "intro": "Shorter notes: what I am tinkering with, what I saw, what I figured out (or did not). Unlike the long posts, these do not aim to be complete.",
+  "intro": "Just Idle Talk",
   "items": [
     {
       "date": "2026-10-23T00:00:00.000Z",
@@ -10,8 +10,8 @@
     {
       "date": "2026-10-18T00:00:00.000Z",
       "title": "Why the blog became a personal archive instead of a post list",
-      "tags": ["TinaCMS", "Writing"],
-      "body": "A post list works well for a site with a lot of content. For a personal site, the first screen should answer \"who is this person, and what are they doing?\" So the homepage became an introduction, a résumé, and recent writing, while the full archive moved to /posts.\n\nThat change also made me realize navigation should not stuff every page into the header. The header now holds four main entries; everything else lives in the footer and in section-level navigation."
+      "tags": ["Design", "Writing"],
+      "body": "It's quite simple: this website serves as my digital persona—my \"cyber-face\". While run-of-the-mill articles are a dime a dozen, a blog that truly feels like the work of a living, breathing human being is one in a million."
     }
   ]
 }

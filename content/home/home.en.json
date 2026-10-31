@@ -1,6 +1,6 @@
 {
   "siteName": "Vector Yu's Blog",
-  "tagline": "Since you're here, take a look.",
+  "tagline": "History never repeats, but it often rhymes.",
   "scrollHint": "Scroll down to meet me",
   "background": {
     "kind": "gradient",
@@ -11,7 +11,7 @@
     "avatar": "/uploads/avatar_color.png",
     "name": "Vector Yu",
     "school": "Nanyang Technological University",
-    "bio": "At least I have been here.",
+    "bio": "History never repeats, but it often rhymes.",
     "facts": [
       {
         "label": "Major",
@@ -44,42 +44,105 @@
     }
   ],
   "techStack": [
-    { "name": "Python", "icon": "python" },
-    { "name": "React", "icon": "react" },
-    { "name": "PHP", "icon": "php" },
-    { "name": "TypeScript", "icon": "typescript" },
-    { "name": "Next.js", "icon": "nextdotjs" },
-    { "name": "Tailwind CSS", "icon": "tailwindcss" },
-    { "name": "Node.js", "icon": "nodedotjs" },
-    { "name": "D3.js", "icon": "d3" },
-    { "name": "Figma", "icon": "figma" },
-    { "name": "Git", "icon": "git" },
-    { "name": "Docker", "icon": "docker" },
-    { "name": "MySQL", "icon": "mysql" }
+    {
+      "name": "Python",
+      "icon": "python"
+    },
+    {
+      "name": "PyTorch",
+      "icon": "pytorch"
+    },
+    {
+      "name": "Pandas",
+      "icon": "pandas"
+    },
+    {
+      "name": "Numpy",
+      "icon": "numpy"
+    },
+    {
+      "name": "Matplotlib",
+      "icon": "matplotlib"
+    },
+    {
+      "name": "TypeScript",
+      "icon": "typescript"
+    },
+    {
+      "name": "JavaScript",
+      "icon": "javascript"
+    },
+    {
+      "name": "MySQL",
+      "icon": "mysql"
+    },
+    {
+      "name": "Git",
+      "icon": "git"
+    },
+    {
+      "name": "Docker",
+      "icon": "docker"
+    },
+    {
+      "name": "Next.js",
+      "icon": "nextdotjs"
+    },
+    {
+      "name": "Tailwind CSS",
+      "icon": "tailwindcss"
+    },
+    {
+      "name": "PHP",
+      "icon": "php"
+    },
+    {
+      "name": "NetworkX",
+      "icon": "networkx"
+    },
+    {
+      "name": "C++",
+      "icon": "cpp"
+    },
+    {
+      "name": "Seaborn",
+      "icon": "seaborn"
+    }
   ],
   "timeline": [
     {
-      "period": "2026 — Now",
-      "title": "Started writing this blog seriously",
-      "place": "Personal project · This site",
-      "description": "Building a corner of the web with Next.js and TinaCMS: notes on code, reading, and whatever I am working on, with the discipline of explaining what I learn.",
-      "tags": ["Next.js", "TinaCMS"],
+      "period": "2026.08 — ",
+      "title": "Undergraduate",
+      "place": "Nanyang Technological University · Singapore",
+      "description": "Bachelor of Science in Data Science and Artificial Intelligence",
+      "tags": [
+        "NTU Science and Technology Undergraduate Scholarship",
+        "Linear Algebra(100)",
+        "Calculus III(97)", 
+        "Discrete Math(97)", 
+        "Probability(95)", 
+        "Data Structures & Algorithms(A+)"
+      ],
       "current": true
     },
     {
-      "period": "2024 — 2026",
-      "title": "Undergraduate · Your major",
-      "place": "Your university",
-      "description": "Coursework, research directions, projects, or results worth keeping.",
-      "tags": ["Study", "Projects"],
+      "period": "2025.08 — 2026.05",
+      "title": "University Foundation",
+      "place": "Nanyang Technological University · Singapore",
+      "description": "",
+      "tags": [
+        "Calculus I & II(A+)",
+        "University Physics(A+)",
+        "Introduction to Programming(A+)"
+      ],
       "current": false
     },
     {
-      "period": "2022 — 2024",
-      "title": "High school",
-      "place": "Your school",
-      "description": "An experience, a turning point, or the first time you finished something properly.",
-      "tags": ["Starting point"],
+      "period": "2023.08 — 2025.06",
+      "title": "Senior High School",
+      "place": "Northeast Normal University Affiliated High School · Changchun, Jilin",
+      "description": "",
+      "tags": [],
       "current": false
     }
   ]

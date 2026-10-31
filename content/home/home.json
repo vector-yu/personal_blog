@@ -11,7 +11,7 @@
     "avatar": "/uploads/124265806.png",
     "name": "Vector Yu",
     "school": "南洋理工大学",
-    "bio": "至少我曾来过这里",
+    "bio": "历史从不重复 但时而踏着韵脚",
     "facts": [
       {
         "label": "专业",
@@ -49,16 +49,20 @@
       "icon": "python"
     },
     {
-      "name": "PyTorch"
+      "name": "PyTorch",
+      "icon": "pytorch"
     },
     {
-      "name": "Pandas"
+      "name": "Pandas",
+      "icon": "pandas"
     },
     {
-      "name": "Numpy"
+      "name": "Numpy",
+      "icon": "numpy"
     },
     {
-      "name": "Matplotlib"
+      "name": "Matplotlib",
+      "icon": "matplotlib"
     },
     {
       "name": "TypeScript",
@@ -93,13 +97,16 @@
       "icon": "php"
     },
     {
-      "name": "NetworkX"
+      "name": "NetworkX",
+      "icon": "networkx"
     },
     {
-      "name": "C++"
+      "name": "C++",
+      "icon": "cpp"
     },
     {
-      "name": "Seaborn"
+      "name": "Seaborn",
+      "icon": "seaborn"
     }
   ],
   "timeline": [
@@ -110,7 +117,11 @@
       "description": "数据科学与人工智能理学学士",
       "tags": [
         "S&T科学与技术本科全额奖学金",
-        "线性代数(100), 微积分III(97), 离散数学(97), 概率论与数理统计(95), 数据结构与算法(A+)"
+        "线性代数(100)",
+        "微积分III(97)", 
+        "离散数学(97)", 
+        "概率论与数理统计(95)", 
+        "数据结构与算法(A+)"
       ],
       "current": true
     },
@@ -119,7 +130,11 @@
       "title": "预科",
       "place": "南洋理工大学 · 新加坡",
       "description": "",
-      "tags": [],
+      "tags": [
+        "微积分(A+)",
+        "大学物理(A+)",
+        "编程导论(A+)"
+      ],
       "current": false
     },
     {
