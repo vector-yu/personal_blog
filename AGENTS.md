@@ -32,9 +32,9 @@
 > `md` 以下/reduced-motion 下退化为静态横向滑动；关于页用同一份数据画 3/4 列小方块。
 > 图标是 `public/tech/<key>.svg` + `src/lib/tech.ts` 的品牌色 mask；未知图标回退首字母。
 >
-> 首页没有「关于我」「履历」小标题。履历是普通、无遮罩的列表（`ResumeEntryRow`），
-> 首页与关于页共用同一份 `timeline`；不要重新引入顶层拉链/遮罩动画。
-> 手机、reduced-motion、无 JS 看到的都是同一份完整履历。
+> 首页没有「关于我」「履历」小标题。履历是 `blueprint-timeline.tsx` 的**工程蓝图**：
+> 桌面 sticky + 滚动绘线，卡片始终在 HTML 里且始终可见；不要用遮罩把内容藏起来。
+> 手机、reduced-motion、无 JS 取消 sticky/绘线，直接显示同一份完整履历。
 > 顶栏没有「履历」入口：完整履历嵌在 `/zh/about` / `/en/about` 的 `#resume` 段，与首页共用 `timeline`；
 > 旧的 `/zh/resume`、`/en/resume` 308 到 `/about#resume`。关于页只把履历放进一个原生
 > `<details>` 折叠框（默认收起，无 JS 可展开），位置在 Toolbox 与正文之间；

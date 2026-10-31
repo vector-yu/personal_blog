@@ -68,6 +68,10 @@ export const zh = {
     present: '现在',
     emptyTimeline: '还没有履历条目。到 /admin 的「个人主页」里添加第一条吧。',
     techStackAria: '技术栈',
+    blueprintEyebrow: 'Blueprint',
+    blueprintTitle: '履历轨迹',
+    blueprintHint: '滚动展开履历',
+    blueprintEnd: '记录结束',
   },
 
   posts: {

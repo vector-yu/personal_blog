@@ -518,6 +518,110 @@
     background-size: 160px 160px;
   }
 
+  /* --- blueprint résumé ---------------------------------------------------
+     The homepage timeline is drawn like a technical sheet: a fine 24px grid,
+     a heavier 120px grid, and a soft mask so the sheet melts into the page.
+     The sticky behaviour and the scroll track live here too: only desktop with
+     motion gets pinned; phones and reduced-motion get the same content in
+     normal flow, with no scroll trap. */
+  .blueprint-grid {
+    background-image:
+      linear-gradient(to right, rgb(11 18 33 / 0.055) 1px, transparent 1px),
+      linear-gradient(to bottom, rgb(11 18 33 / 0.055) 1px, transparent 1px),
+      linear-gradient(to right, rgb(11 18 33 / 0.025) 1px, transparent 1px),
+      linear-gradient(to bottom, rgb(11 18 33 / 0.025) 1px, transparent 1px);
+    background-size: 120px 120px, 120px 120px, 24px 24px, 24px 24px;
+    -webkit-mask-image: radial-gradient(120% 110% at 50% 45%, #000 52%, transparent 100%);
+    mask-image: radial-gradient(120% 110% at 50% 45%, #000 52%, transparent 100%);
+  }
+
+  [data-theme='dark'] .blueprint-grid {
+    background-image:
+      linear-gradient(to right, rgb(233 238 248 / 0.07) 1px, transparent 1px),
+      linear-gradient(to bottom, rgb(233 238 248 / 0.07) 1px, transparent 1px),
+      linear-gradient(to right, rgb(233 238 248 / 0.028) 1px, transparent 1px),
+      linear-gradient(to bottom, rgb(233 238 248 / 0.028) 1px, transparent 1px);
+  }
+
+  .blueprint-stage {
+    position: relative;
+  }
+
+  @media (min-width: 48rem) and (prefers-reduced-motion: no-preference) {
+    .blueprint-track[data-enhanced='true'] {
+      height: calc(100vh + var(--blueprint-steps, 3) * 52vh);
+    }
+
+    .blueprint-track[data-enhanced='true'] .blueprint-stage {
+      position: sticky;
+      top: 4.5rem;
+      height: calc(100vh - 4.5rem);
+    }
+  }
+}
+
+/* ============================================================================
+   Blueprint: reduced-motion and phones
+   ----------------------------------------------------------------------------
+   The scroll lighting is a desktop-only enhancement. On a phone or with
+   reduced motion every node is already "reached", so the callouts should read
+   as complete instead of waiting for a scroll that never comes. These rules are
+   deliberately outside `@layer components`: they must win over the inactive
+   utility classes on the cards/nodes.
+   ========================================================================== */
+
+@media (prefers-reduced-motion: reduce), (max-width: 47.999rem) {
+  .blueprint-card {
+    border-color: rgb(109 92 255 / 0.45);
+    box-shadow: 0 20px 50px -38px rgb(109 92 255 / 0.55);
+  }
+
+  .blueprint-node {
+    border-color: var(--color-iris);
+    background-color: rgb(255 255 255 / 0.85);
+    color: var(--color-iris-text);
+    box-shadow: 0 0 0 7px rgb(109 92 255 / 0.11);
+  }
+
+  [data-theme='dark'] .blueprint-node {
+    border-color: color-mix(in oklab, var(--color-iris) 60%, transparent);
+    background-color: rgb(255 255 255 / 0.08);
+    color: #c7d2fe;
+  }
+}
+
+/* Short laptops: keep the pin, but tighten the sheet so all three callouts
+   fit above the fold. The hint is expendable at this height. */
+@media (min-width: 48rem) and (max-height: 48rem) {
+  .blueprint-body {
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+  }
+
+  .blueprint-list {
+    gap: 0.75rem;
+  }
+
+  .blueprint-card {
+    padding: 1rem 1.25rem;
+  }
+
+  .blueprint-hint {
+    display: none;
+  }
+}
+
+/* Very short windows cannot hold a pinned three-card sheet. Fall back to
+   normal flow instead of clipping the last card. */
+@media (min-width: 48rem) and (max-height: 42rem) {
+  .blueprint-track[data-enhanced='true'] {
+    height: auto;
+  }
+
+  .blueprint-track[data-enhanced='true'] .blueprint-stage {
+    position: relative;
+    height: auto;
+  }
 }
 
 /* ============================================================================

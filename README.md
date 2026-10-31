@@ -66,7 +66,7 @@ src/app/[lang]/             路由（`/zh/...` 与 `/en/...` 共用一棵树）
 src/i18n/                   locale 配置、中英字典、metadata / 日期工具
 src/components/tina-markdown.tsx    ★ 组件映射表（TinaMarkdown 渲染层）
 src/components/mdx/         自定义交互组件
-src/components/home/        主页区块（首屏 / 背景 / 关于 / 履历列表）
+src/components/home/        主页区块（首屏 / 背景 / 关于 / 蓝图履历）
 scripts/check-i18n.mjs      字典 key 对齐 + 中英内容配对门禁
 ```
 
@@ -122,7 +122,7 @@ URL 是语言的唯一来源：**同一路径永远返回同一语言**，不做
 | 个人介绍 | 头像、姓名、学校、自我介绍、逐条信息（横向铺开） | `profile` |
 | 社交 | 页脚 / 关于页的图标链接 | `socials` |
 | 技术栈 | 首页滚动带 + 关于页 3/4 列小方块 | `techStack` |
-| 履历 | 无边框铺开的履历列表；每条可填学校 / 公司图标（`timeline[].logo`） | `timeline` |
+| 履历 | 工程蓝图式履历：卡片始终可见，桌面滚动绘线；每条可填学校 / 公司图标（`timeline[].logo`） | `timeline` |
 | 阅读页开关 | 关掉后页脚链接隐藏、`/reading` 返回 404 | `showReading` |
 
 以上全部来自 **一个** 文档：`content/home/home.json`（英文为 `content/home/home.en.json`），在 `/admin/index.html` 的
@@ -151,8 +151,10 @@ URL 是语言的唯一来源：**同一路径永远返回同一语言**，不做
 - 只接受站内路径或 http(s) 地址，`javascript:` 之类的 src 会被丢弃。
 
 > 首页**没有**「关于我」「履历」这类小标题：个人介绍直接以姓名为标题，履历直接铺开。
-> 履历是普通列表，由 `ResumeEntryRow` 渲染，首页与关于页共用同一份 `timeline`；
-> 没有顶层遮罩、拉链或滚动动画。手机、`prefers-reduced-motion`、无 JS 看到的都是同一份完整履历。
+> 履历是一张**工程蓝图**（`blueprint-timeline.tsx`）：桌面 sticky 住整屏，滚动时一条制图线
+> 依次穿过节点，节点和卡片随之点亮；卡片本身始终在 HTML 里、始终可见。手机、
+> `prefers-reduced-motion`、无 JS 时取消 sticky 和绘线，直接显示同一份完整履历。
+> 关于页仍用 `ResumeEntryRow` 的普通列表，两处共用同一份 `timeline`。
 >
 > 顶栏不再有独立的「履历」入口：完整履历已经嵌进 `/zh/about` / `/en/about` 的 `#resume` 段，
 > 与首页共用同一份 `timeline` 数据。旧的 `/resume` 地址会 308 到 `/about#resume`。
@@ -161,7 +163,7 @@ URL 是语言的唯一来源：**同一路径永远返回同一语言**，不做
 
 ### 技术栈
 
-首页在个人介绍与拉链履历之间有一条 **`Toolbox`** 滚动带；关于页用同一份数据渲染
+首页在个人介绍与蓝图履历之间有一条 **`Toolbox`** 滚动带；关于页用同一份数据渲染
 3 个（手机）/ 4 个（桌面）一排的小方块。
 
 - 编辑：`/admin/index.html` →「个人主页」→「技术栈」。每项只有**名称**和**图标**，
@@ -186,7 +188,7 @@ URL 是语言的唯一来源：**同一路径永远返回同一语言**，不做
 
 | 路由 | 作用 | 数据 |
 | --- | --- | --- |
-| `/`（308 → `/zh`） | 个人档案：首屏、介绍、拉链履历 | `content/home/home.json` / `home.en.json` |
+| `/`（308 → `/zh`） | 个人档案：首屏、介绍、蓝图履历 | `content/home/home.json` / `home.en.json` |
 | `/posts` + `/posts/page/[page]` | 文章列表，每页 8 篇 | `content/posts` / `content/posts-en` |
 | `/posts/[...filename]` | 文章详情：目录、上一篇/下一篇、相关阅读、标签、系列、阅读时长、JSON-LD | 同上 |
 | `/tags` + `/tags/[tag]` | 标签索引 / 标签聚合 | 从当前语言文章的 tags 派生 |

@@ -69,6 +69,10 @@ export const en: Messages = {
     present: 'Now',
     emptyTimeline: 'No résumé entries yet. Add the first one in the Homepage collection in /admin.',
     techStackAria: 'Tech stack',
+    blueprintEyebrow: 'Blueprint',
+    blueprintTitle: 'Career track',
+    blueprintHint: 'Scroll to trace the record',
+    blueprintEnd: 'End of record',
   },
 
   posts: {

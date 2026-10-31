@@ -56,6 +56,12 @@ export default async function HomePage() {
         readArticlesLabel={messages.home.readArticles}
         emptyText={messages.home.emptyTimeline}
         presentLabel={messages.home.present}
+        labels={{
+          eyebrow: messages.home.blueprintEyebrow,
+          title: messages.home.blueprintTitle,
+          hint: messages.home.blueprintHint,
+          end: messages.home.blueprintEnd,
+        }}
       />
     </main>
   );
