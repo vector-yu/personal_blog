@@ -49,6 +49,18 @@
       "icon": "python"
     },
     {
+      "name": "PyTorch"
+    },
+    {
+      "name": "Pandas"
+    },
+    {
+      "name": "Numpy"
+    },
+    {
+      "name": "Matplotlib"
+    },
+    {
       "name": "TypeScript",
       "icon": "typescript"
     },
@@ -81,16 +93,7 @@
       "icon": "php"
     },
     {
-      "name": "PyTorch"
-    },
-    {
-      "name": "Matplotlib"
-    },
-    {
-      "name": "Pandas"
-    },
-    {
-      "name": "Numpy"
+      "name": "NetworkX"
     }
   ],
   "timeline": [
