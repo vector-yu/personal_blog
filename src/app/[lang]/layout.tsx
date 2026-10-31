@@ -92,14 +92,13 @@ function NavLink({ href, children }: { href: string; children: React.ReactNode }
 
 type NavGroup = { label: string; links: { label: string; href: string }[] };
 
-function navGroups(locale: Locale, messages: Messages): NavGroup[] {
+function navGroups(locale: Locale, messages: Messages, showReading: boolean): NavGroup[] {
   return [
     {
       label: messages.footer.browse,
       links: [
         { label: messages.nav.posts, href: localePath(locale, '/posts') },
         { label: messages.nav.projects, href: localePath(locale, '/projects') },
-        { label: messages.nav.resume, href: localePath(locale, '/resume') },
         { label: messages.nav.about, href: localePath(locale, '/about') },
       ],
     },
@@ -116,9 +115,11 @@ function navGroups(locale: Locale, messages: Messages): NavGroup[] {
     {
       label: messages.footer.more,
       links: [
-        { label: messages.nav.now, href: localePath(locale, '/now') },
-        { label: messages.nav.reading, href: localePath(locale, '/reading') },
-        { label: messages.nav.uses, href: localePath(locale, '/uses') },
+        // The reading page can be switched off while it is being rebuilt; the
+        // link disappears with the page so there is no dead end in the footer.
+        ...(showReading
+          ? [{ label: messages.nav.reading, href: localePath(locale, '/reading') }]
+          : []),
         { label: messages.nav.rss, href: localePath(locale, '/rss.xml') },
       ],
     },
@@ -129,12 +130,14 @@ function SiteHeader({
   siteName,
   locale,
   messages,
+  showReading,
 }: {
   siteName: string;
   locale: Locale;
   messages: Messages;
+  showReading: boolean;
 }) {
-  const groups = navGroups(locale, messages);
+  const groups = navGroups(locale, messages, showReading);
   const target = otherLocale(locale);
   const languageLabel = formatMessage(messages.language.switchToLabel, {
     language: localeName[target],
@@ -161,7 +164,7 @@ function SiteHeader({
         <div className="hidden items-center gap-0.5 text-sm sm:flex sm:gap-1">
           <NavLink href={localePath(locale, '/posts')}>{messages.nav.posts}</NavLink>
           <NavLink href={localePath(locale, '/projects')}>{messages.nav.projects}</NavLink>
-          <NavLink href={localePath(locale, '/resume')}>{messages.nav.resume}</NavLink>
+          <NavLink href={localePath(locale, '/notes')}>{messages.nav.notes}</NavLink>
           <NavLink href={localePath(locale, '/about')}>{messages.nav.about}</NavLink>
           <LanguageSwitch
             locale={locale}
@@ -221,14 +224,16 @@ function SiteFooter({
   socials,
   locale,
   messages,
+  showReading,
 }: {
   siteName: string;
   tagline: string;
   socials: HomeSocial[];
   locale: Locale;
   messages: Messages;
+  showReading: boolean;
 }) {
-  const groups = navGroups(locale, messages);
+  const groups = navGroups(locale, messages, showReading);
 
   return (
     <footer className="relative z-10 mt-20 print:hidden">
@@ -313,7 +318,12 @@ export default async function RootLayout({
         <script dangerouslySetInnerHTML={{ __html: THEME_INIT_SCRIPT }} />
         <MotionProvider>
           <Backdrop />
-          <SiteHeader siteName={home.siteName} locale={locale} messages={messages} />
+          <SiteHeader
+            siteName={home.siteName}
+            locale={locale}
+            messages={messages}
+            showReading={home.showReading}
+          />
           <div className="flex-1">
             <PageTransition>{children}</PageTransition>
           </div>
@@ -323,6 +333,7 @@ export default async function RootLayout({
             socials={home.socials}
             locale={locale}
             messages={messages}
+            showReading={home.showReading}
           />
         </MotionProvider>
       </body>

@@ -1,5 +1,6 @@
 import type { MetadataRoute } from 'next';
 import { localePath } from '@/i18n/config';
+import { getHomeContent } from '@/lib/home';
 import { getPosts } from '@/lib/posts';
 import { collectSeries, collectTags, seriesPath, tagPath } from '@/lib/taxonomy';
 import { pageCount, pagePath } from '@/lib/pagination';
@@ -16,10 +17,7 @@ const STATIC_PATHS = [
   '/projects',
   '/notes',
   '/start-here',
-  '/now',
   '/reading',
-  '/uses',
-  '/resume',
   '/about',
 ];
 
@@ -37,6 +35,10 @@ function languageAlternates(path: string) {
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const base = siteUrl();
   const [zhPosts, enPosts] = await Promise.all([getPosts('zh'), getPosts('en')]);
+  const homes = {
+    zh: await getHomeContent('zh'),
+    en: await getHomeContent('en'),
+  };
   const zhSlugs = new Set(zhPosts.map((post) => postSlug(post)));
   const enSlugs = new Set(enPosts.map((post) => postSlug(post)));
 
@@ -45,8 +47,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   for (const locale of ['zh', 'en'] as const) {
     const posts = locale === 'zh' ? zhPosts : enPosts;
     const otherSlugs = locale === 'zh' ? enSlugs : zhSlugs;
+    // Hidden pages are not advertised to crawlers either.
+    const paths = STATIC_PATHS.filter((path) => path !== '/reading' || homes[locale].showReading);
 
-    for (const path of STATIC_PATHS) {
+    for (const path of paths) {
       entries.push({
         url: `${base}${localePath(locale, path)}`,
         changeFrequency: path === '/' || path === '/posts' ? 'daily' : 'monthly',

@@ -1,0 +1,495 @@
+---
+title: Binary search, seen through red-blue coloring
+date: 2026-10-25T14:36:55.089Z
+description: Believe it or not, binary search has only four cases
+tags:
+  - Algorithms
+cover: /uploads/cover_binary_search.jpg
+---
+
+# Why do we need binary search?
+
+Looking at it purely from the problem-solving angle, there are two reasons:
+
+1. The complexity is too high — we need to turn one of the n factors into logn
+2. A condition goes unused, things like "sorted" or "monotonic"
+
+The first reason is the main one. It is extremely common for a problem to hand you input in the hundred-thousand range, in which case the worst you can get away with is an nlogn solution; the problem is plainly asking you to optimize with a tree / heap / binary search or any other algorithm that carries a logn.
+
+<Callout type="info" body="" title="Why binary search?">
+  Here is a thoroughly non-rigorous derivation:
+
+  * Suppose one cut splits the array into two pieces with length ratio p:1-p (assume p ≤0.5)
+  * Then the probability that the target number is on the left is p, and on the right is 1-p
+  * In the worst case, the target value lands exactly in the larger 1-p piece every time
+    * Suppose k-1 more steps are enough to search this piece completely, then the array length n must satisfy: floor(n\*(1-p)^k) = 0
+    * That is, k = ceil(logn) / (1-p), so the time complexity is O(logn)
+  * What we want is the average number of steps, 1 + pf(np) + (1-p)f(n(1-p)), to be as small as possible
+  * f(n) \~ logn, therefore
+    * 1 + pf(np) + (1-p)f(n(1-p)) = 1 + logn + (plogp + (1-p)log(1-p))
+    * it reaches its minimum logn + 1 - log2 at p=0.5
+  * So splitting evenly gives the best average behavior
+</Callout>
+
+# The simplest case
+
+Given a strictly increasing array, suppose you want to find the position of some target value (which is not necessarily in the array). What would you do?
+
+Approach one: a linear scan, from left to right, complexity O(n).
+
+Yet, as we said earlier, you have not made use of the "sorted" condition. For any array at all, a linear scan looks the same. Every operation merely shrinks the search interval by 1, which is far too slow.
+
+Is there a way to shrink the search interval quickly? Of course! Enter binary search!
+
+# The confusing details
+
+But the moment you start writing code, these details are bound to get in the way. Here are the usual points of confusion in binary search:
+
+1. Are the search interval's ends open or closed? Closed on both ends, or open on the left and closed on the right, or closed on the left and open on the right, or open on both? That is four cases
+2. The choice of the middle position: do we take the sum of the two bounds divided by two and round down, or round up? That is 2 cases
+3. The condition for updating a bound: when the value at the middle position equals the target, is it handled as less-than, or as greater-than? Or do we write a separate branch for it? That is 3 cases
+4. Shrinking a bound: do we update it to the middle +-1, or to the middle? For two branches that is 3^2=9 cases; for three branches it is 3^3=27 cases
+5. The termination condition: do the left and right bounds need to be allowed to be equal? That is 2 cases
+6. The search result: does the left bound carry the result, or does the right bound? That is 2 cases
+
+Combined freely, that is 4\*2\*(2\*9+27)\*2\*2=1440 possible implementations. That does not mean every one of them is right, but it does mean that in an exam, given any binary search problem, if you write blindly there is less than a one-in-a-thousand chance of getting it right in one shot; and if you debug, there are a thousand possible variations.
+
+# Never mind those details
+
+Let me offer a bold claim here: **every single binary search problem has exactly 4 cases**
+
+Don't believe me? First, throughout this article I fix the following rules:
+
+* Use a closed interval
+* Round the middle position down
+* A bound always shrinks to left=mid+1 or right=mid-1
+* The termination condition is always written as left≤right, that is, we only stop when there is no element left in the search interval!
+
+That leaves only two details:
+
+* The condition for updating a bound
+* The search result
+
+This compresses all possible cases down to 4
+
+# From finding a number to finding a divider
+
+To cut the cases down to 2, we first have to change our mental model.
+
+For example, take the array \[1,2,3,4,5] and suppose we want to find the position of 2.
+
+Following the usual reasoning, we cut in the middle and call it binary search.
+
+Hold on — is it really split into two parts?
+
+No. There are three parts: the left of mid, mid itself, and the right of mid. That is not a bisection.
+
+So we turn our attention to the dividers between the numbers: everything left of the divider, everything right of the divider — exactly two parts.
+
+Therefore, for this problem, **we are actually looking for a divider**: at which divider do the numbers start being greater than or equal to 2?
+
+# The red-blue marking method
+
+The condition "is the number greater than 2" splits the array into two parts. We color the left side red and the right side blue. The place where red meets blue is the divider.
+
+🟥 | 🟦🟦🟦🟦
+
+Clearly, once we find the divider, the first element to its right is the target.
+
+## Properties of the divider
+
+"|" is called a divider because:
+
+1. Everything to the left of "|" is 🟥
+2. Everything to the right of "|" is 🟦
+
+So "|" is unique, and these two properties let us find "|" exactly.
+
+## Finding the divider
+
+Finding a divider that satisfies both property 1 and property 2 in one shot is hard, so we can first introduce two pointers, left and right, each satisfying one of the properties:
+
+* Everything to the left of left (not including left) is 🟥 (or empty)
+* Everything to the right of right (not including right) is 🟦 (or empty)
+
+This way, starting from the divider to the left of left, every divider to the right is a candidate, that is:
+
+* …. | left | left + 1 | ….| n-1 | every divider you can draw there is a candidate
+
+Starting from the divider to the right of right, every divider to the left is a candidate, that is:
+
+* \| 0 |…. | right - 1 | right | …. every divider you can draw there is a candidate
+
+Therefore, the common candidates are:
+
+* …. | left | left + 1 |…. | right - 1 | right | …
+
+which is exactly all the dividers contained in the closed interval \[left, right]. Note that the number of dividers is right-left+1
+
+## The sign that the search is over
+
+When can the divider be uniquely confirmed? Precisely when there is only one common candidate divider left, that is:
+
+* At that point right-left+1=0, i.e. right = left - 1
+* **The divider to the left of left is exactly the divider to the right of right**
+* The stopping state is …right | left ….
+* At that point right is 🟥 and left is 🟦
+
+And the process of shrinking the bounds is where the bisection comes in
+
+## Shrinking the left and right bounds
+
+The process of shrinking the left and right bounds can be seen as probing the border between the red and blue territories.
+
+* left stands for the red side, right stands for the blue side.
+* left expands to the right, right expands to the left.
+* The positions of left and right themselves do not matter; what matters is the position of the divider beside them. To put it vividly, the two pointers should really be written as "|left" and "right|"
+* The closed interval framed by \[left, right] is the range in which the border between the two colors may still lie.
+
+At every step, using the bisection, we look at the color of mid's territory:
+
+* mid is 🟥, which is red territory, so the real border must be to the right of mid; every candidate to the left of mid is disqualified and must be excluded, so we set left = mid+1
+* mid is 🟦, which is blue territory, so the real border must be to the left of mid; every candidate to the right of mid is disqualified and must be excluded, so we set right = mid-1
+* When left moves past right, only one candidate remains, and what is left is exactly the red-blue border, so the loop terminates
+
+## Who is the answer?
+
+In this example, the element to the right of the divider "|", that is left — as said earlier
+
+## Summary
+
+What do we really care about?
+
+1. The definition of the red and blue territories. This directly controls the condition for updating a bound
+2. The choice of target. Is it the rightmost of the red region (left of the border line) or the leftmost of the blue region (right of the border line)
+
+## Code
+
+```python
+nums = [1,2,3,4,5,6,7]
+target = 5
+def binary_search(nums, target):
+    left, right = 0, len(nums) - 1 # closed interval
+    while left <= right: # we can only exit once there is no element left in the interval
+        mid = (left+right) // 2 # round down
+        if nums[mid] >= target: # mid is in the blue region
+            right = mid - 1
+        else: # mid is not in the blue region
+            left = mid + 1
+    return left # the right side of the divider
+```
+
+# Finding the left and right bounds of a target value
+
+Same idea: just pin down the red-blue definition, and whether you want red-right or blue-left
+
+## Finding the left bound
+
+Three steps:
+
+1. Read the problem: find the smallest element greater than or equal to target
+2. Define red and blue: greater than or equal to target is blue, everything else is red
+3. Fix the target: right side of the divider / blue-left
+
+Nothing changes, the code above can be used directly
+
+```python
+def left_bound(nums, target):
+    left, right = 0, len(nums) - 1 # closed interval
+    while left <= right: # we can only exit once there is no element left in the interval
+        mid = (left+right) // 2 # round down
+        if nums[mid] >= target: # mid is in the blue region
+            right = mid - 1
+        else: # mid is not in the blue region
+            left = mid + 1
+    return left # the right side of the divider
+```
+
+## Finding the right bound
+
+Three steps:
+
+1. Read the problem: find the largest element less than or equal to target
+2. Define red and blue: less than or equal to target is red, everything else is blue
+3. Fix the target: left side of the divider / red-right
+
+So the code changes in two places:
+
+```python
+def right_bound(nums, target):
+    left, right = 0, len(nums) - 1
+    while left <= right:
+        mid = (left+right) // 2
+        if nums[mid] <= target: # red region
+            left = mid + 1
+        else:
+            right = mid - 1
+    return right # the left side of the divider
+```
+
+## Summary
+
+What is the basis for the red-blue split? **Red on the left, blue on the right**
+
+* For a non-decreasing case, greater than (or equal to) some number is blue, less than (or equal to) some number is red
+* For a non-increasing case, less than (or equal to) some number is blue, greater than (or equal to) some number is red
+
+How do we choose the target position?
+
+* The smallest one satisfying the condition is blue-left
+* The largest one satisfying the condition is red-right
+
+# The other way round
+
+We have just given binary search code for a monotonically non-decreasing array; what about a monotonically non-increasing array?
+
+## Finding the left bound
+
+1. Goal: the largest element less than or equal to target
+2. Blue: less than or equal to target
+3. Target position: right side of the divider / blue-left
+
+Write the code directly:
+
+```python
+def left_bound(nums, target):
+    left, right = 0, len(nums)-1
+    while left <= right:
+        mid = (left+right) // 2
+        if nums[mid] <= target: # blue
+            right = mid - 1
+        else:
+            left = mid + 1
+    return left # right side of the divider
+```
+
+## Finding the right bound
+
+1. Goal: the smallest element greater than or equal to target
+2. Red: greater than or equal to target
+3. Target position: left side of the divider / red-right
+
+Write the code directly:
+
+```python
+def right_bound(nums, target):
+    left, right = 0, len(nums) - 1
+    while left <= right:
+        mid = (left+right) // 2
+        if nums[mid] < target: # mid is in the blue region
+            right = mid - 1
+        else:
+            left = mid + 1
+    return right # the left side of the divider
+```
+
+# Binary search in general
+
+If we view the mapping from index to value in an array as a function, then the process above — finding an index from a value — is the process of finding the argument that corresponds to a given function value. Likewise, for any discrete monotonic function, given any y, you can apply binary search to find the largest/smallest x such that f(x) and y satisfy some relation.
+
+## **Example 1: 875. Koko Eating Bananas**
+
+Koko loves to eat bananas. There are `n` piles of bananas, the `ith` pile has `piles[i]` bananas. The guards have gone and will come back in `h` hours.
+
+Koko can decide her bananas-per-hour eating speed of `k`. Each hour, she chooses some pile of bananas and eats `k` bananas from that pile. If the pile has less than `k` bananas, she eats all of them instead and will not eat any more bananas during this hour.
+
+Koko likes to eat slowly but still wants to finish eating all the bananas before the guards return.
+
+Return *the minimum integer* `k` *such that she can eat all the bananas within* `h` *hours*.
+
+In this problem, the time needed to eat the bananas is a non-increasing function of the eating speed, so binary search can be used
+
+The problem asks for the **smallest** k such that f(k) is less than or equal to h:
+
+* Color split: less than or equal to h is blue, greater than h is red
+* Target position: blue-left
+
+And so the code writes itself:
+
+```python
+class Solution:
+    def minEatingSpeed(self, piles: list[int], h: int) -> int:
+        def time_cost(k):
+            return sum(((pile+k-1)//k for pile in piles))
+        lo, hi = 1, max(piles)
+        while lo <= hi:
+            mid = (lo + hi) // 2
+            if time_cost(mid) <= h:
+                hi = mid - 1
+            else:
+                lo = mid + 1
+        return lo
+```
+
+## **Example 2: 1011. Capacity To Ship Packages Within D Days**
+
+A conveyor belt has packages that must be shipped from one port to another within `days` days.
+
+The `ith` package on the conveyor belt has a weight of `weights[i]`. Each day, we load the ship with packages on the conveyor belt (in the order given by `weights`). We may not load more weight than the maximum weight capacity of the ship.
+
+Return the least weight capacity of the ship that will result in all the packages on the conveyor belt being shipped within `days` days.
+
+In this problem, the **minimum** number of days needed to load and ship is a monotonically non-increasing function of the ship's maximum capacity, so binary search can be used
+
+Three steps:
+
+1. Goal: the smallest capacity x such that f(x) is less than or equal to days
+2. Blue: every x such that f(x) is less than or equal to days
+3. Target position: blue-left
+
+Write the code normally:
+
+```python
+class Solution:
+    def shipWithinDays(self, weights: list[int], days: int) -> int:
+        def min_days_needed(max_capacity):
+            cur_capacity = 0
+            days = 0
+            for weight in weights:
+                if cur_capacity + weight <= max_capacity:
+                    cur_capacity += weight
+                else: 
+                    days += 1
+                    cur_capacity = weight
+            if cur_capacity > 0:
+                days += 1
+            return days
+    
+        left, right = max(weights), sum(weights)
+        while left <= right:
+            mid = (left+right) // 2
+            if min_days_needed(mid) <= days: # blue
+                right = mid - 1
+            else:
+                left = mid + 1
+        return left # blue-left
+```
+
+## **Example 3: 410. Split Array Largest Sum**
+
+Given an integer array `nums` and an integer `k`, split `nums` into `k` non-empty subarrays such that the largest sum of any subarray is **minimized**.
+
+Return *the minimized largest sum of the split*.
+
+A **subarray** is a contiguous part of the array.
+
+**Constraints:**
+
+* `1 <= nums.length <= 1000`
+* `0 <= nums[i] <= 106`
+* `1 <= k <= min(50, nums.length)`
+
+In this problem, the minimum number of subarrays is a monotonically non-increasing function of the maximum allowed subarray sum, so binary search can be used
+
+Wait a moment. This problem requires splitting into exactly k subarrays, whereas by the definition of the function what we compute is the minimum largest sum when splitting into **at most k subarrays**. What if, when the largest sum takes its minimum, the corresponding number of subarrays is less than k — wouldn't that violate the rules?
+
+No need to worry. The minimum largest sum found by binary search guarantees the following properties:
+
+* The number we find is the rightmost edge of the blue region. To its left, every argument smaller than the current value requires a minimum number of splits that is definitely not less than or equal to k. In other words, every number to the left of it certainly fails the requirement
+* Even if the number we find comes with a split count smaller than k, it can still be turned into k. The problem states that k is smaller than the array length, which means I can break some subarrays apart to bring the number of subarrays up to k. During this process the subarray with the largest sum is unaffected. Because everything with a smaller sum than it cannot be split into k or fewer subarrays, the subarray with the largest sum stays unchanged throughout
+* This property, "splitting always makes the subset sum smaller", ensures that we can define the function greedily
+
+Therefore, if we simply change this problem's condition to "at most k subarrays", the answer stays the same. The problem is then exactly the same as Example 2:
+
+```python
+class Solution:
+    def splitArray(self, nums: list[int], k: int) -> int:
+        def split_num(max_sum):
+            cur = 0
+            count = 0
+            for num in nums:
+                if num + cur <= max_sum:
+                    cur += num
+                else:
+                    cur = num
+                    count += 1
+            if cur > 0:
+                count += 1
+            return count
+        left, right = max(nums), sum(nums)
+        while left <= right:
+            mid = (left+right) // 2
+            if split_num(mid) <= k:
+                right = mid - 1
+            else:
+                left = mid + 1
+        return left
+```
+
+## Example 4: **1552. Magnetic Force Between Two Balls**
+
+In the universe Earth C-137, Rick discovered a special form of magnetic force between two balls if they are put in his new invented basket. Rick has `n` empty baskets, the `ith` basket is at `position[i]`, Morty has `m` balls and needs to distribute the balls into the baskets such that the **minimum magnetic force** between any two balls is **maximum**.
+
+Rick stated that magnetic force between two different balls at positions `x` and `y` is `|x - y|`.
+
+Given the integer array `position` and the integer `m`. Return *the required force*.
+
+The "magnetic force" in this problem is really just the distance between two balls, and the shortest distance naturally occurs between two adjacent balls. So if we treat the balls as the endpoints of intervals, the question becomes: when there are (at least) m-1 intervals, what is the largest possible value of the minimum interval length?
+
+The word "at least" can be added because, if the resulting number of intervals is greater than m-1, we can merge several intervals to make the number exactly m-1. And the interval providing the maximum interval length will not be merged, because once merged the maximum interval length would grow, and a larger interval length could not possibly satisfy the condition of being split into m-1 intervals. As in Example 3, using the property "merging always makes the interval length larger", we can change the equals sign in the problem into a greater-than-or-equal sign
+
+Define the function f: minimum interval length → maximum number of intervals. Obviously, as the minimum interval length increases, the number of intervals that can be placed decreases, so f is a monotonically non-increasing function.
+
+To split as many intervals as possible, the greedy strategy is to start from the first possible position and split as soon as the interval length is just greater than or equal to x.
+
+* Suppose we do not start from the first element but from the k-th element; then if the interval length from k to the next node is greater than or equal to x, the interval length from 1 to that node is necessarily also greater than or equal to x. Therefore, the number of intervals obtained by starting from the k-th element is certainly no greater than the number obtained by starting from the first element
+* Suppose that at some intermediate point n the interval length is already greater than or equal to x, but we keep putting off the split and wait until some later position m. Then the interval length from m to the next node is certainly greater than or equal to x, and the interval length from n to the next node is even larger than that from m. Therefore, the number of intervals obtained by splitting from m is certainly no greater than the number obtained by splitting from the earliest possible split point, n
+* Therefore, this greedy strategy guarantees as many split intervals as possible
+
+Then we binary search on that number: we look for the maximum of the monotonically non-increasing function that is greater than or equal to some value, that is, red-right once "greater than or equal to some value" is defined as red. The code is then very simple:
+
+```python
+class Solution:
+    def maxDistance(self, position: list[int], m: int) -> int:
+        position.sort()
+        def max_count(min_dist):
+            pre = -min_dist
+            count = 0
+            for pos in position:
+                if pos - pre >= min_dist:
+                    pre = pos
+                    count += 1
+            return count
+        
+        left, right = 1, max(position)-min(position)
+        while left <= right:
+            mid = (left+right) // 2
+            if max_count(mid) >= m:
+                left = mid + 1
+            else:
+                right = mid - 1
+        return right
+```
+
+## Example 5: **2517. Maximum Tastiness of Candy Basket**
+
+You are given an array of positive integers `price` where `price[i]` denotes the price of the `ith` candy and a positive integer `k`.
+
+The store sells baskets of `k` **distinct** candies. The **tastiness** of a candy basket is the smallest absolute difference of the **prices** of any two candies in the basket.
+
+Return *the **maximum** tastiness of a candy basket.*
+
+Exactly the same as Example 4, so we will not repeat it
+
+```python
+class Solution:
+    def maximumTastiness(self, price: list[int], k: int) -> int:
+        price.sort()
+        def max_num(tastiness):
+            pre = - tastiness
+            count = 0
+            for p in price:
+                if p - pre >= tastiness:
+                    count += 1
+                    pre = p
+            return count
+        
+        left, right = 1, max(price) - min(price)
+        while left <= right:
+            mid = (left+right) // 2
+            if max_num(mid) >= k:
+                left = mid + 1
+            else:
+                right = mid - 1
+        return right
+```

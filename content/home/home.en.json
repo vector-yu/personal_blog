@@ -1,6 +1,7 @@
 {
   "siteName": "Vector Yu's Blog",
   "tagline": "History never repeats, but it often rhymes.",
+  "showReading": false,
   "scrollHint": "Scroll down to meet me",
   "background": {
     "kind": "gradient",

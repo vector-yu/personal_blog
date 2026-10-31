@@ -19,7 +19,7 @@
 | CMS | TinaCMS 3.13.0 + TinaCloud |
 | 线上域名 | https://yujingyao.com （也绑定在 TinaCloud Site URL 白名单里） |
 | 部署 | Vercel，构建命令 `npm run build`（**不要改成 `next build`**） |
-| 内容 | 中文：`content/posts/*.mdx`、`content/pages/*.mdx`；英文：`content/posts-en/*.mdx`、`content/pages-en/*.mdx`；主页/项目/笔记/阅读是 JSON 单文档，英文为同目录的 `*.en.json` |
+| 内容 | 中文：`content/posts/*.mdx`、`content/pages/*.mdx`；英文：`content/posts-en/*.mdx`、`content/pages-en/*.mdx`；主页/项目/随笔/阅读是 JSON 单文档，英文为同目录的 `*.en.json` |
 
 **铁律（产品要求，不要违反）**：正文渲染只用 Tina 官方的 `<TinaMarkdown>`。
 **不要**引入 `next-mdx-remote`、`@next/mdx` 或任何 MDX 编译管线。
@@ -38,18 +38,19 @@
 > 拉链底部有布帘下摆：`curtain-hem` 在舞台底部上下各延伸，波浪 mask + 竖向褶皱 +
 > 投影，配一个拉链底部止口。**根容器必须是 `overflow-x-clip`**（只裁横向），不能改回
 > `overflow-hidden`，否则下摆会被切平；也不要移除下摆。
-> 顶栏「履历」指向独立页 `src/app/[lang]/resume/page.tsx`（`/zh/resume`、`/en/resume`）：纯列表、无动画，
-> 与首页共用 `timeline` 数据；不要把它改回 `/#journey` 锚点。
+> 顶栏没有「履历」入口：完整履历嵌在 `/zh/about` / `/en/about` 的 `#resume` 段，与首页共用 `timeline`；
+> 旧的 `/zh/resume`、`/en/resume` 308 到 `/about#resume`。关于页把 Toolbox + 正文放进一个原生
+> `<details>` 折叠框（默认收起，无 JS 可展开），不要再加回独立的履历页。
+> 阅读页由 `home.showReading` 控制：关闭时页脚无链接、`/reading` 404、sitemap 不收录。
 > 详见 `README.md` 的「个人主页」一节。
 
 > **个人品牌站的页面结构**：所有路由都在 `src/app/[lang]/` 下，公共 URL 带 `/zh` 或 `/en`。
-> 主入口是 `/posts`、`/projects`、`/resume`、`/about`；二级入口在页脚与文章页次级导航：
-> `/tags`、`/tags/[tag]`、`/archive`、`/notes`、`/series`、`/series/[series]`、`/start-here`、
-> `/now`、`/reading`、`/uses`（均以 `/{lang}` 开头）。
-> `project` / `note` / `reading` 是 JSON 单文档集合（禁用新建/删除）；`now`/`uses`/
-> `start-here` 是 `content/pages/*.mdx`。文章的 `series` / `featured` 字段分别驱动
-> 系列页和「从这开始」。
-> **笔记的 `body` 在 JSON 里是 Markdown 字符串**，不是 rich-text AST；手写 AST 会得到
+> 主入口是 `/posts`、`/projects`、`/notes`（界面名「随笔」/ Essays）、`/about`；二级入口在页脚与文章页次级导航：
+> `/tags`、`/tags/[tag]`、`/archive`、`/series`、`/series/[series]`、`/start-here`、`/reading`（可开关）
+> （均以 `/{lang}` 开头）。`/now`、`/uses` 已删除，旧地址 308 到 `/about`。
+> `project` / `note` / `reading` 是 JSON 单文档集合（禁用新建/删除）；`start-here` 是
+> `content/pages/*.mdx`。文章的 `series` / `featured` 字段分别驱动系列页和「从这开始」。
+> **随笔的 `body` 在 JSON 里是 Markdown 字符串**，不是 rich-text AST；手写 AST 会得到
 > `invalid_markdown`。
 > **移动端**：`sm` 以上顶栏显示 4 个主链接；`sm` 以下收进 `MobileNav`（360–390px 不能
 > 横向溢出）。**文章目录**在 `lg+` 固定在正文右侧；h1/h2/h3 的 `id` 与 TOC 必须共用

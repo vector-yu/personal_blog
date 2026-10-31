@@ -299,6 +299,13 @@ export default defineConfig({
             description: '显示在大标题下方的一句话。',
           },
           {
+            type: 'boolean',
+            name: 'showReading',
+            label: '显示「阅读」页面',
+            description:
+              '关闭后页脚不再显示「阅读」链接，/zh/reading 与 /en/reading 返回 404。页面施工期间可以先关掉，完成后再打开。',
+          },
+          {
             type: 'string',
             name: 'scrollHint',
             label: '向下滚动提示',
@@ -581,11 +588,11 @@ export default defineConfig({
       },
       {
         /*
-         * A short-note stream. Two JSON documents with a list, because notes are
-         * short and do not need their own URLs; the page renders them inline.
+         * A short-essay stream. Two JSON documents with a list, because essays
+         * are short and do not need their own URLs; the page renders them inline.
          */
         name: 'note',
-        label: '笔记 / 短记',
+        label: '随笔 / 短记',
         path: 'content/notes',
         format: 'json',
         match: { include: '*' },
@@ -600,12 +607,12 @@ export default defineConfig({
           {
             type: 'object',
             name: 'items',
-            label: '笔记列表',
+            label: '随笔列表',
             list: true,
             ui: {
               itemProps: (item) => ({
                 label:
-                  [item?.date?.slice(0, 10), item?.title].filter(Boolean).join(' · ') || '笔记',
+                  [item?.date?.slice(0, 10), item?.title].filter(Boolean).join(' · ') || '随笔',
               }),
             },
             fields: [

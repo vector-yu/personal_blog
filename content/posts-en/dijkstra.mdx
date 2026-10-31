@@ -1,0 +1,496 @@
+---
+title: Dijkstra's Algorithm
+date: 2026-10-30T10:12:52.102Z
+description: The most comprehensive and systematic breakdown of Dijkstra's algorithm you will find
+tags:
+  - Algorithms
+featured: true
+---
+
+# When it applies
+
+Dijkstra's algorithm solves **single-source** shortest paths in **non-negative** weighted graphs. If there are negative weights, turn around and go find the more versatile Bellman-Ford algorithm.
+
+# The idea
+
+## The core idea
+
+Dijkstra's algorithm is greedy at heart. Three sentences summarize the rough idea:
+
+1. Initialize the distance from the source O to every node as infinity, except the distance from O to O, which is set to zero.
+2. Each time, start from a node A whose shortest distance is already known and probe its neighboring node B.
+3. If the currently known distance from O to B is greater than the distance from O to A and then from A to B, update that distance.
+
+The "as soon as a shorter route shows up, update" part is exactly where the greediness lives. Because we know that every node on the shortest path from O to A — say B — must itself have the shortest distance from O. If a shorter path from O to B existed, that shorter path would have been taken instead, so no shorter path exists.
+
+## The key optimizations
+
+### Picking out the shortest distance
+
+But how do we pick the node A out of the various nodes whose distance is not yet known to be shortest, in such a way that the distance from O to A is guaranteed to be the shortest?
+
+The reasoning is plain: it is enough that OA is the smallest of all the unsettled distances.
+
+The only worry is that a detour from O to A might be closer than the current situation. But every other point reachable from O is at distance greater than or equal to OA, to say nothing of the extra distance needed to come back from those points to A. So the distance OA is guaranteed to be the smallest.
+
+Therefore the data structure that stores unsettled distances should be a priority queue, popping the node closest to the source each time.
+
+Exactly — Dijkstra's algorithm is essentially BFS, just with the queue replaced by a priority queue.
+
+## Discarding stale data
+
+However, when we push a new distance into the queue, we do not know whether the queue still holds stale data recording an earlier distance from the source to that node. Clearly this larger distance will be popped after the shorter one. At that point we have to throw this larger distance away. In other words, if a distance to the same node is popped a second or third time, discard it immediately, because it is certainly not the optimal one.
+
+## Avoiding repeated paths
+
+We can, as always, maintain a visited array. The moment a node's distance from the source is settled — that is, the moment it is popped from the priority queue — we can immediately tag it as visited.
+
+The visited array is not mandatory. A node marked visited is by definition a node whose shortest distance is already known. Even without the marking, when exploring new nodes the new distance will never be smaller than the old one; and when a visited node is taken out of the heap, the check above removes it as well. Writing visited only serves to buy back the time saved while exploring new nodes.
+
+# Applications
+
+## A direct test
+
+[https://leetcode.com/problems/network-delay-time](https://leetcode.com/problems/network-delay-time) This problem is a direct test of Dijkstra's algorithm. Following the reasoning above, it asks us to do these things:
+
+1. Convert the given times array into a form suitable for processing (adjacency list, adjacency matrix, and so on)
+2. Initialize the distances
+3. Run a BFS traversal, updating the minimum distances along the way
+4. If every node is reachable, return the maximum distance; otherwise return -1
+
+I chose to convert the array into an adjacency list:
+
+```python
+graph = [[] for _ in range(n)] 
+for u, v, w in times:
+    graph[u-1].append((v-1,w)) # subtract 1 so the numbering starts at 0
+```
+
+Initialize the distances
+
+```python
+dist = [float('inf')]*n
+dist[k-1] = 0
+```
+
+Initialize the min-heap and the visited array
+
+```python
+pq = [(0, k-1)] # (distance, node index), because heapq compares from left to right by default
+visited = [False] * (n)
+```
+
+Run the BFS traversal
+
+```python
+while pq:
+    d, cur = heapq.heappop(pq)
+    if d > dist[cur]: # discard stale data
+        continue
+    visited[cur] = True # avoid repeated visits
+    for nxt, w in graph[cur]:
+        if visited[nxt]:
+            continue
+        if dist[nxt] > w + dist[cur]: # if shorter, update
+            dist[nxt] = w + dist[cur]
+            heapq.heappush(pq, (dist[nxt], nxt))
+```
+
+And the answer follows.
+
+## Redefining distance
+
+In fact, any state quantity that can be called a "distance" only needs to satisfy the following three properties:
+
+1. **No aftereffect:** when we reach a node, we only care about the "accumulated cost so far", not about how we got there.
+2. **Optimal substructure:** a path that wins at the starting line will never be overtaken by a lagging path after both take the same edge.
+3. **Greedy monotonicity:** every extra step forward can only push the new cost **away from the optimization target** relative to the current cost (when minimizing, monotonically non-decreasing; when maximizing, monotonically non-increasing).
+
+### The maximum probability
+
+[https://leetcode.com/problems/path-with-maximum-probability/description/](https://leetcode.com/problems/path-with-maximum-probability/description/) This problem asks for the maximum probability between two given points. Compared with the previous problem, there are these changes:
+
+1. Unreachable nodes get probability 0; a node that is certain to be reachable should get probability 1
+2. Paths no longer add up but multiply
+3. Since every edge weight lies in \[0,1], multiplying shrinks the path, while what we want is the largest path — exactly the other way round. So we need a max-heap rather than a min-heap
+4. We only want the distance between two specified points, which means we do not have to compute all the single-source distances
+
+Change 1: the dist array should be initialized to 0, with the starting point set to 1
+
+Change 2: simply turn the plus sign where the code above updates the distance into a multiplication sign
+
+Change 3: when pushing into the heap, take the negative of the distance
+
+Change 4: we can break out of the loop early and return
+
+So we can write the code directly:
+
+```python
+class Solution:
+    def maxProbability(self, n: int, edges: list[list[int]], succProb: list[float], start_node: int, end_node: int) -> float:
+        graph = {i:[] for i in range(n)}
+        for i in range(len(edges)):
+            start, end = edges[i]
+            weight = succProb[i]
+            graph[start].append((end, weight))
+            graph[end].append((start, weight))
+        dist = [0] * n
+        dist[start_node] = 1
+        visited = set()
+        pq = [(-1, start_node)]
+        while pq:
+            d, cur = heapq.heappop(pq)
+            d = -d
+            if d < dist[cur]:
+                continue
+            if cur == end_node:
+                return d
+            visited.add(cur)
+            for nxt, weight in graph[cur]:
+                if nxt in visited:
+                    continue
+                if weight*dist[cur] > dist[nxt]:
+                    dist[nxt] = weight*dist[cur]
+                    heapq.heappush(pq, (-dist[nxt], nxt))
+        return 0
+```
+
+### The smallest maximum gap
+
+[https://leetcode.com/problems/path-with-minimum-effort/description/](https://leetcode.com/problems/path-with-minimum-effort/description/) At first glance this looks like a dynamic programming problem. But it is not. This problem does not fix movement to right and down only, which means the direction of state transitions is undetermined.
+
+Look more carefully: this problem's definition of distance satisfies our three requirements:
+
+1. No aftereffect: we do not care how we got to a node, only what the largest gap was on the way there
+2. Optimal substructure: among the different paths reaching the same node, the one with the smallest maximum gap is optimal even globally
+3. Greedy monotonicity: as the name of this section suggests — the smallest maximum gap — the maximum gap only grows and never shrinks, and what we want is exactly its minimum
+
+So this problem can use Dijkstra's algorithm.
+
+Compared with the previous two problems, the differences here are:
+
+1. The way a path accumulates becomes max, and the weight between two adjacent cells is |h1-h2|
+2. The graph is concretized as a grid
+
+For the first point we just modify how the distance is computed; the second point means the graph is ready-made, and each cell's neighbors are ready-made too (up, down, left, right), which actually saves us work.
+
+The code is as follows:
+
+```python
+class Solution:
+    def minimumEffortPath(self, heights: list[list[int]]) -> int:
+        m, n = len(heights), len(heights[0])
+        dist = [[float('inf')]*n for _ in range(m)]
+        dist[0][0] = 0
+        pq = [(0, 0, 0)] # (distance, row, col)
+        visited = [[False]*n for _ in range(m)]
+        DIR = [0, 1, 0, -1, 0]
+        while pq:
+            d, i, j = heapq.heappop(pq)
+            if d > dist[i][j]:
+                continue
+            if i == m-1 and j == n-1:
+                return d
+            visited[i][j] = True
+            for k in range(4):
+                ni, nj = i + DIR[k], j + DIR[k+1]
+                if 0<= ni < m and 0 <= nj < n and not visited[ni][nj]:
+                    new_dist = max(d, abs(heights[i][j]-heights[ni][nj]))
+                    if dist[ni][nj] > new_dist:
+                        dist[ni][nj] = new_dist
+                        heapq.heappush(pq, (new_dist, ni, nj))
+        return dist[-1][-1] # can be deleted; this line can never be executed         
+```
+
+### The smallest maximum number
+
+[https://leetcode.com/problems/swim-in-rising-water/description/](https://leetcode.com/problems/swim-in-rising-water/description/) This problem is exactly like the previous one, so I will not go over it again. Here the definition of "distance" still satisfies those three properties, and the only thing to change is how the distance is computed.
+
+```python
+class Solution:
+    def swimInWater(self, grid: list[list[int]]) -> int:
+        m, n = len(grid), len(grid[0])
+        max_num = [[float('inf')]*n for _  in range(m)]
+        max_num[0][0] = grid[0][0]
+        pq = [(grid[0][0], 0, 0)]
+        DIR = [0, 1, 0, -1, 0]
+        while pq:
+            cur_max_num, i, j = heapq.heappop(pq)
+            if cur_max_num > max_num[i][j]:
+                continue
+            if i == m-1 and j == n-1:
+                return cur_max_num
+            for k in range(4):
+                new_i, new_j = i+DIR[k], j+DIR[k+1]
+                if 0<= new_i <m and 0 <= new_j < n:
+                    new_max_num = max(max_num[i][j], grid[new_i][new_j])
+                    if max_num[new_i][new_j] > new_max_num:
+                        max_num[new_i][new_j] = new_max_num
+                        heapq.heappush(pq, (new_max_num, new_i, new_j))
+```
+
+### The least travel time
+
+[https://leetcode.com/problems/find-minimum-time-to-reach-last-room-i/description/](https://leetcode.com/problems/find-minimum-time-to-reach-last-room-i/description/) Similar to the previous problem:
+
+1. The time taken to move is added
+2. The cost of moving depends not only on the minimum time to reach the current cell, but also on the time at which the neighboring cell opens.
+
+Note that here "time" is the "distance" we should be optimizing. Time likewise satisfies the three properties:
+
+1. No aftereffect: on reaching any node, we do not care exactly how we walked before, only how much time has been used so far and how long the next step from here takes.
+2. Optimal substructure: on reaching any node, the plan that used the least time can never be overtaken by another plan during the rest of the search
+3. Greedy monotonicity: time only grows as we move, and what we want is exactly the minimum of this total time
+
+Suppose the time to reach the current cell is t0, and the time marked on an adjacent cell is t1:
+
+* If t1≤t0, then we can move over directly without waiting, and the final time to reach the adjacent cell is t0+1
+* If t1>t0, then we have to wait until t1 before we can move over, and the final time to reach the adjacent cell is t1+1
+
+So the time update formula is min(t0,t1)+1. The no-aftereffect property is on shaky ground in this problem, but it can still be solved.
+
+```python
+class Solution:
+    def minTimeToReach(self, moveTime: List[List[int]]) -> int:
+        m, n = len(moveTime), len(moveTime[0])
+        min_time = [[float('inf')]*n for _ in range(m)]
+        min_time[0][0] = 0
+        visited = [[False]*n for _ in range(m)]
+        pq = [(0, 0, 0)]
+        DIR = [0, 1, 0, -1, 0]
+        while pq:
+            cur_min_time, i, j = heapq.heappop(pq)
+            if cur_min_time > min_time[i][j]:
+                continue
+            if i == m-1 and j == n-1:
+                return cur_min_time
+            visited[i][j] = True
+            for k in range(4):
+                new_i, new_j = i+DIR[k], j+DIR[k+1]
+                if 0<= new_i < m and 0<= new_j < n and not visited[new_i][new_j]:
+                    new_min_time = min(max(cur_min_time,moveTime[new_i][new_j])+1, min_time[new_i][new_j])
+                    if min_time[new_i][new_j] > new_min_time:
+                        min_time[new_i][new_j] = new_min_time
+                        heapq.heappush(pq, (new_min_time, new_i, new_j))
+```
+
+There is also a sister problem, [https://leetcode.com/problems/find-minimum-time-to-reach-last-room-ii/description/，](https://leetcode.com/problems/find-minimum-time-to-reach-last-room-ii/description/%EF%BC%8C) in which the time consumed by a move alternates back and forth between 1 and 2. The period of that alternation happens to match the period of the sum of the row and column coordinates modulo 2, so apart from a tiny change in the way the time is updated, everything else is identical. That is a mathematical trick and has little to do with Dijkstra.
+
+```python
+class Solution:
+    def minTimeToReach(self, moveTime: List[List[int]]) -> int:
+        m, n = len(moveTime), len(moveTime[0])
+        min_time = [[float('inf')]*n for _ in range(m)]
+        min_time[0][0] = 0
+        visited = [[False]*n for _ in range(m)]
+        pq = [(0, 0, 0)]
+        DIR = [0, 1, 0, -1, 0]
+        while pq:
+            cur_min_time, i, j = heapq.heappop(pq)
+            if cur_min_time > min_time[i][j]:
+                continue
+            if i == m-1 and j == n-1:
+                return cur_min_time
+            visited[i][j] = True
+            for k in range(4):
+                new_i, new_j = i+DIR[k], j+DIR[k+1]
+                if 0<= new_i < m and 0<= new_j < n and not visited[new_i][new_j]:
+                    new_min_time = min(max(cur_min_time,moveTime[new_i][new_j])+1+(i+j)%2, min_time[new_i][new_j])
+                    if min_time[new_i][new_j] > new_min_time:
+                        min_time[new_i][new_j] = new_min_time
+                        heapq.heappush(pq, (new_min_time, new_i, new_j))
+```
+
+### The fewest reversals
+
+[https://leetcode.com/problems/minimum-cost-to-make-at-least-one-valid-path-in-a-grid/description/](https://leetcode.com/problems/minimum-cost-to-make-at-least-one-valid-path-in-a-grid/description/) The "path" in this problem is the sum of the number of reversals. It satisfies the three properties as well:
+
+* Optimal substructure: for reaching the same node, the fewer reversals the better
+* No aftereffect: for reaching the same node, no matter how many reversals follow afterwards, only the current number of reversals matters
+* Greedy monotonicity: the number of reversals is monotonically non-decreasing as we move, and what we want is its minimum
+
+So Dijkstra's algorithm applies. The only change is how we decide whether a move is a reversal. A reversal adds 1 to the cost; otherwise the cost stays the same:
+
+```python
+class Solution:
+    def minCost(self, grid: list[list[int]]) -> int:
+        m, n = len(grid), len(grid[0])
+        cost = [[float('inf')]*n for _ in range(m)]
+        cost[0][0] = 0
+        visited = [[False]*n for _ in range(m)]
+        pq = [(0, 0, 0)]
+        DIR = [(0, 1), (0, -1), (1, 0), (-1, 0)]
+        while pq:
+            cur_cost, i, j = heapq.heappop(pq)
+            if cur_cost > cost[i][j]:
+                continue
+            if i == m-1 and j == n-1:
+                return cur_cost
+            visited[i][j] = True
+            for k in range(4):
+                new_i, new_j = i + DIR[k][0], j + DIR[k][1]
+                if 0<= new_i < m and 0<= new_j < n and not visited[new_i][new_j]:
+                    if cost[new_i][new_j] > cur_cost + int(k != grid[i][j]-1):
+                        cost[new_i][new_j] = cur_cost + int(k != grid[i][j]-1)
+                        heapq.heappush(pq, (cost[new_i][new_j], new_i, new_j))
+                
+            
+```
+
+## Introducing other state variables
+
+If the state is not unique, the "distance" may lose those three properties. To use Dijkstra's algorithm we must record more state.
+
+For example, still the shortest path, but with a stamina limit: a route may be short in distance yet consume so much stamina that it cannot carry us to the end. So only by considering both state variables together can the three properties be satisfied.
+
+### Minimum cost + at most k intermediate nodes
+
+[https://leetcode.com/problems/cheapest-flights-within-k-stops/description/](https://leetcode.com/problems/cheapest-flights-within-k-stops/description/) This problem puts an upper bound on the number of nodes passed through. That means greedily choosing the path with the least cost is no longer enough. For example, flying to some airport may be cheap, but it requires many transfers, so the number of airports passed through actually increases.
+
+So we should consider (cost, number of nodes passed) together, and then this two-dimensional state satisfies:
+
+1. No aftereffect: once the number of nodes passed to reach a node is fixed, we only care about the cost so far and the number of transfer airports, not exactly how we flew
+2. Optimal substructure: once the number of nodes passed to reach a node is fixed, the cheapest plan remains better than the other plans for the rest of the flight
+3. Greedy monotonicity: as we move, the cost only grows, and what we want is exactly the minimum cost
+
+```python
+class Solution:
+    def findCheapestPrice(self, n: int, flights: list[list[int]], src: int, dst: int, k: int) -> int:
+        graph = [[] for _ in range(n)]
+        for start, end, p in flights:
+            graph[start].append((end, p))
+        price = [[float('inf')]*(k+2) for _ in range(n)]
+        price[src][0] = 0
+        pq = [(0, src, 0)] # price, idx, k
+        while pq:
+            cur_price, cur, count = heapq.heappop(pq)
+            if cur_price > price[cur][count]:
+                continue
+            if cur == dst:
+                return cur_price
+            if count > k:
+                continue
+            for nxt, new_price in graph[cur]:
+                if price[nxt][count+1] > cur_price + new_price:
+                    price[nxt][count+1] = cur_price + new_price
+                    heapq.heappush(pq, (price[nxt][count+1], nxt, count+1))
+        return -1
+        
+```
+
+### Shortest distance + at most k consecutive identical letters
+
+[https://leetcode.com/problems/shortest-path-with-at-most-k-consecutive-identical-characters/description/?envType=daily-question\&envId=2026-10-30](https://leetcode.com/problems/shortest-path-with-at-most-k-consecutive-identical-characters/description/?envType=daily-question\&envId=2026-10-30) This is the same dish in a new bowl, extremely similar to the previous problem. The difference is that the count of consecutive identical letters can be refreshed. So when probing the path we have to compute this state variable separately. Beyond that there is no other difference.
+
+```python
+class Solution:
+    def shortestPath(self, n: int, edges: List[List[int]], labels: str, k: int) -> int:
+        graph = [[] for _ in range(n)]
+        for start, end, weight in edges:
+            graph[start].append((end, weight))
+        dist = [[float('inf')]*(k+1) for _ in range(n)]
+        dist[0][1] = 0
+        heap = [] # weight, index, count
+        heapq.heappush(heap, (0, 0, 1))
+        while heap:
+            total_weight, index, count = heapq.heappop(heap)
+            if total_weight > dist[index][count]:
+                continue
+            if index == n-1:
+                return total_weight
+            for next_index, weight in graph[index]:
+                next_count = count + 1 if labels[next_index] == labels[index] else 1
+                if next_count > k:
+                    continue
+                if total_weight + weight < dist[next_index][next_count]:
+                    dist[next_index][next_count] = total_weight + weight
+                    heapq.heappush(heap, (total_weight + weight, next_index, next_count))
+        return -1                
+
+```
+
+### Minimum time + battery constraint
+
+[https://leetcode.cn/problems/DFPeFJ/description/This problem introduces the bicycle's battery. What that implies is that during pathfinding we need to keep to these rules:](https://leetcode.cn/problems/DFPeFJ/description/%E8%BF%99%E9%A2%98%E5%BC%95%E5%85%A5%E7%9A%84%E8%87%AA%E8%A1%8C%E8%BD%A6%E7%94%B5%E9%87%8F%E3%80%82%E8%A8%80%E5%A4%96%E4%B9%8B%E6%84%8F%EF%BC%8C%E5%B0%B1%E6%98%AF%E8%A6%81%E6%B1%82%E5%9C%A8%E5%AF%BB%E8%B7%AF%E8%BF%87%E7%A8%8B%E4%B8%AD%EF%BC%9A)
+
+* The battery must be non-negative
+* You still have to charge
+
+This is different from the previous problem's "at most k transfer airports". There the limit was hard-coded, whereas here you can charge, as long as you do not break that rule.
+
+So why not treat "charging" as part of pathfinding? At every node, try charging once; if the time after charging is shorter, throw it into the heap. Then it will certainly be popped again later and charged again.
+
+This way the (time, remaining battery) state satisfies the three properties:
+
+1. No aftereffect: at a fixed node with a fixed remaining battery, we do not care how we charged or where we went before, only the time needed to reach this state and the remaining battery
+2. Optimal substructure: at a fixed node with a fixed remaining battery, the one that took the least time remains optimal as we go on
+3. Greedy monotonicity: as we move, time only grows, and what we want is exactly the minimum time
+
+In short, the code merely adds a "charging" step; the question itself is the same as the previous problem (as if at every airport you could choose to hire "hackers" at different prices to break into the airline's system and erase the fact that you bought a connecting ticket — though nobody does that in real life).
+
+```python
+class Solution(object):
+    def electricCarPlan(self, paths: List[List[int]], cnt: int, start: int, end: int, charge:List[int]):
+        graph = {}
+        for u, v, cost in paths:
+            if u not in graph:
+                graph[u] = []
+            if v not in graph:
+                graph[v] = []
+            graph[u].append((v, cost))
+            graph[v].append((u, cost))
+        n = len(graph)
+        time = [[float('inf')]*(cnt+1) for _ in range(n)]
+        time[start][0] = 0
+        pq = [(0, 0, start)] # time, battery, city
+        while pq:
+            cur_time, elec, cur = heapq.heappop(pq)
+            if cur_time > time[cur][elec]:
+                continue
+            if cur == end:
+                return cur_time
+            if elec < cnt and time[cur][elec+1] > cur_time + charge[cur]:
+                time[cur][elec+1] = cur_time + charge[cur]
+                heapq.heappush(pq, (time[cur][elec+1], elec+1, cur))
+            for nxt, nxt_time in graph[cur]:
+                new_elec = elec - nxt_time
+                if new_elec >= 0 and time[nxt][new_elec] > cur_time + nxt_time:
+                    time[nxt][new_elec] = cur_time + nxt_time
+                    heapq.heappush(pq, (time[nxt][new_elec], new_elec, nxt))
+```
+
+## Counting quantities other than the shortest/longest distance
+
+### The number of shortest paths
+
+[https://leetcode.com/problems/number-of-ways-to-arrive-at-destination/description/](https://leetcode.com/problems/number-of-ways-to-arrive-at-destination/description/) Here we need to additionally record the number of shortest paths. All the earlier code stays unchanged; we only need to add up the path counts when we find an equally short path.
+
+```python
+class Solution:
+    def countPaths(self, n: int, roads: list[list[int]]) -> int:
+        MOD = 10**9 + 7
+        graph = [[] for _ in range(n)]
+        for u, v, t in roads:
+            graph[u].append((v, t))
+            graph[v].append((u, t))
+        dist = [[float('inf'), 0]]*n
+        dist[0] = [0, 1]
+        pq = [(0, 0)] # time, idx
+        while pq:
+            cur_time, cur = heapq.heappop(pq)
+            if cur_time > dist[cur][0]:
+                continue
+            for nxt, nxt_time in graph[cur]:
+                if dist[nxt][0] == cur_time + nxt_time:
+                    dist[nxt][1] = (dist[cur][1] + dist[nxt][1])%MOD
+                elif dist[nxt][0] > cur_time + nxt_time:
+                    dist[nxt] = [cur_time+nxt_time, dist[cur][1]]
+                    heapq.heappush(pq, (dist[nxt][0], nxt))
+        return dist[-1][1] % MOD
+```
+
+### The second-shortest travel time
+
+[https://leetcode.com/problems/second-minimum-time-to-reach-destination/description/](https://leetcode.com/problems/second-minimum-time-to-reach-destination/description/)
+
+I will leave this one as homework. I solved all ten problems above in one sitting today and I am a little tired.

@@ -98,7 +98,11 @@ npm run build                          # 不带 --skip-cloud-checks
 2. **`tina/tina-lock.json` 只由 `tinacms dev` 生成，`tinacms build` 不会写它**。
    所以改了 `tina/config.ts` 之后必须跑一次 `npx tinacms dev`（让它生成 lock）再提交，
    否则云端会报 local/remote schema 不一致。
-   `npm run check:env` 现在会检测「config.ts 比 tina-lock.json 新」并直接报错，避免踩这个坑。
+   > schema 不只会因为 `tina/config.ts` 变化：凡是 `config.ts` 里 import 的常量也算，
+   > 例如 `src/lib/tech.ts` 的 `TECH_OPTIONS`（技术栈图标下拉框）。2026-10-31 这次失败
+   > 就是新增图标后 options 变了、`tina/config.ts` 本身却没改，容易漏掉。
+   `npm run check:env` 现在会检测「config.ts 比 tina-lock.json 新」并直接报错，避免踩这个坑
+   （但它只比较 `config.ts` 的 mtime，无法发现上面这种间接变化）。
 3. **lock 文件已提交，也不等于 TinaCloud 已索引新 schema**。push 只更新 GitHub；TinaCloud
    的 schema 索引是异步的，Vercel 构建可能先跑，于是报：
 
@@ -110,8 +114,9 @@ npm run build                          # 不带 --skip-cloud-checks
 
    这不是代码错误，`npm run build:local` 通过也不能排除它（本地构建不校验云端 schema）。
    → 到 TinaCloud 项目配置对 `main` 点 **Reindex**，等状态 complete，再在 Vercel 点 **Redeploy**。
-   不要用 `--skip-cloud-checks` 绕过：`/admin` 会查询远端不存在的类型。
-   判断索引是否完成：远端 GraphQL 的 `__schema` 出现新类型（如 `PostEn` / `PageEn`），
+   不要用 `--skip-cloud-checks` 绕过：`/admin` 会查询远端不存在的类型；而且只要新字段被
+   页面查询（例如 `home.showReading`），`next build` 也会因为远端 schema 缺字段而失败或静默回退。
+   判断索引是否完成：远端 GraphQL 的 `__schema` 出现新类型 / 新字段（如 `PostEn`、`Home.showReading`），
    或 TinaCloud 的索引时间晚于该提交。
 
 ---

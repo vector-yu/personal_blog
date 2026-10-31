@@ -58,7 +58,7 @@ content/pages-en/*.mdx      英文独立页面
 content/home/home.json      中文个人主页（单文档）
 content/home/home.en.json   英文个人主页（同一集合的第二份文档）
 content/projects/*.json     项目（中文 projects.json + 英文 projects.en.json）
-content/notes/*.json        笔记（同上）
+content/notes/*.json        随笔（同上）
 content/reading/*.json      阅读（同上）
 public/uploads/             媒体库
 public/admin/               tinacms build 生成的编辑器 SPA
@@ -89,9 +89,9 @@ URL 是语言的唯一来源：**同一路径永远返回同一语言**，不做
 
 - **同一相对路径 = 同一篇内容**：`content/posts/hello-tinacms.mdx` ↔ `content/posts-en/hello-tinacms.mdx`，因此 `/zh/posts/hello-tinacms` ↔ `/en/posts/hello-tinacms`。
 - 文章和页面的英文集合在 `tina/config.ts` 中是独立的 `postEn` / `pageEn`，编辑器的「Blog posts (English)」「Pages (English)」里维护。
-- 首页 / 项目 / 笔记 / 阅读仍是**单文档 JSON 集合**，英文是同一目录下的 `*.en.json`；Tina 的 `match: '*'` 让两份文档都出现在编辑器里。
+- 首页 / 项目 / 随笔 / 阅读仍是**单文档 JSON 集合**，英文是同一目录下的 `*.en.json`；Tina 的 `match: '*'` 让两份文档都出现在编辑器里。
 - 标签、系列名是**内容**，中英可以不同；语言切换在标签/系列详情页会回到该语言的索引页，避免 404。
-- 英文文章缺失时：不出现在 `/en/posts`；直接访问 `/en/posts/<slug>` 若中文存在则回到 `/en/posts`，否则 404。必需页面（首页 / 关于 / Now / Uses / Start here）缺失会让 `check:i18n --strict` 失败。
+- 英文文章缺失时：不出现在 `/en/posts`；直接访问 `/en/posts/<slug>` 若中文存在则回到 `/en/posts`，否则 404。必需页面（首页 / 关于 / Start here）缺失会让 `check:i18n --strict` 失败。
 
 ### 新增/修改内容的流程
 
@@ -123,10 +123,21 @@ URL 是语言的唯一来源：**同一路径永远返回同一语言**，不做
 | 社交 | 页脚 / 关于页的图标链接 | `socials` |
 | 技术栈 | 首页滚动带 + 关于页 3/4 列小方块 | `techStack` |
 | 履历 | 整幅磨砂玻璃拉链 + 无边框铺开的履历 | `timeline` |
+| 阅读页开关 | 关掉后页脚链接隐藏、`/reading` 返回 404 | `showReading` |
 
 以上全部来自 **一个** 文档：`content/home/home.json`（英文为 `content/home/home.en.json`），在 `/admin/index.html` 的
 「个人主页」集合里编辑（该集合是 JSON 格式的单文档，编辑器里禁用了新建/删除）。
 `siteName` 同时用于顶部导航、浏览器标题与 Open Graph，改一处即可。
+
+### 暂时隐藏「阅读」页面
+
+「个人主页」里有一个 `showReading` 开关。关掉后：
+
+- 页脚「更多」里不再出现「阅读」链接；
+- `/zh/reading`、`/en/reading` 直接 `notFound()`（404），不会发布半成品；
+- `sitemap.xml` 也不再列出这两个地址。
+
+页面施工完成后把开关打开即可，不需要改代码。中英文文档各有一份开关，默认 `true`。
 
 ### 切换首屏背景
 
@@ -149,8 +160,10 @@ URL 是语言的唯一来源：**同一路径永远返回同一语言**，不做
 > 手机、`prefers-reduced-motion`、无 JS 时**不渲染顶层玻璃**，直接显示完整履历（R1）。
 > 履历正文始终在预渲染 HTML 里，拉链只是提升层，不是内容可见性的前提。
 >
-> 顶栏的「履历」是独立页 **`/zh/resume` / `/en/resume`**：纯列表、无动画，和首页读取同一份 `timeline` 数据。
-> 首页的拉链履历负责表现，`/resume` 负责可扫读的完整清单。
+> 顶栏不再有独立的「履历」入口：完整履历已经嵌进 `/zh/about` / `/en/about` 的 `#resume` 段，
+> 与首页共用同一份 `timeline` 数据。旧的 `/resume` 地址会 308 到 `/about#resume`。
+> 关于页把 **Toolbox + 正文**收进一个原生 `<details>` 折叠框（默认收起，无 JS 也能展开），
+> 打开页面先看到个人介绍与履历。
 
 ### 技术栈
 
@@ -171,8 +184,8 @@ URL 是语言的唯一来源：**同一路径永远返回同一语言**，不做
 
 ## 页面与内容模型
 
-站点是「个人品牌页」而不是纯文章列表：主入口 4 个（文章 / 项目 / 履历 / 关于），
-其余内容在页脚和文章页内的次级导航。
+站点是「个人品牌页」而不是纯文章列表：主入口 4 个（文章 / 项目 / 随笔 / 关于），
+其余内容在页脚和文章页内的次级导航。`/now`、`/uses` 已下线（内容删除），旧地址 308 到关于页。
 
 > 下表省略 `/<lang>` 前缀：中文是 `/zh/...`，英文是 `/en/...`；根路径 `/` 只做 308。
 > 英文数据来自同名的 `*-en` 目录或 `*.en.json`。
@@ -185,19 +198,16 @@ URL 是语言的唯一来源：**同一路径永远返回同一语言**，不做
 | `/tags` + `/tags/[tag]` | 标签索引 / 标签聚合 | 从当前语言文章的 tags 派生 |
 | `/archive` | 按年份归档 | 从当前语言文章日期派生 |
 | `/projects` | 项目卡片页 | `content/projects/projects.json` / `projects.en.json` |
-| `/notes` | 短记流（正文用 Tina 富文本） | `content/notes/notes.json` / `notes.en.json` |
+| `/notes` | 随笔流（正文用 Tina 富文本） | `content/notes/notes.json` / `notes.en.json` |
 | `/series` + `/series/[series]` | 系列索引 / 系列聚合 | 当前语言文章的 `series` 字段 |
 | `/start-here` | 入门页 + 精选文章（`featured`） | `content/pages/start-here.mdx` / `pages-en` + posts |
-| `/now` | 最近在做什么 | `content/pages/now.mdx` / `pages-en` |
-| `/reading` | 阅读清单 | `content/reading/reading.json` / `reading.en.json` |
-| `/uses` | 工具 / 硬件 | `content/pages/uses.mdx` / `pages-en` |
-| `/about` | 长关于：个人介绍 + 正文 + 社交 | `content/pages/about.mdx` / `pages-en` + home |
-| `/resume` | 纯列表履历 | `content/home/home.json` / `home.en.json` |
+| `/reading` | 阅读清单；`home.showReading = false` 时页面 404、页脚链接隐藏 | `content/reading/reading.json` / `reading.en.json` |
+| `/about` | 长关于：个人介绍 + 履历 + 可折叠的 Toolbox / 正文 + 社交 | `content/pages/about.mdx` / `pages-en` + home |
 | `/rss.xml` `/sitemap.xml` `/opengraph-image` | 订阅 / 站点地图 / 默认分享图 | RSS 两种语言；sitemap 双语 |
 
 - `project` / `note` / `reading` 都是**单文档 JSON 集合**（`match` + 禁用新建/删除），
   在 `/admin` 的表单里编辑。
-- **笔记的 `body` 在 JSON 里存 Markdown 字符串**，不要手写 rich-text AST：Tina 的 JSON
+- **随笔的 `body` 在 JSON 里存 Markdown 字符串**，不要手写 rich-text AST：Tina 的 JSON
   富文本解析器会把它当字符串解析，手写 AST 会变成 `invalid_markdown`。
 - 顶栏在 `sm` 以上展示 4 个主链接；`sm` 以下收进 `MobileNav`，避免 360–390px 横向溢出。
 - 文章 h1/h2/h3 的 `id` 与右侧 TOC 都走 `src/lib/toc.ts` 的 `slugifyHeading`；新增标题渲染

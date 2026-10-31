@@ -25,12 +25,25 @@ const legacyChineseRoutes = [
   { source: '/projects', destination: '/zh/projects' },
   { source: '/notes', destination: '/zh/notes' },
   { source: '/reading', destination: '/zh/reading' },
-  { source: '/resume', destination: '/zh/resume' },
+  { source: '/resume', destination: '/zh/about#resume' },
   { source: '/about', destination: '/zh/about' },
   { source: '/start-here', destination: '/zh/start-here' },
-  { source: '/now', destination: '/zh/now' },
-  { source: '/uses', destination: '/zh/uses' },
+  { source: '/now', destination: '/zh/about' },
+  { source: '/uses', destination: '/zh/about' },
   { source: '/rss.xml', destination: '/zh/rss.xml' },
+];
+
+/**
+ * Retired pages. Their content was removed or folded into `/about`, so the old
+ * per-locale URLs 308 to the surviving section instead of becoming 404s.
+ */
+const retiredRoutes = [
+  { source: '/zh/resume', destination: '/zh/about#resume' },
+  { source: '/en/resume', destination: '/en/about#resume' },
+  { source: '/zh/now', destination: '/zh/about' },
+  { source: '/en/now', destination: '/en/about' },
+  { source: '/zh/uses', destination: '/zh/about' },
+  { source: '/en/uses', destination: '/en/about' },
 ];
 
 const nextConfig: NextConfig = {
@@ -51,6 +64,7 @@ const nextConfig: NextConfig = {
     return [
       { source: '/', destination: '/zh', permanent: true },
       ...legacyChineseRoutes.map((route) => ({ ...route, permanent: true })),
+      ...retiredRoutes.map((route) => ({ ...route, permanent: true })),
     ];
   },
 };

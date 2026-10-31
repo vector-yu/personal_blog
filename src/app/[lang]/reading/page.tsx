@@ -1,10 +1,12 @@
 import type { Metadata } from 'next';
 import Image from 'next/image';
+import { notFound } from 'next/navigation';
 import { SectionLink } from '@/components/site/section-link';
 import { localePath } from '@/i18n/config';
 import { formatMessage } from '@/i18n/format';
 import { buildMetadata } from '@/i18n/metadata';
 import { getLocale, messagesFor } from '@/i18n/server';
+import { getHomeContent } from '@/lib/home';
 import { getReading, type Book, type ReadingStatus } from '@/lib/reading';
 
 export const revalidate = 60;
@@ -122,6 +124,11 @@ export default async function ReadingPage() {
   const locale = await getLocale();
   const messages = messagesFor(locale);
   const labels = messages.reading;
+  // Site-level switch: while the page is being rebuilt it can be hidden from the
+  // footer and returns a 404 here, so no half-finished list is published.
+  const { showReading } = await getHomeContent(locale);
+  if (!showReading) notFound();
+
   const { intro, books } = await getReading(locale);
   const groups = STATUS_ORDER.map((status) => ({
     status,

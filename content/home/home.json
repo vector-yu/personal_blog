@@ -1,6 +1,7 @@
 {
   "siteName": "Vector Yu的博客",
   "tagline": "历史从不重复 但时而踏着韵脚",
+  "showReading": false,
   "scrollHint": "向下滚动，认识我",
   "background": {
     "kind": "gradient",

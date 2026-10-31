@@ -77,8 +77,6 @@ try {
     'content/notes/notes.en.json',
     'content/reading/reading.en.json',
     'content/pages-en/about.mdx',
-    'content/pages-en/now.mdx',
-    'content/pages-en/uses.mdx',
     'content/pages-en/start-here.mdx',
   ];
   const missingDocs = required.filter((path) => !existsSync(path));

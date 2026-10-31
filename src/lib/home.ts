@@ -90,6 +90,8 @@ export type HomeTimelineEntry = {
 export type HomeContent = {
   siteName: string;
   tagline: string;
+  /** Site-level switch for the `/reading` page + its footer link (construction mode). */
+  showReading: boolean;
   scrollHint: string;
   background: HomeBackground;
   profile: HomeProfile;
@@ -110,6 +112,7 @@ export const HOME_RELATIVE_PATH_EN = 'home.en.json';
 export const DEFAULT_HOME: HomeContent = {
   siteName: '我的博客',
   tagline: '把好奇写下来，把复杂讲清楚。',
+  showReading: true,
   scrollHint: '向下滚动，认识我',
   background: {
     kind: 'gradient',
@@ -185,6 +188,7 @@ export const DEFAULT_HOME: HomeContent = {
 export const DEFAULT_HOME_EN: HomeContent = {
   siteName: "Vector Yu's Blog",
   tagline: 'Since you are here, stay a while.',
+  showReading: true,
   scrollHint: 'Scroll to meet me',
   background: {
     kind: 'gradient',
@@ -400,6 +404,9 @@ export function normaliseHome(
   return {
     siteName: asText(record.siteName, defaults.siteName),
     tagline: asText(record.tagline, defaults.tagline),
+    // Only an explicit `false` hides the page; a missing field keeps the default
+    // (true), so older documents keep working after this field is introduced.
+    showReading: typeof record.showReading === 'boolean' ? record.showReading : defaults.showReading,
     scrollHint: asText(record.scrollHint, defaults.scrollHint),
     background: normaliseBackground(record.background, defaults),
     profile: normaliseProfile(record.profile, defaults),
