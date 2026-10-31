@@ -19,9 +19,11 @@ import {
   useTransform,
 } from 'framer-motion';
 import { BlueprintTelemetry } from '@/components/home/blueprint-telemetry';
+import {
+  roundedPolyline,
+  type BlueprintPoint as Point,
+} from '@/components/home/blueprint-geometry';
 import type { HomeTimelineEntry } from '@/lib/home';
-
-type Point = { x: number; y: number };
 
 type BlueprintLabels = {
   eyebrow: string;
@@ -269,41 +271,12 @@ export function BlueprintTimeline({
           <span className="absolute top-1/2 left-4 hidden -translate-y-1/2 -rotate-90 font-mono text-[0.55rem] tracking-[0.3em] text-ink/20 sm:block dark:text-chalk/20">
             Y / CAREER
           </span>
-          <span className="absolute bottom-4 left-1/2 hidden -translate-x-1/2 font-mono text-[0.55rem] tracking-[0.3em] text-ink/20 sm:block dark:text-chalk/20">
+          <span className="absolute bottom-4 left-1/2 hidden translate-x-6 font-mono text-[0.55rem] tracking-[0.3em] text-ink/20 sm:block dark:text-chalk/20">
             X / TIME
           </span>
         </div>
 
         <BlueprintTelemetry enabled={!staticMode} />
-
-        <div className="relative z-10 flex min-h-full flex-col py-6">
-          <header className="flex items-start justify-between gap-6">
-            <div>
-              <p className="font-mono text-[0.6rem] tracking-[0.3em] text-ink/40 uppercase dark:text-slate-500">
-                {labels.eyebrow} <span className="text-iris-text dark:text-indigo-300">/</span>{' '}
-                FIG. 01
-              </p>
-              <h2 className="mt-2 text-title">{labels.title}</h2>
-            </div>
-
-            <div className="hidden shrink-0 text-right font-mono text-[0.58rem] leading-relaxed tracking-[0.16em] text-ink/40 sm:block dark:text-slate-500">
-              <p>SCALE 1:1</p>
-              <p>REV / 01</p>
-              <p className="motion-reduce:hidden">
-                TRACE{' '}
-                <span ref={traceRef} className="text-iris-text tabular-nums dark:text-indigo-300">
-                  00%
-                </span>
-              </p>
-            </div>
-          </header>
-
-          <div className="blueprint-body relative flex flex-1 flex-col justify-between py-6">
-            {/* Desktop: the drawing. Mobile: a static left rail. */}
-            <div
-              aria-hidden
-              className="absolute top-0 bottom-0 left-[1.625rem] w-px border-l border-dashed border-ink/25 md:hidden dark:border-chalk/25"
-            />
 
             <svg
               aria-hidden
@@ -318,21 +291,35 @@ export function BlueprintTimeline({
                   x1="0"
                   y1="0"
                   x2="0"
-                  y2="240"
-                  spreadMethod="repeat"
+                  y2={size.height}
                 >
                   <stop offset="0" stopColor="var(--color-iris)" />
-                  <stop offset="0.22" stopColor="var(--color-blush)" />
-                  <stop offset="0.46" stopColor="var(--color-sun)" />
-                  <stop offset="0.7" stopColor="var(--color-mint)" />
-                  <stop offset="1" stopColor="var(--color-iris)" />
+                  <stop offset="0.55" stopColor="var(--color-blush)" />
+                  <stop offset="1" stopColor="var(--color-sun)" />
+                </linearGradient>
+
+                {/* A soft white sheen slides along the fixed-colour line. The
+                    hue never changes; only the light travels. */}
+                <linearGradient
+                  id="blueprint-sheen"
+                  gradientUnits="userSpaceOnUse"
+                  x1="0"
+                  y1="0"
+                  x2="0"
+                  y2={size.height}
+                >
+                  <stop offset="0" stopColor="#fff" stopOpacity="0" />
+                  <stop offset="0.42" stopColor="#fff" stopOpacity="0" />
+                  <stop offset="0.5" stopColor="#fff" stopOpacity="0.6" />
+                  <stop offset="0.58" stopColor="#fff" stopOpacity="0" />
+                  <stop offset="1" stopColor="#fff" stopOpacity="0" />
                   {staticMode ? null : (
                     <animateTransform
                       attributeName="gradientTransform"
                       type="translate"
-                      from="0 0"
-                      to="0 -240"
-                      dur="14s"
+                      from={`0 -${size.height}`}
+                      to={`0 ${size.height}`}
+                      dur="16s"
                       repeatCount="indefinite"
                       className="motion-reduce:hidden"
                     />
@@ -354,12 +341,6 @@ export function BlueprintTimeline({
                     cy={geometry?.start.y}
                     r="2.5"
                     className="fill-iris/70"
-                  />
-                  <circle
-                    cx={geometry?.end.x}
-                    cy={geometry?.end.y}
-                    r="2.5"
-                    className="fill-sun/70"
                   />
                   <path
                     d={path}
@@ -397,6 +378,21 @@ export function BlueprintTimeline({
                     vectorEffect="non-scaling-stroke"
                     className="motion-reduce:hidden"
                   />
+                  {staticMode ? null : (
+                    <m.path
+                      d={path}
+                      fill="none"
+                      stroke="url(#blueprint-sheen)"
+                      strokeWidth="2.4"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      pathLength={1}
+                      strokeDasharray="1"
+                      style={{ strokeDashoffset: dashOffset }}
+                      vectorEffect="non-scaling-stroke"
+                      className="motion-reduce:hidden"
+                    />
+                  )}
                   <g
                     ref={tipRef}
                     opacity="0"
@@ -410,6 +406,36 @@ export function BlueprintTimeline({
                 </>
               ) : null}
             </svg>
+
+        <div className="relative z-10 flex min-h-full flex-col py-6">
+          <header className="flex items-start justify-between gap-6">
+            <div>
+              <p className="font-mono text-[0.6rem] tracking-[0.3em] text-ink/40 uppercase dark:text-slate-500">
+                {labels.eyebrow} <span className="text-iris-text dark:text-indigo-300">/</span>{' '}
+                FIG. 01
+              </p>
+              <h2 className="mt-2 text-title">{labels.title}</h2>
+            </div>
+
+            <div className="hidden shrink-0 text-right font-mono text-[0.58rem] leading-relaxed tracking-[0.16em] text-ink/40 sm:block dark:text-slate-500">
+              <p>SCALE 1:1</p>
+              <p>REV / 01</p>
+              <p className="motion-reduce:hidden">
+                TRACE{' '}
+                <span ref={traceRef} className="text-iris-text tabular-nums dark:text-indigo-300">
+                  00%
+                </span>
+              </p>
+            </div>
+          </header>
+
+          <div className="blueprint-body relative flex flex-1 flex-col justify-between py-6">
+            {/* Desktop: the drawing. Mobile: a static left rail. */}
+            <div
+              aria-hidden
+              className="absolute top-0 bottom-0 left-[1.625rem] w-px border-l border-dashed border-ink/25 md:hidden dark:border-chalk/25"
+            />
+
 
             <ol className="blueprint-list relative z-10 flex h-full flex-col justify-between gap-6">
               {entries.length === 0 ? (
@@ -611,37 +637,36 @@ function BlueprintCard({
   );
 }
 
-/** A smooth cubic path through every node centre, with an entry/exit tail. */
+/** A rounded orthogonal drafting trace, with an entry/exit tail. */
 function buildPath(points: Point[], size: { width: number; height: number }) {
   if (!points.length || !size.width || !size.height) return null;
 
   const startY = Math.max(8, points[0].y - 58);
-  const endY = Math.min(size.height - 8, points[points.length - 1].y + 68);
-  const all: Point[] = [
+  // Run the tail all the way to the bottom of the pinned sheet, so it can meet
+  // the branch trunk that starts exactly at the next section.
+  const endY = Math.max(points[points.length - 1].y + 58, size.height);
+  const vertices: Point[] = [
     { x: points[0].x, y: startY },
-    ...points,
-    { x: points[points.length - 1].x, y: endY },
+    points[0],
   ];
 
-  const detour = Math.min(46, size.width * 0.038);
-  let d = `M ${all[0].x} ${all[0].y} L ${points[0].x} ${points[0].y}`;
-
+  const detour = Math.min(60, size.width * 0.045);
   for (let i = 0; i < points.length - 1; i += 1) {
     const from = points[i];
     const to = points[i + 1];
     const direction = i % 2 === 0 ? 1 : -1;
-    // Orthogonal drafting trace: a straight drop, a detour to one side, then
-    // back to the centre at the next node. It reads as a circuit/blueprint
-    // line rather than an organic squiggle.
-    const shoulder = Math.min(34, (to.y - from.y) * 0.24);
-    d += ` L ${from.x} ${from.y + shoulder}`;
-    d += ` L ${from.x + direction * detour} ${from.y + shoulder}`;
-    d += ` L ${from.x + direction * detour} ${to.y - shoulder}`;
-    d += ` L ${to.x} ${to.y - shoulder}`;
-    d += ` L ${to.x} ${to.y}`;
+    const shoulder = Math.min(48, (to.y - from.y) * 0.28);
+    vertices.push(
+      { x: from.x, y: from.y + shoulder },
+      { x: from.x + direction * detour, y: from.y + shoulder },
+      { x: from.x + direction * detour, y: to.y - shoulder },
+      { x: to.x, y: to.y - shoulder },
+      to
+    );
   }
 
-  d += ` L ${all[all.length - 1].x} ${all[all.length - 1].y}`;
+  vertices.push({ x: points[points.length - 1].x, y: endY });
 
-  return { d, start: all[0], end: all[all.length - 1] };
+  const d = roundedPolyline(vertices, 28);
+  return { d, start: vertices[0], end: vertices[vertices.length - 1] };
 }

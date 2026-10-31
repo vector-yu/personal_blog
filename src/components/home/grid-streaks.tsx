@@ -5,7 +5,7 @@ import { useEffect, useRef } from 'react';
 const CELL = 120; // the major grid line spacing in globals.css
 const MAX_STREAKS = 2;
 const TRAIL = 60;
-const COLORS = ['109,92,255', '126,240,208', '255,209,102'] as const;
+const COLORS = ['109,92,255', '239,123,160', '255,209,102'] as const;
 
 type Direction = 'up' | 'down' | 'left' | 'right';
 

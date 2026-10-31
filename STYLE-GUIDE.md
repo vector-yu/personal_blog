@@ -138,6 +138,9 @@ class="animate-flow animate-tumble"
 | 蓝图网格只能由 `BlueprintField` 连续铺到页脚，不要在每个 section 单独切网格 | `blueprint-field.tsx` + `timeline-section.tsx` | 底部出现断层 / 网格接缝 |
 | 底部三岔卡必须是真实 `<Link>`；SVG 线、节点和流动光效只是装饰 | `blueprint-branches.tsx` | 导航依赖 JS / 爬虫看不到 |
 | 加粗制图线不能透进节点：节点圆盘必须是不透明纸面/午夜色 | `blueprint-timeline.tsx` | 深色下像线压在节点上 |
+| 制图线必须从履历末卡无缝接到下方总线，不能插入独立 section 标题 | `blueprint-timeline.tsx` + `blueprint-branches.tsx` | 中间出现断层 / 空白 |
+| 线色固定 iris→blush→sun，只允许柔和白色 sheen 流动；不要循环换色/跑马灯 | `blueprint-timeline.tsx` + `blueprint-branches.tsx` | 配色失控 / 动画廉价 |
+| 制图线拐角必须用足够大的圆角（当前 28/34），不要回到硬直角 | `blueprint-geometry.ts` + 两个线组件 | 拐角生硬 |
 | 表格必须保持「外层 `overflow-hidden` 圆角 + 内层 `overflow-x-auto`」，且 `table` 的 margin 为 0 | `tina-markdown.tsx` | 否则表头/表尾出现空隙，圆角处露出方角 |
 | 代码块 token 颜色类必须是 `highlight-code.ts` 里的字面量 | `highlight-code.ts` | Tailwind 扫描不到动态拼接的类名 |
 | 文章 h1/h2/h3 的 `id` 与右侧 TOC 必须共用 `slugifyHeading` | `tina-markdown.tsx` + `toc.ts` | 目录锚点对不上，点了不跳 |

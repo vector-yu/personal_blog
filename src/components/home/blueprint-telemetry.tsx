@@ -64,7 +64,7 @@ export function BlueprintTelemetry({ enabled }: { enabled: boolean }) {
     >
       <div className="flex items-center justify-between gap-2 font-mono text-[0.52rem] tracking-[0.18em] text-ink/45 uppercase dark:text-slate-400">
         <span className="flex items-center gap-1.5">
-          <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-mint motion-reduce:animate-none" />
+          <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-iris motion-reduce:animate-none" />
           SYS / LIVE
         </span>
         <span>04</span>

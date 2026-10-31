@@ -639,22 +639,8 @@
   animation: hud-tick 280ms ease-out both;
 }
 
-@keyframes blueprint-energy {
-  to {
-    stroke-dashoffset: -64;
-  }
-}
-
-.blueprint-energy {
-  animation: blueprint-energy 7s linear infinite;
-}
-
 @media (prefers-reduced-motion: reduce) {
   .hud-tick {
-    animation: none;
-  }
-
-  .blueprint-energy {
     animation: none;
   }
 }

@@ -61,9 +61,6 @@ export default async function HomePage() {
           end: messages.home.blueprintEnd,
         }}
         branches={{
-          eyebrow: messages.home.branchEyebrow,
-          title: messages.home.branchTitle,
-          hint: messages.home.branchHint,
           open: messages.home.branchOpen,
           cards: [
             {

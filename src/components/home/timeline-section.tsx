@@ -27,9 +27,6 @@ export function TimelineSection({
     end: string;
   };
   branches: {
-    eyebrow: string;
-    title: string;
-    hint: string;
     open: string;
     cards: BranchCard[];
   };

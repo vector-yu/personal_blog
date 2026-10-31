@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { roundedPolyline, type BlueprintPoint as Point } from '@/components/home/blueprint-geometry';
 
 export type BranchCard = {
   title: string;
@@ -11,17 +12,14 @@ export type BranchCard = {
 };
 
 type BranchLabels = {
-  eyebrow: string;
-  title: string;
-  hint: string;
   open: string;
 };
 
-type Point = { x: number; y: number };
-
 /**
  * The bottom of the blueprint: the drafting line reaches a bus and splits into
- * three labeled routes (About / Start here / Notes).
+ * three labeled routes (About / Start here / Notes). There is no separate
+ * heading: the line arrives directly from the résumé sheet above, so the two
+ * parts read as one drawing.
  *
  * The cards are ordinary links in the server HTML; the SVG is decorative and is
  * only measured after mount. On phones the line is hidden and the cards stack,
@@ -41,11 +39,16 @@ export function BlueprintBranches({
   const [reduceMotion, setReduceMotion] = useState(false);
 
   useEffect(() => {
-    const query = window.matchMedia('(prefers-reduced-motion: reduce)');
-    const sync = () => setReduceMotion(query.matches);
+    const reduced = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const mobile = window.matchMedia('(max-width: 47.999rem)');
+    const sync = () => setReduceMotion(reduced.matches || mobile.matches);
     sync();
-    query.addEventListener('change', sync);
-    return () => query.removeEventListener('change', sync);
+    reduced.addEventListener('change', sync);
+    mobile.addEventListener('change', sync);
+    return () => {
+      reduced.removeEventListener('change', sync);
+      mobile.removeEventListener('change', sync);
+    };
   }, []);
 
   useLayoutEffect(() => {
@@ -85,24 +88,9 @@ export function BlueprintBranches({
 
   return (
     <section
-      aria-labelledby="blueprint-branches-title"
-      className="relative z-10 mx-auto w-full max-w-7xl px-4 pt-20 pb-28 sm:px-6 sm:pt-24"
+      className="blueprint-branches relative z-10 mx-auto w-full max-w-7xl px-4 pb-28 sm:px-6"
     >
-      <header className="flex items-end justify-between gap-6">
-        <div>
-          <p className="font-mono text-[0.6rem] tracking-[0.3em] text-ink/40 uppercase dark:text-slate-500">
-            {labels.eyebrow}
-          </p>
-          <h2 id="blueprint-branches-title" className="mt-2 text-title">
-            {labels.title}
-          </h2>
-        </div>
-        <p className="hidden shrink-0 font-mono text-[0.58rem] tracking-[0.16em] text-ink/35 uppercase sm:block dark:text-slate-500">
-          {labels.hint} <span className="text-iris-text dark:text-indigo-300">/ 03</span>
-        </p>
-      </header>
-
-      <div ref={stageRef} className="relative mt-10">
+      <div ref={stageRef} className="relative">
         <svg
           aria-hidden
           className="pointer-events-none absolute inset-0 z-0 hidden h-full w-full md:block"
@@ -116,21 +104,33 @@ export function BlueprintBranches({
               x1="0"
               y1="0"
               x2="0"
-              y2="240"
-              spreadMethod="repeat"
+              y2={size.height}
             >
-              <stop offset="0" stopColor="var(--color-iris)" />
-              <stop offset="0.22" stopColor="var(--color-blush)" />
-              <stop offset="0.46" stopColor="var(--color-sun)" />
-              <stop offset="0.7" stopColor="var(--color-mint)" />
+              <stop offset="0" stopColor="var(--color-sun)" />
+              <stop offset="0.5" stopColor="var(--color-blush)" />
               <stop offset="1" stopColor="var(--color-iris)" />
+            </linearGradient>
+
+            <linearGradient
+              id="branch-sheen"
+              gradientUnits="userSpaceOnUse"
+              x1="0"
+              y1="0"
+              x2="0"
+              y2={size.height}
+            >
+              <stop offset="0" stopColor="#fff" stopOpacity="0" />
+              <stop offset="0.42" stopColor="#fff" stopOpacity="0" />
+              <stop offset="0.5" stopColor="#fff" stopOpacity="0.6" />
+              <stop offset="0.58" stopColor="#fff" stopOpacity="0" />
+              <stop offset="1" stopColor="#fff" stopOpacity="0" />
               {reduceMotion ? null : (
                 <animateTransform
                   attributeName="gradientTransform"
                   type="translate"
-                  from="0 0"
-                  to="0 -240"
-                  dur="14s"
+                  from={`0 -${size.height}`}
+                  to={`0 ${size.height}`}
+                  dur="16s"
                   repeatCount="indefinite"
                   className="motion-reduce:hidden"
                 />
@@ -151,7 +151,7 @@ export function BlueprintBranches({
                 d={branch.d}
                 fill="none"
                 stroke="currentColor"
-                strokeWidth="1.5"
+                strokeWidth="1.8"
                 strokeDasharray="5 9"
                 strokeLinejoin="round"
                 className="text-ink/15 dark:text-chalk/15"
@@ -167,17 +167,18 @@ export function BlueprintBranches({
                 filter="url(#branch-glow)"
                 vectorEffect="non-scaling-stroke"
               />
-              <path
-                d={branch.d}
-                fill="none"
-                stroke="rgba(255,255,255,0.9)"
-                strokeWidth="1.6"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeDasharray="10 54"
-                className="blueprint-energy"
-                vectorEffect="non-scaling-stroke"
-              />
+              {reduceMotion ? null : (
+                <path
+                  d={branch.d}
+                  fill="none"
+                  stroke="url(#branch-sheen)"
+                  strokeWidth="2.4"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  vectorEffect="non-scaling-stroke"
+                  className="motion-reduce:hidden"
+                />
+              )}
               <rect
                 x={branch.busX - 5}
                 y={branch.busY - 5}
@@ -188,7 +189,6 @@ export function BlueprintBranches({
                 strokeWidth="2"
                 vectorEffect="non-scaling-stroke"
               />
-              <circle cx={branch.busX} cy={0} r="3" className="fill-iris/70" />
             </>
           ) : null}
         </svg>
@@ -286,13 +286,39 @@ function buildBranch(points: Point[], size: { width: number; height: number }) {
   const busY = Math.max(44, Math.min(left.y, middle.y, right.y) - 88);
   const busX = middle.x;
 
-  const d = [
-    `M ${middle.x} 0 L ${middle.x} ${busY}`,
-    `M ${left.x} ${busY} L ${right.x} ${busY}`,
-    `M ${left.x} ${busY} L ${left.x} ${left.y}`,
-    `M ${middle.x} ${busY} L ${middle.x} ${middle.y}`,
-    `M ${right.x} ${busY} L ${right.x} ${right.y}`,
-  ].join(' ');
+  // Trunk + two halves of the bus, then a rounded outer elbow at each end.
+  // The centre T is covered by the diamond below, the same way a drafting
+  // drawing hides a sharp junction under a marker.
+  const trunk = roundedPolyline(
+    [
+      { x: middle.x, y: 0 },
+      { x: middle.x, y: busY },
+    ],
+    8
+  );
+  const leftBranch = roundedPolyline(
+    [
+      { x: middle.x, y: busY },
+      { x: left.x, y: busY },
+      { x: left.x, y: left.y },
+    ],
+    34
+  );
+  const rightBranch = roundedPolyline(
+    [
+      { x: middle.x, y: busY },
+      { x: right.x, y: busY },
+      { x: right.x, y: right.y },
+    ],
+    34
+  );
+  const centerBranch = roundedPolyline(
+    [
+      { x: middle.x, y: busY },
+      { x: middle.x, y: middle.y },
+    ],
+    8
+  );
 
-  return { d, busX, busY };
+  return { d: `${trunk} ${leftBranch} ${rightBranch} ${centerBranch}`, busX, busY };
 }
