@@ -105,8 +105,6 @@ function navGroups(locale: Locale, messages: Messages, showReading: boolean): Na
     {
       label: messages.footer.content,
       links: [
-        { label: messages.nav.tags, href: localePath(locale, '/tags') },
-        { label: messages.nav.archive, href: localePath(locale, '/archive') },
         { label: messages.nav.notes, href: localePath(locale, '/notes') },
         { label: messages.nav.series, href: localePath(locale, '/series') },
         { label: messages.nav.startHere, href: localePath(locale, '/start-here') },
@@ -115,12 +113,13 @@ function navGroups(locale: Locale, messages: Messages, showReading: boolean): Na
     {
       label: messages.footer.more,
       links: [
-        // The reading page can be switched off while it is being rebuilt; the
-        // link disappears with the page so there is no dead end in the footer.
-        ...(showReading
-          ? [{ label: messages.nav.reading, href: localePath(locale, '/reading') }]
-          : []),
-        { label: messages.nav.rss, href: localePath(locale, '/rss.xml') },
+        { label: messages.nav.tags, href: localePath(locale, '/tags') },
+        { label: messages.nav.archive, href: localePath(locale, '/archive') },
+        // Keep the three-column rhythm even while the reading page is off.
+        // The bottom bar keeps its dedicated RSS button as a subscribe CTA.
+        showReading
+          ? { label: messages.nav.reading, href: localePath(locale, '/reading') }
+          : { label: messages.nav.rss, href: localePath(locale, '/rss.xml') },
       ],
     },
   ];
