@@ -739,6 +739,34 @@
   animation: hero-scan 1.5s 0.6s cubic-bezier(0.4, 0, 0.2, 1) both;
 }
 
+/* The hero swaps the native cursor for a hollow drafting ring. It only does
+   this on a fine pointer with motion enabled, so touch and reduced-motion keep
+   the OS cursor. */
+@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference) {
+  .hero-custom-cursor,
+  .hero-custom-cursor * {
+    cursor: none !important;
+  }
+}
+
+@keyframes hero-selection-out {
+  0% {
+    opacity: 1;
+    transform: scale(1);
+    filter: blur(0);
+  }
+
+  100% {
+    opacity: 0;
+    transform: scale(1.025);
+    filter: blur(1.2px);
+  }
+}
+
+.hero-selection-out {
+  animation: hero-selection-out 950ms cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
 @media (prefers-reduced-motion: reduce), (max-width: 47.999rem) {
   .hero-word,
   .hero-fade,
@@ -751,6 +779,11 @@
   }
 
   .hero-scan-line {
+    animation: none !important;
+    opacity: 0 !important;
+  }
+
+  .hero-selection-out {
     animation: none !important;
     opacity: 0 !important;
   }

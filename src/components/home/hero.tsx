@@ -11,6 +11,20 @@ import { m, useScroll, useTransform } from 'framer-motion';
 import { GridStreaks } from '@/components/home/grid-streaks';
 
 type HeroToken = { text: string; space: boolean };
+type TypingPhase = 'typing' | 'holding' | 'deleting';
+type HeroSelection = {
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+  leaving: boolean;
+};
+type HeroDrag = {
+  startX: number;
+  startY: number;
+  pointerId: number;
+  current: HeroSelection | null;
+};
 
 /**
  * Split the site name into word-sized pieces for the masked reveal.
@@ -36,8 +50,9 @@ function splitIdentity(value: string): HeroToken[] {
  *
  * On load a frame draws, the name wipes in by word, then the motto and the
  * colour strip settle. On a desktop with motion, a faint crosshair follows the
- * pointer, the title moves by a couple of pixels, and the whole sheet recedes
- * gently on scroll. Phones and reduced motion get the composed end state only.
+ * pointer, the title tilts in 3D, a hollow ring replaces the native cursor, and
+ * dragging a non-link area draws a selection box that dissolves on release.
+ * Phones and reduced motion get the composed end state only.
  */
 export function HomeHero({
   siteName,
@@ -52,10 +67,15 @@ export function HomeHero({
   const crosshairRef = useRef<HTMLDivElement>(null);
   const verticalRef = useRef<HTMLSpanElement>(null);
   const horizontalRef = useRef<HTMLSpanElement>(null);
-  const cursorRef = useRef<HTMLSpanElement>(null);
+  const pointerRef = useRef<HTMLSpanElement>(null);
   const coordRef = useRef<HTMLSpanElement>(null);
+  const dragRef = useRef<HeroDrag | null>(null);
+  const selectionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [interactive, setInteractive] = useState(false);
+  const [pointerReady, setPointerReady] = useState(false);
   const [displayedTagline, setDisplayedTagline] = useState(tagline);
+  const [typingPhase, setTypingPhase] = useState<TypingPhase>('typing');
+  const [selection, setSelection] = useState<HeroSelection | null>(null);
 
   const { scrollYProgress } = useScroll({
     target: heroRef,
@@ -65,40 +85,64 @@ export function HomeHero({
   const contentOpacity = useTransform(scrollYProgress, [0, 0.7], [1, 0.55]);
   const contentScale = useTransform(scrollYProgress, [0, 0.7], [1, 0.985]);
 
+  const clearSelection = () => {
+    if (selectionTimerRef.current) {
+      clearTimeout(selectionTimerRef.current);
+      selectionTimerRef.current = null;
+    }
+    dragRef.current = null;
+    setSelection(null);
+  };
+
   useEffect(() => {
     const query = window.matchMedia(
-      '(min-width: 48rem) and (prefers-reduced-motion: no-preference)'
+      '(min-width: 48rem) and (hover: hover) and (pointer: fine) and (prefers-reduced-motion: no-preference)'
     );
     const sync = () => {
       setInteractive(query.matches);
       if (!query.matches) {
         if (crosshairRef.current) crosshairRef.current.style.opacity = '0';
-        heroRef.current?.style.setProperty('--hero-tx', '0px');
-        heroRef.current?.style.setProperty('--hero-ty', '0px');
+        if (pointerRef.current) pointerRef.current.style.opacity = '0';
+        setPointerReady(false);
+        heroRef.current?.style.setProperty('--hero-rx', '0deg');
+        heroRef.current?.style.setProperty('--hero-ry', '0deg');
+        clearSelection();
       }
     };
     sync();
     query.addEventListener('change', sync);
     return () => query.removeEventListener('change', sync);
+    // `clearSelection` only touches refs and a stable setter.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      if (selectionTimerRef.current) clearTimeout(selectionTimerRef.current);
+    };
   }, []);
 
   const resetPointer = () => {
     if (crosshairRef.current) crosshairRef.current.style.opacity = '0';
-    heroRef.current?.style.setProperty('--hero-tx', '0px');
-    heroRef.current?.style.setProperty('--hero-ty', '0px');
+    if (pointerRef.current) pointerRef.current.style.opacity = '0';
+    setPointerReady(false);
+    heroRef.current?.style.setProperty('--hero-rx', '0deg');
+    heroRef.current?.style.setProperty('--hero-ry', '0deg');
   };
 
   const handlePointerMove = (event: ReactPointerEvent<HTMLElement>) => {
     if (!interactive || !heroRef.current) return;
+    if (!pointerReady) setPointerReady(true);
     const rect = heroRef.current.getBoundingClientRect();
     const x = Math.min(Math.max(event.clientX - rect.left, 0), rect.width);
     const y = Math.min(Math.max(event.clientY - rect.top, 0), rect.height);
 
     if (verticalRef.current) verticalRef.current.style.transform = `translateX(${x}px)`;
     if (horizontalRef.current) horizontalRef.current.style.transform = `translateY(${y}px)`;
-    if (cursorRef.current) {
-      cursorRef.current.style.left = `${x}px`;
-      cursorRef.current.style.top = `${y}px`;
+    if (pointerRef.current) {
+      pointerRef.current.style.left = `${x}px`;
+      pointerRef.current.style.top = `${y}px`;
+      pointerRef.current.style.opacity = '1';
     }
     if (coordRef.current) {
       coordRef.current.style.left = `${Math.min(x + 14, rect.width - 106)}px`;
@@ -112,8 +156,93 @@ export function HomeHero({
 
     const nx = (x / Math.max(1, rect.width)) * 2 - 1;
     const ny = (y / Math.max(1, rect.height)) * 2 - 1;
-    heroRef.current.style.setProperty('--hero-tx', `${(nx * 4).toFixed(2)}px`);
-    heroRef.current.style.setProperty('--hero-ty', `${(ny * 3).toFixed(2)}px`);
+    heroRef.current.style.setProperty('--hero-rx', `${(-ny * 3.5).toFixed(2)}deg`);
+    heroRef.current.style.setProperty('--hero-ry', `${(nx * 4.5).toFixed(2)}deg`);
+
+    const drag = dragRef.current;
+    if (drag) {
+      const dx = x - drag.startX;
+      const dy = y - drag.startY;
+      if (Math.abs(dx) >= 4 || Math.abs(dy) >= 4) {
+        const next: HeroSelection = {
+          x: Math.min(drag.startX, x),
+          y: Math.min(drag.startY, y),
+          w: Math.abs(dx),
+          h: Math.abs(dy),
+          leaving: false,
+        };
+        drag.current = next;
+        setSelection(next);
+      }
+    }
+  };
+
+  const handlePointerDown = (event: ReactPointerEvent<HTMLElement>) => {
+    if (!interactive || event.button !== 0 || !heroRef.current) return;
+    const target = event.target as Element | null;
+    if (target?.closest('a, button, [role="button"], input, textarea, select')) {
+      return;
+    }
+
+    event.preventDefault();
+    const rect = heroRef.current.getBoundingClientRect();
+    const startX = Math.min(Math.max(event.clientX - rect.left, 0), rect.width);
+    const startY = Math.min(Math.max(event.clientY - rect.top, 0), rect.height);
+
+    if (selectionTimerRef.current) {
+      clearTimeout(selectionTimerRef.current);
+      selectionTimerRef.current = null;
+    }
+    setSelection(null);
+    dragRef.current = {
+      startX,
+      startY,
+      pointerId: event.pointerId,
+      current: null,
+    };
+    try {
+      event.currentTarget.setPointerCapture(event.pointerId);
+    } catch {
+      // Pointer capture is best-effort; the up handler still clears state.
+    }
+  };
+
+  const handlePointerUp = (event: ReactPointerEvent<HTMLElement>) => {
+    const drag = dragRef.current;
+    if (!drag) return;
+    dragRef.current = null;
+    try {
+      if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+        event.currentTarget.releasePointerCapture(event.pointerId);
+      }
+    } catch {
+      // ignore
+    }
+
+    const rect = drag.current;
+    if (!rect || rect.w < 8 || rect.h < 8) {
+      setSelection(null);
+      return;
+    }
+
+    setSelection({ ...rect, leaving: true });
+    if (selectionTimerRef.current) clearTimeout(selectionTimerRef.current);
+    selectionTimerRef.current = setTimeout(() => {
+      selectionTimerRef.current = null;
+      setSelection(null);
+    }, 980);
+  };
+
+  const handlePointerCancel = (event: ReactPointerEvent<HTMLElement>) => {
+    dragRef.current = null;
+    try {
+      if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+        event.currentTarget.releasePointerCapture(event.pointerId);
+      }
+    } catch {
+      // ignore
+    }
+    setSelection(null);
   };
 
   const tokens = splitIdentity(siteName);
@@ -121,6 +250,7 @@ export function HomeHero({
   useEffect(() => {
     if (!interactive) {
       setDisplayedTagline(tagline);
+      setTypingPhase('typing');
       return;
     }
 
@@ -133,6 +263,7 @@ export function HomeHero({
     let timer: ReturnType<typeof setTimeout> | undefined;
 
     setDisplayedTagline('');
+    setTypingPhase('typing');
 
     const schedule = (fn: () => void, ms: number) => {
       timer = setTimeout(fn, ms);
@@ -143,23 +274,27 @@ export function HomeHero({
       if (!deleting) {
         index += 1;
         setDisplayedTagline(chars.slice(0, index).join(''));
+        setTypingPhase('typing');
         if (index >= chars.length) {
           deleting = true;
-          schedule(step, 3200);
+          setTypingPhase('holding');
+          schedule(step, 3600);
           return;
         }
-        schedule(step, 70);
+        schedule(step, 105);
         return;
       }
 
       index -= 1;
       setDisplayedTagline(chars.slice(0, index).join(''));
+      setTypingPhase('deleting');
       if (index <= 0) {
         deleting = false;
-        schedule(step, 700);
+        setTypingPhase('typing');
+        schedule(step, 800);
         return;
       }
-      schedule(step, 26);
+      schedule(step, 42);
     };
 
     schedule(step, 650);
@@ -174,8 +309,14 @@ export function HomeHero({
     <section
       ref={heroRef}
       onPointerMove={handlePointerMove}
+      onPointerEnter={handlePointerMove}
       onPointerLeave={resetPointer}
-      className="relative w-full text-center"
+      onPointerDown={handlePointerDown}
+      onPointerUp={handlePointerUp}
+      onPointerCancel={handlePointerCancel}
+      className={`relative w-full text-center ${
+        interactive && pointerReady ? 'hero-custom-cursor' : ''
+      }`}
     >
       <div
         aria-hidden
@@ -270,7 +411,7 @@ export function HomeHero({
             className="hero-title-wrap relative mx-auto w-full transition-transform duration-300 ease-out"
             style={{
               transform:
-                'translate3d(var(--hero-tx, 0px), var(--hero-ty, 0px), 0)',
+                'perspective(900px) rotateX(var(--hero-rx, 0deg)) rotateY(var(--hero-ry, 0deg))',
             }}
           >
             <div className="relative inline-block max-w-full">
@@ -316,7 +457,13 @@ export function HomeHero({
               >
                 {displayedTagline}
                 {interactive ? (
-                  <span className="ml-0.5 inline-block h-[1.05em] w-[2px] translate-y-[0.14em] animate-pulse rounded-full bg-iris/70 align-baseline motion-reduce:animate-none" />
+                  <span
+                    className={`ml-0.5 inline-block h-[1.1em] w-[2px] translate-y-[0.14em] rounded-full bg-iris-text align-baseline opacity-90 dark:bg-indigo-300 ${
+                      typingPhase === 'holding'
+                        ? 'animate-pulse motion-reduce:animate-none'
+                        : ''
+                    }`}
+                  />
                 ) : null}
               </span>
             </span>
@@ -362,6 +509,30 @@ export function HomeHero({
       </div>
       </div>
 
+      {selection ? (
+        <div
+          aria-hidden
+          className={`hero-selection pointer-events-none absolute z-[12] border border-iris/80 bg-iris/[0.06] ${
+            selection.leaving ? 'hero-selection-out' : ''
+          }`}
+          style={{
+            left: selection.x,
+            top: selection.y,
+            width: selection.w,
+            height: selection.h,
+          }}
+        >
+          <span className="absolute -top-px -left-px h-2.5 w-2.5 border-t border-l border-iris" />
+          <span className="absolute -top-px -right-px h-2.5 w-2.5 border-t border-r border-iris" />
+          <span className="absolute -bottom-px -left-px h-2.5 w-2.5 border-b border-l border-iris" />
+          <span className="absolute -right-px -bottom-px h-2.5 w-2.5 border-r border-b border-iris" />
+          <span className="absolute right-0 -bottom-5 font-mono text-[0.55rem] tracking-[0.16em] whitespace-nowrap text-iris-text tabular-nums dark:text-indigo-300">
+            {String(Math.round(selection.w)).padStart(4, '0')} ×{' '}
+            {String(Math.round(selection.h)).padStart(4, '0')}
+          </span>
+        </div>
+      ) : null}
+
       {/* Pointer crosshair: behind the title, above the frame. It only exists
           visually on a desktop with motion enabled. */}
       <div
@@ -378,18 +549,19 @@ export function HomeHero({
           className="absolute top-0 right-0 left-0 h-px bg-ink/15 dark:bg-chalk/15"
         />
         <span
-          ref={cursorRef}
-          className="absolute -translate-x-1/2 -translate-y-1/2 font-mono text-sm text-iris/60 dark:text-indigo-300/70"
-        >
-          +
-        </span>
-        <span
           ref={coordRef}
           className="absolute font-mono text-[0.55rem] tracking-[0.18em] text-ink/40 tabular-nums dark:text-slate-500"
         >
           X 0000 / Y 0000
         </span>
       </div>
+
+      {/* Hollow drafting ring: the only visible mouse cursor on the hero. */}
+      <span
+        ref={pointerRef}
+        aria-hidden
+        className="hero-pointer pointer-events-none absolute z-30 hidden h-[18px] w-[18px] -translate-x-1/2 -translate-y-1/2 rounded-full border border-ink/55 opacity-0 transition-opacity duration-200 md:block dark:border-chalk/70"
+      />
     </section>
   );
 }
