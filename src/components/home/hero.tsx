@@ -8,6 +8,7 @@ import {
   type PointerEvent as ReactPointerEvent,
 } from 'react';
 import { m, useScroll, useTransform } from 'framer-motion';
+import { GridStreaks } from '@/components/home/grid-streaks';
 
 type HeroToken = { text: string; space: boolean };
 
@@ -54,6 +55,7 @@ export function HomeHero({
   const cursorRef = useRef<HTMLSpanElement>(null);
   const coordRef = useRef<HTMLSpanElement>(null);
   const [interactive, setInteractive] = useState(false);
+  const [displayedTagline, setDisplayedTagline] = useState(tagline);
 
   const { scrollYProgress } = useScroll({
     target: heroRef,
@@ -116,14 +118,78 @@ export function HomeHero({
 
   const tokens = splitIdentity(siteName);
 
+  useEffect(() => {
+    if (!interactive) {
+      setDisplayedTagline(tagline);
+      return;
+    }
+
+    const chars = Array.from(tagline);
+    if (!chars.length) return;
+
+    let index = 0;
+    let deleting = false;
+    let cancelled = false;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+
+    setDisplayedTagline('');
+
+    const schedule = (fn: () => void, ms: number) => {
+      timer = setTimeout(fn, ms);
+    };
+
+    const step = () => {
+      if (cancelled) return;
+      if (!deleting) {
+        index += 1;
+        setDisplayedTagline(chars.slice(0, index).join(''));
+        if (index >= chars.length) {
+          deleting = true;
+          schedule(step, 3200);
+          return;
+        }
+        schedule(step, 70);
+        return;
+      }
+
+      index -= 1;
+      setDisplayedTagline(chars.slice(0, index).join(''));
+      if (index <= 0) {
+        deleting = false;
+        schedule(step, 700);
+        return;
+      }
+      schedule(step, 26);
+    };
+
+    schedule(step, 650);
+
+    return () => {
+      cancelled = true;
+      if (timer) clearTimeout(timer);
+    };
+  }, [interactive, tagline]);
+
   return (
     <section
       ref={heroRef}
       onPointerMove={handlePointerMove}
       onPointerLeave={resetPointer}
-      className="relative mx-auto flex min-h-[calc(100svh-4rem)] w-full max-w-5xl flex-col items-center justify-center px-4 pt-16 pb-32 text-center"
+      className="relative w-full text-center"
     >
-      <m.div
+      <div
+        aria-hidden
+        className="hero-grid blueprint-grid pointer-events-none absolute inset-0 z-0 opacity-50"
+      />
+      <div
+        aria-hidden
+        className="hero-data pointer-events-none absolute inset-0 z-[1] opacity-70"
+      >
+        <GridStreaks active dense />
+      </div>
+
+      <div className="relative mx-auto flex min-h-[calc(100svh-4rem)] w-full max-w-5xl flex-col items-center justify-center px-4 pt-16 pb-32">
+        <m.div
         style={
           interactive
             ? { y: contentY, opacity: contentOpacity, scale: contentScale }
@@ -236,12 +302,26 @@ export function HomeHero({
             </div>
           </div>
 
-          <p
-            className="hero-fade mx-auto mt-7 max-w-2xl text-pretty text-lg leading-relaxed font-medium text-ink/75 sm:text-xl dark:text-slate-300"
+          <div
+            className="hero-tagline hero-fade relative mx-auto mt-7 w-full max-w-2xl text-lg leading-relaxed font-medium text-ink/75 sm:text-xl dark:text-slate-300"
             style={{ '--hero-delay': '720ms' } as CSSProperties}
           >
-            {tagline}
-          </p>
+            <span className="relative inline-block max-w-full pr-1 align-top">
+              <span aria-hidden className="hero-measure invisible">
+                {tagline}
+              </span>
+              <span
+                aria-hidden
+                className="hero-typed absolute inset-0 text-left"
+              >
+                {displayedTagline}
+                {interactive ? (
+                  <span className="ml-0.5 inline-block h-[1.05em] w-[2px] translate-y-[0.14em] animate-pulse rounded-full bg-iris/70 align-baseline motion-reduce:animate-none" />
+                ) : null}
+              </span>
+            </span>
+            <span className="sr-only">{tagline}</span>
+          </div>
 
           <div aria-hidden className="mt-10 flex items-center justify-center gap-2">
             <span
@@ -279,6 +359,7 @@ export function HomeHero({
             <span className="h-2 w-1 animate-bob rounded-full bg-current max-md:animate-none" />
           </span>
         </a>
+      </div>
       </div>
 
       {/* Pointer crosshair: behind the title, above the frame. It only exists

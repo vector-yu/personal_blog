@@ -51,17 +51,27 @@ const DIRECTIONS: Direction[] = ['right', 'left', 'down', 'up'];
  * Decorative light points that travel along the blueprint's major grid lines,
  * leaving a short tail and occasionally turning 90° at an intersection.
  *
+ * The hero requests `dense` so its first screen gets a little more life; the
+ * résumé field keeps the calmer default.
  * Kept on a 2D canvas (rather than dozens of DOM nodes):
  *  - the canvas is transparent, non-interactive and behind the cards;
  *  - it only runs while the section is in view and the tab is visible;
  *  - prefers-reduced-motion and phones get no canvas animation at all;
  *  - no-JS leaves it empty.
  */
-export function GridStreaks({ active }: { active: boolean }) {
+export function GridStreaks({
+  active,
+  dense = false,
+}: {
+  active: boolean;
+  dense?: boolean;
+}) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
     if (!active) return;
+
+    const maxStreaks = dense ? 3 : MAX_STREAKS;
 
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -152,7 +162,7 @@ export function GridStreaks({ active }: { active: boolean }) {
       ctx.clearRect(0, 0, width, height);
       streaks = [];
       elapsed = 0;
-      nextSpawn = 0.8;
+      nextSpawn = dense ? 0.2 : 0.8;
     };
 
     const drawTail = (streak: Streak, alpha: number) => {
@@ -192,9 +202,9 @@ export function GridStreaks({ active }: { active: boolean }) {
       elapsed += dt;
       const boost = isDark() ? 1 : 0.72;
 
-      if (streaks.length < MAX_STREAKS && elapsed >= nextSpawn) {
+      if (streaks.length < maxStreaks && elapsed >= nextSpawn) {
         spawn();
-        nextSpawn = elapsed + random(4, 7.5);
+        nextSpawn = elapsed + (dense ? random(2.2, 4.2) : random(4, 7.5));
       }
 
       streaks = streaks.filter((streak) => streak.life > 0);
@@ -246,7 +256,10 @@ export function GridStreaks({ active }: { active: boolean }) {
       const before = streaks.length;
       streaks = streaks.filter((streak) => streak.life > 0);
       if (before > 0 && streaks.length < before) {
-        nextSpawn = Math.max(nextSpawn, elapsed + random(1.5, 3.5));
+        nextSpawn = Math.max(
+          nextSpawn,
+          elapsed + (dense ? random(1.2, 2.6) : random(1.5, 3.5))
+        );
       }
     };
 
@@ -313,7 +326,7 @@ export function GridStreaks({ active }: { active: boolean }) {
       document.removeEventListener('visibilitychange', onVisibility);
       ctx.clearRect(0, 0, width, height);
     };
-  }, [active]);
+  }, [active, dense]);
 
   return (
     <canvas
