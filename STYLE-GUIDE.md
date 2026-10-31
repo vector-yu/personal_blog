@@ -133,6 +133,8 @@ class="animate-flow animate-tumble"
 | 视差/push 必须加在 **wrapper** 上 | `backdrop.tsx` | CSS 动画优先级高于行内样式 |
 | 新增可插入组件必须同步 **4 处** | 见 `AGENTS.md` 第二节 | 内容门禁 |
 | `.scroll-reveal` 必须留在 `(width >= 48rem)` + `prefers-reduced-motion: no-preference` + `@supports (animation-timeline: view())` 的合围内 | `globals.css` | 手机零动效；不支持的浏览器/无 JS 时内容立即可见 |
+| 首屏标题必须始终在 HTML 里；入场用 CSS 遮罩揭示，桌面指针准星/视差不能依赖 hydration 才显示标题 | `hero.tsx` + `globals.css` | 慢网/无 JS 首屏空白 |
+| 首屏准星、标题视差和滚动后退只允许桌面 + 非 reduced-motion；手机直接显示静态成稿 | `hero.tsx` | 手机发热 / 可读性 |
 | 蓝图履历的卡片必须始终渲染且可见；sticky/绘线只是装饰，手机与 reduced-motion 不 sticky | `blueprint-timeline.tsx` | no-JS、手机、爬虫看到完整履历 |
 | 遥测 HUD 与网格光点只做装饰：`aria-hidden`、手机/reduced 不更新、不承载内容 | `blueprint-telemetry.tsx` + `grid-streaks.tsx` | 动画影响可读性 / 手机发热 |
 | 蓝图网格只能由 `BlueprintField` 连续铺到页脚，不要在每个 section 单独切网格 | `blueprint-field.tsx` + `timeline-section.tsx` | 底部出现断层 / 网格接缝 |

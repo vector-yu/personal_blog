@@ -639,6 +639,123 @@
   animation: hud-tick 280ms ease-out both;
 }
 
+/* --- hero boot sequence ---------------------------------------------------
+   The first screen is a small drafting sheet: a frame draws, the title wipes
+   in word by word, then the motto and the colour strip settle. These are CSS
+   animations, so they start even when JavaScript has not hydrated yet; the
+   reduced/mobile block below restores the visible end state. */
+@keyframes hero-word-in {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 0.36em, 0);
+    clip-path: inset(-12% 100% -12% 0);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+    clip-path: inset(-12% 0 -12% 0);
+  }
+}
+
+.hero-word {
+  display: inline-block;
+  animation: hero-word-in 0.95s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: var(--hero-delay, 0ms);
+}
+
+@keyframes hero-fade-in {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 10px, 0);
+  }
+
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.hero-fade {
+  animation: hero-fade-in 0.8s cubic-bezier(0.16, 1, 0.3, 1) both;
+  animation-delay: var(--hero-delay, 0ms);
+}
+
+@keyframes hero-frame-x {
+  from {
+    transform: scaleX(0);
+  }
+
+  to {
+    transform: scaleX(1);
+  }
+}
+
+@keyframes hero-frame-y {
+  from {
+    transform: scaleY(0);
+  }
+
+  to {
+    transform: scaleY(1);
+  }
+}
+
+.hero-frame-x,
+.hero-frame-y {
+  transform-origin: center;
+  animation-delay: var(--hero-delay, 0ms);
+}
+
+.hero-frame-x {
+  animation: hero-frame-x 1.05s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.hero-frame-y {
+  animation: hero-frame-y 1.05s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes hero-scan {
+  0% {
+    left: -8%;
+    opacity: 0;
+  }
+
+  12% {
+    opacity: 0.55;
+  }
+
+  80% {
+    opacity: 0.55;
+  }
+
+  100% {
+    left: 108%;
+    opacity: 0;
+  }
+}
+
+.hero-scan-line {
+  animation: hero-scan 1.5s 0.6s cubic-bezier(0.4, 0, 0.2, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce), (max-width: 47.999rem) {
+  .hero-word,
+  .hero-fade,
+  .hero-frame-x,
+  .hero-frame-y {
+    animation: none !important;
+    opacity: 1 !important;
+    clip-path: none !important;
+    transform: none !important;
+  }
+
+  .hero-scan-line {
+    animation: none !important;
+    opacity: 0 !important;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .hud-tick {
     animation: none;

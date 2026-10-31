@@ -32,7 +32,10 @@
 > `md` 以下/reduced-motion 下退化为静态横向滑动；关于页用同一份数据画 3/4 列小方块。
 > 图标是 `public/tech/<key>.svg` + `src/lib/tech.ts` 的品牌色 mask；未知图标回退首字母。
 >
-> 首页没有「关于我」「履历」小标题。履历是 `blueprint-timeline.tsx` 的**工程蓝图**：
+> 首页没有「关于我」「履历」小标题。首屏是 `hero.tsx` 的“蓝图开机”：CSS 入场画框、遮罩揭示标题，
+> 桌面才有低对比指针准星/坐标与 2–3px 视差，滚动时整张图纸轻微后退；手机/reduced 只显示静态成稿。
+> 标题必须在 HTML 里，不要用 JS 把首屏藏到 hydration 之后。
+> 履历是 `blueprint-timeline.tsx` 的**工程蓝图**：
 > 桌面 sticky + 滚动绘线，卡片始终在 HTML 里且始终可见；不要用遮罩把内容藏起来。
 > 手机、reduced-motion、无 JS 取消 sticky/绘线，直接显示同一份完整履历。
 > 蓝图的遥测读数（`blueprint-telemetry.tsx`）和网格光点（`grid-streaks.tsx`）都是
