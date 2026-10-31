@@ -133,7 +133,7 @@ class="animate-flow animate-tumble"
 | 视差/push 必须加在 **wrapper** 上 | `backdrop.tsx` | CSS 动画优先级高于行内样式 |
 | 新增可插入组件必须同步 **4 处** | 见 `AGENTS.md` 第二节 | 内容门禁 |
 | `.scroll-reveal` 必须留在 `(width >= 48rem)` + `prefers-reduced-motion: no-preference` + `@supports (animation-timeline: view())` 的合围内 | `globals.css` | 手机零动效；不支持的浏览器/无 JS 时内容立即可见 |
-| 顶层拉链玻璃必须只在「桌面 + JS」下渲染，不能成为履历可见性的前提 | `zip-timeline.tsx` | no-JS、手机、爬虫看到完整履历 |
+| 履历列表直接渲染，不得用遮罩/滚动动画作为可见性前提 | `timeline-section.tsx` + `resume-entry.tsx` | no-JS、手机、爬虫看到完整履历 |
 | 表格必须保持「外层 `overflow-hidden` 圆角 + 内层 `overflow-x-auto`」，且 `table` 的 margin 为 0 | `tina-markdown.tsx` | 否则表头/表尾出现空隙，圆角处露出方角 |
 | 代码块 token 颜色类必须是 `highlight-code.ts` 里的字面量 | `highlight-code.ts` | Tailwind 扫描不到动态拼接的类名 |
 | 文章 h1/h2/h3 的 `id` 与右侧 TOC 必须共用 `slugifyHeading` | `tina-markdown.tsx` + `toc.ts` | 目录锚点对不上，点了不跳 |
@@ -141,7 +141,6 @@ class="animate-flow animate-tumble"
 | 笔记 JSON 的富文本 `body` 存 Markdown 字符串，不要存 AST | `content/notes/notes.json` | Tina 解析成 `invalid_markdown` |
 | 首页技术栈自动滚动必须在 `md` 以下和 reduced-motion 关闭，且隐藏第二份副本 | `tech-marquee.tsx` | 手机出现自动动画 / 横向溢出 |
 | 技术栈图标用 `public/tech` 的 SVG 作 mask，颜色只从 `src/lib/tech.ts` 取 | `tech-chip.tsx` + `tech.ts` | 暗色下黑图标不可见、颜色漂移 |
-| 拉链根容器用 `overflow-x-clip`，且保留下摆与止口 | `zip-timeline.tsx` | 下摆被裁平 / 收尾时出现横向滚动条 |
 
 ---
 

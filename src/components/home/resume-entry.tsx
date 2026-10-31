@@ -2,19 +2,16 @@ import Image from 'next/image';
 import type { HomeTimelineEntry } from '@/lib/home';
 
 /**
- * One résumé row, shared by the animated homepage and the static section on the
- * About page (`/about#resume`).
+ * One résumé row, shared by the homepage list and the About page section
+ * (`/about#resume`).
  *
  * Deliberately UNFRAMED: a big index in the left margin, then the period,
  * title, place, copy and tags laid out across the page. The period lives with
- * the title rather than in the far-left margin on purpose: the homepage's V
- * opening widens from the centre, so far-left metadata would stay under the
- * sheet longer than the title. The index is decorative and may be partly
- * covered mid-reveal; the content is not.
+ * the title rather than in the far-left margin so the eye reads it before the
+ * title; the index and optional logo are decorative.
  *
- * This file has no `'use client'`: the homepage imports it from a client
- * component (so it ships with the zipper), and the About page imports it as a
- * server component. It has no hooks or Tina imports, so both are valid.
+ * This file has no `'use client'`: both pages import it as a server component.
+ * It has no hooks or Tina imports, so either usage is valid.
  */
 export function ResumeEntryRow({
   entry,

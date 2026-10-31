@@ -5,7 +5,7 @@
       "title": "This blog",
       "year": "2026",
       "role": "Design / Development",
-      "summary": "A static personal site built with Next.js + TinaCMS: editable content, a zippered résumé, frosted glass, and a table of contents.",
+      "summary": "A static personal site built with Next.js + TinaCMS: editable content, a résumé timeline, frosted glass, and a table of contents.",
       "stack": ["Next.js", "TinaCMS", "Tailwind CSS"],
       "link": "/en",
       "repo": "https://github.com/yourname/personal-blog",
