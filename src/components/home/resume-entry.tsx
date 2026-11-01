@@ -4,12 +4,11 @@ import type { HomeTimelineEntry } from '@/lib/home';
  * One résumé row for the About page section (`/about#resume`). The homepage
  * timeline uses the shared data through its own blueprint component.
  *
- * Deliberately UNFRAMED: the period, title, place, copy and tags read as one
- * column. The oversized index is a gradient watermark clipped by the lower-left
- * corner of the row, not a margin marker and not a logo tile.
- *
- * This file has no `'use client'`: both pages import it as a server component.
- * It has no hooks or Tina imports, so either usage is valid.
+ * Desktop keeps the original empty left margin. The oversized gradient index
+ * sits at the bottom-left, behind the copy, so the content covers part of it
+ * naturally — it is not clipped by an overflow box. Mobile drops the empty
+ * margin and the oversized number entirely; it keeps only a small muted index
+ * above the period so the row stays simple and readable.
  */
 export function ResumeEntryRow({
   entry,
@@ -20,9 +19,27 @@ export function ResumeEntryRow({
   index: number;
   presentLabel: string;
 }) {
+  const number = String(index + 1).padStart(2, '0');
+
   return (
-    <li className="relative isolate overflow-hidden py-9 sm:py-12">
-      <div className="relative z-10 min-w-0">
+    <li className="group relative isolate grid gap-5 py-9 lg:min-h-[14rem] lg:grid-cols-[12rem_minmax(0,1fr)] lg:gap-10 lg:py-12">
+      {/* Desktop keeps the original blank margin and its current-entry spine.
+          Below lg the row is a single mobile column and this is hidden. */}
+      {entry.current ? (
+        <span
+          aria-hidden
+          className="absolute inset-y-10 left-0 z-0 hidden w-1 rounded-full bg-gradient-to-b from-iris via-blush to-sun lg:block lg:inset-y-12"
+        />
+      ) : null}
+
+      <div className="min-w-0 lg:col-start-2">
+        <span
+          aria-hidden
+          className="mb-2 block font-mono text-sm font-black tracking-[0.22em] text-ink/30 tabular-nums lg:hidden dark:text-chalk/25"
+        >
+          {number}
+        </span>
+
         <div className="flex flex-wrap items-center gap-2">
           {entry.period ? (
             <span className="inline-flex items-center rounded-full border-2 border-ink/20 bg-sun/30 px-3 py-1 text-xs font-black text-amber-900 dark:border-sun/30 dark:bg-sun/15 dark:text-amber-200">
@@ -68,11 +85,13 @@ export function ResumeEntryRow({
         ) : null}
       </div>
 
+      {/* The number is fully inside the row; no overflow clipping. Its right
+          side runs under the copy column and is covered by the content. */}
       <span
         aria-hidden
-        className="pointer-events-none absolute -bottom-5 -left-2 z-0 bg-gradient-to-br from-iris via-blush to-sun bg-clip-text text-[clamp(6rem,12vw,9rem)] leading-[0.68] font-black tracking-[-0.08em] text-transparent opacity-45 select-none dark:from-indigo-300 dark:via-rose-300 dark:to-amber-200 dark:opacity-35"
+        className="pointer-events-none absolute bottom-0 left-0 z-0 hidden bg-gradient-to-br from-iris via-blush to-sun bg-clip-text text-[clamp(9rem,22vw,16rem)] leading-[0.68] font-black tracking-[-0.08em] text-transparent opacity-45 select-none lg:block dark:from-indigo-300 dark:via-rose-300 dark:to-amber-200 dark:opacity-35"
       >
-        {String(index + 1).padStart(2, '0')}
+        {number}
       </span>
     </li>
   );
