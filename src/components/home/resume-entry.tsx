@@ -22,16 +22,7 @@ export function ResumeEntryRow({
   const number = String(index + 1).padStart(2, '0');
 
   return (
-    <li className="group relative isolate grid gap-5 py-9 lg:min-h-[14rem] lg:grid-cols-[12rem_minmax(0,1fr)] lg:gap-10 lg:py-12">
-      {/* Desktop keeps the original blank margin and its current-entry spine.
-          Below lg the row is a single mobile column and this is hidden. */}
-      {entry.current ? (
-        <span
-          aria-hidden
-          className="absolute inset-y-10 left-0 z-0 hidden w-1 rounded-full bg-gradient-to-b from-iris via-blush to-sun lg:block lg:inset-y-12"
-        />
-      ) : null}
-
+    <li className="group relative isolate grid gap-5 py-9 lg:grid-cols-[12rem_minmax(0,1fr)] lg:gap-10 lg:py-12">
       <div className="min-w-0 lg:col-start-2">
         <span
           aria-hidden
@@ -85,11 +76,13 @@ export function ResumeEntryRow({
         ) : null}
       </div>
 
-      {/* The number is fully inside the row; no overflow clipping. Its right
-          side runs under the copy column and is covered by the content. */}
+      {/* Desktop watermark: deliberately hangs past the card's lower-left edge
+          so the rounded card clips it. Padding + 1.2 line-height keep the glyph
+          inside the gradient box; the gradient is transparent at the bottom and
+          rises into iris/blush. */}
       <span
         aria-hidden
-        className="pointer-events-none absolute bottom-0 left-0 z-0 hidden bg-gradient-to-br from-iris via-blush to-sun bg-clip-text text-[clamp(9rem,22vw,16rem)] leading-[0.68] font-black tracking-[-0.08em] text-transparent opacity-45 select-none lg:block dark:from-indigo-300 dark:via-rose-300 dark:to-amber-200 dark:opacity-35"
+        className="pointer-events-none absolute -bottom-8 -left-14 z-0 hidden bg-gradient-to-t from-transparent via-blush to-iris bg-clip-text px-4 py-6 text-[clamp(8rem,14vw,13rem)] leading-[1.2] font-black tracking-[-0.08em] text-transparent opacity-60 select-none lg:block dark:from-transparent dark:via-rose-300 dark:to-indigo-300 dark:opacity-50"
       >
         {number}
       </span>
