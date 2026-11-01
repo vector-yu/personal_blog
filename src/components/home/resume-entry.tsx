@@ -4,11 +4,11 @@ import type { HomeTimelineEntry } from '@/lib/home';
  * One résumé row for the About page section (`/about#resume`). The homepage
  * timeline uses the shared data through its own blueprint component.
  *
- * Desktop keeps the original empty left margin. The oversized gradient index
- * sits at the bottom-left, behind the copy, so the content covers part of it
- * naturally — it is not clipped by an overflow box. Mobile drops the empty
- * margin and the oversized number entirely; it keeps only a small muted index
- * above the period so the row stays simple and readable.
+ * Desktop keeps the original empty left margin. A large single-digit gradient
+ * index sits inside that margin, fully visible; only its lower edge fades to
+ * transparent against the row baseline. Mobile drops the empty margin and the
+ * oversized number entirely; it keeps only a small muted index above the period
+ * so the row stays simple and readable.
  */
 export function ResumeEntryRow({
   entry,
@@ -19,7 +19,8 @@ export function ResumeEntryRow({
   index: number;
   presentLabel: string;
 }) {
-  const number = String(index + 1).padStart(2, '0');
+  const number = String(index + 1);
+  const mobileNumber = number.padStart(2, '0');
 
   return (
     <li className="group relative isolate grid gap-5 py-9 lg:grid-cols-[12rem_minmax(0,1fr)] lg:gap-10 lg:py-12">
@@ -28,7 +29,7 @@ export function ResumeEntryRow({
           aria-hidden
           className="mb-2 block font-mono text-sm font-black tracking-[0.22em] text-ink/30 tabular-nums lg:hidden dark:text-chalk/25"
         >
-          {number}
+          {mobileNumber}
         </span>
 
         <div className="flex flex-wrap items-center gap-2">
@@ -76,13 +77,11 @@ export function ResumeEntryRow({
         ) : null}
       </div>
 
-      {/* Desktop watermark: deliberately hangs past the card's lower-left edge
-          so the rounded card clips it. Padding + 1.2 line-height keep the glyph
-          inside the gradient box; the gradient is transparent at the bottom and
-          rises into iris/blush. */}
+      {/* Desktop index: a single numeral inside the blank margin. It is fully
+          visible; only the bottom of the gradient fades out at the row baseline. */}
       <span
         aria-hidden
-        className="pointer-events-none absolute -bottom-8 -left-14 z-0 hidden bg-gradient-to-t from-transparent via-blush to-iris bg-clip-text px-4 py-6 text-[clamp(8rem,14vw,13rem)] leading-[1.2] font-black tracking-[-0.08em] text-transparent opacity-60 select-none lg:block dark:from-transparent dark:via-rose-300 dark:to-indigo-300 dark:opacity-50"
+        className="pointer-events-none absolute bottom-0 left-8 z-0 hidden bg-gradient-to-t from-transparent via-blush/40 to-iris/45 bg-clip-text px-2 py-4 text-[clamp(9rem,16vw,14rem)] leading-[1.2] font-black tracking-[-0.06em] text-transparent opacity-45 select-none lg:block dark:from-transparent dark:via-rose-300/25 dark:to-indigo-300/30 dark:opacity-40"
       >
         {number}
       </span>
