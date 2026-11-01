@@ -19,11 +19,24 @@ export function ResumeEntryRow({
   index: number;
   presentLabel: string;
 }) {
-  const number = String(index + 1);
-  const mobileNumber = number.padStart(2, '0');
+  const mobileNumber = String(index + 1).padStart(2, '0');
 
   return (
     <li className="group relative isolate grid gap-5 py-9 lg:grid-cols-[12rem_minmax(0,1fr)] lg:gap-10 lg:py-12">
+      <div
+        aria-hidden
+        className="hidden lg:col-start-1 lg:row-start-1 lg:flex lg:flex-col lg:items-start lg:gap-2 lg:pt-1"
+      >
+        <span className="flex items-center gap-2 font-mono text-[0.62rem] font-bold uppercase tracking-[0.24em] text-ink/40 dark:text-chalk/35">
+          <span aria-hidden className="h-1.5 w-1.5 border border-iris/60" />
+          Node
+        </span>
+        <span aria-hidden className="h-px w-10 bg-ink/15 dark:bg-chalk/15" />
+        <span className="resume-index-outline font-mono text-[clamp(4.5rem,6vw,5.5rem)] leading-none font-black tracking-[-0.08em] tabular-nums">
+          {mobileNumber}
+        </span>
+      </div>
+
       <div className="min-w-0 lg:col-start-2">
         <span
           aria-hidden
@@ -76,21 +89,6 @@ export function ResumeEntryRow({
           </ul>
         ) : null}
       </div>
-
-      {/* Desktop index: one fixed size, one fixed top-left anchor. It sits
-          inside the row cell; only its opacity fades toward the bottom. */}
-      <span
-        aria-hidden
-        className="pointer-events-none absolute top-4 left-8 z-0 hidden bg-gradient-to-t from-blush via-blush to-iris bg-clip-text px-2 py-1 text-[8.5rem] leading-[1.2] font-black tracking-[-0.06em] text-transparent opacity-45 select-none lg:block dark:from-rose-300 dark:via-rose-300 dark:to-indigo-300 dark:opacity-40"
-        style={{
-          maskImage:
-            'linear-gradient(to bottom, #000 0%, #000 38%, transparent 100%)',
-          WebkitMaskImage:
-            'linear-gradient(to bottom, #000 0%, #000 38%, transparent 100%)',
-        }}
-      >
-        {number}
-      </span>
     </li>
   );
 }

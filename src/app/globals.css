@@ -789,6 +789,16 @@
   block-size: auto;
 }
 
+.resume-index-outline {
+  color: transparent;
+  -webkit-text-stroke: 1px rgba(109, 92, 255, 0.55);
+  -webkit-text-stroke: 1px color-mix(in oklab, var(--color-iris) 55%, transparent);
+}
+
+[data-theme='dark'] .resume-index-outline {
+  -webkit-text-stroke-color: color-mix(in oklab, #c7d2fe 60%, transparent);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .resume-disclosure::details-content {
     transition: none;
