@@ -789,18 +789,6 @@
   block-size: auto;
 }
 
-/* The index is sized against its own row cell: 60cqh keeps it inside the
-   shortest entry while still filling the taller ones. The preceding clamp is
-   a fallback for browsers without container query units. */
-.resume-index {
-  container-type: size;
-}
-
-.resume-index-number {
-  font-size: clamp(6rem, 8vw, 8rem);
-  font-size: min(12rem, 60cqh);
-}
-
 @media (prefers-reduced-motion: reduce) {
   .resume-disclosure::details-content {
     transition: none;

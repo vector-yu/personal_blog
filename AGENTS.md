@@ -50,7 +50,7 @@
 > 旧的 `/zh/resume`、`/en/resume` 308 到 `/about#resume`。关于页只把履历放进一个原生
 > `<details>` 折叠框（默认收起，无 JS 可展开），位置在 Toolbox 与正文之间；
 > 展开/收起用 `::details-content` + `interpolate-size` 做高度动画；`ResumeEntryRow` 桌面保留原左侧空白列，
-> 大号单数字编号完整落在空白列内，按所在单元格高度缩放且不跨行；颜色保持 iris→blush 渐变，
+> 大号单数字编号使用同一字号、同一左上角锚点，完整落在各自行内且不跨行；颜色保持 iris→blush 渐变，
 > 只把透明度从顶部到底部渐隐，不参与行高计算。移动端只保留单列内容 + 小号编号，不显示大数字。
 > 关于页不再显示 timeline logo。个人介绍、技术栈、正文保持可见，不要再加回独立的履历页。
 > 阅读页由 `home.showReading` 控制：关闭时页脚无链接、`/reading` 404、sitemap 不收录。

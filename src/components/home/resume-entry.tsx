@@ -77,26 +77,19 @@ export function ResumeEntryRow({
         ) : null}
       </div>
 
-      {/* Desktop index: a single numeral inside the blank margin. The wrapper
-          is the row-sized container; the number scales to 60% of that cell so
-          it never spills into the previous/next entry. Brand colour is intact;
-          only the bottom of the element is masked to transparent. */}
+      {/* Desktop index: one fixed size, one fixed top-left anchor. It sits
+          inside the row cell; only its opacity fades toward the bottom. */}
       <span
         aria-hidden
-        className="resume-index pointer-events-none absolute inset-0 z-0 hidden lg:block"
+        className="pointer-events-none absolute top-4 left-8 z-0 hidden bg-gradient-to-t from-blush via-blush to-iris bg-clip-text px-2 py-1 text-[8.5rem] leading-[1.2] font-black tracking-[-0.06em] text-transparent opacity-45 select-none lg:block dark:from-rose-300 dark:via-rose-300 dark:to-indigo-300 dark:opacity-40"
+        style={{
+          maskImage:
+            'linear-gradient(to bottom, #000 0%, #000 38%, transparent 100%)',
+          WebkitMaskImage:
+            'linear-gradient(to bottom, #000 0%, #000 38%, transparent 100%)',
+        }}
       >
-        <span
-          aria-hidden
-          className="resume-index-number pointer-events-none absolute bottom-0 left-8 bg-gradient-to-t from-blush via-blush to-iris bg-clip-text px-2 py-4 leading-[1.2] font-black tracking-[-0.06em] text-transparent opacity-45 select-none dark:from-rose-300 dark:via-rose-300 dark:to-indigo-300 dark:opacity-40"
-          style={{
-            maskImage:
-              'linear-gradient(to bottom, #000 0%, #000 38%, transparent 100%)',
-            WebkitMaskImage:
-              'linear-gradient(to bottom, #000 0%, #000 38%, transparent 100%)',
-          }}
-        >
-          {number}
-        </span>
+        {number}
       </span>
     </li>
   );
