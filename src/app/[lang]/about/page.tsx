@@ -139,14 +139,14 @@ export default async function AboutPage() {
       */}
       <details
         id="resume"
-        className="group mt-12 scroll-mt-24 overflow-hidden rounded-blob border-2 border-ink/15 bg-white/55 shadow-brutal-sm backdrop-blur-xl dark:border-chalk/15 dark:bg-white/[0.03] dark:shadow-chalk-sm"
+        className="resume-disclosure group mt-12 scroll-mt-24 overflow-hidden rounded-blob border-2 border-ink/15 bg-white/55 shadow-brutal-sm backdrop-blur-xl dark:border-chalk/15 dark:bg-white/[0.03] dark:shadow-chalk-sm"
       >
-        <summary className="flex cursor-pointer list-none items-center justify-between gap-4 px-5 py-5 transition-colors hover:bg-white/40 sm:px-7 dark:hover:bg-white/[0.05] [&::-webkit-details-marker]:hidden">
+        <summary className="flex cursor-pointer list-none items-center justify-between gap-4 px-4 py-5 transition-colors hover:bg-white/40 sm:px-6 dark:hover:bg-white/[0.05] [&::-webkit-details-marker]:hidden">
           <span className="min-w-0">
             <span className="block text-lg font-black tracking-tight">
               {messages.resume.title}
             </span>
-            <span className="mt-0.5 block text-xs font-medium text-ink/45 group-open:hidden dark:text-slate-500">
+            <span className="mt-0.5 block text-xs font-medium text-ink/45 group-open:invisible dark:text-slate-500">
               {messages.resume.detailsHint}
             </span>
           </span>
@@ -175,7 +175,7 @@ export default async function AboutPage() {
           </span>
         </summary>
 
-        <div className="border-t-2 border-dashed border-ink/15 px-2 pt-2 pb-4 sm:px-5 dark:border-chalk/15">
+        <div className="border-t-2 border-dashed border-ink/15 px-4 pt-2 pb-4 sm:px-6 dark:border-chalk/15">
           {timeline.length === 0 ? (
             <p className="m-4 rounded-2xl border-2 border-dashed border-ink/25 bg-white/40 p-6 text-center text-sm font-medium text-ink/60 dark:border-chalk/20 dark:bg-white/[0.03] dark:text-slate-400">
               {messages.resume.empty}

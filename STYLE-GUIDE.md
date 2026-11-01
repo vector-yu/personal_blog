@@ -139,6 +139,8 @@ class="animate-flow animate-tumble"
 | 标题跟随指针只允许 3D 朝向倾斜，不要改位移；空心圆环和选择框仅桌面 fine pointer + 非 reduced 显示 | `hero.tsx` + `globals.css` | 标题漂移 / 触屏误触 |
 | 首屏准星、标题视差和滚动后退只允许桌面 + 非 reduced-motion；手机直接显示静态成稿 | `hero.tsx` | 手机发热 / 可读性 |
 | 蓝图履历的卡片必须始终渲染且可见；sticky/绘线只是装饰，手机与 reduced-motion 不 sticky | `blueprint-timeline.tsx` | no-JS、手机、爬虫看到完整履历 |
+| 关于页履历行必须是单列；编号是左下角被裁切的渐变水印，不要再放 logo 或左侧竖线 | `resume-entry.tsx` | 移动端排版拥挤 |
+| 关于页 `<details>` 必须有展开/收起高度动画；用原生 details + CSS，不改成 JS-only 折叠 | `about/page.tsx` + `globals.css` | 无 JS 不可用 / 突兀开合 |
 | 遥测 HUD 与网格光点只做装饰：`aria-hidden`、手机/reduced 不更新、不承载内容 | `blueprint-telemetry.tsx` + `grid-streaks.tsx` | 动画影响可读性 / 手机发热 |
 | 蓝图网格只能由 `BlueprintField` 连续铺到页脚，不要在每个 section 单独切网格 | `blueprint-field.tsx` + `timeline-section.tsx` | 底部出现断层 / 网格接缝 |
 | 底部三岔卡必须是真实 `<Link>`；SVG 线、节点和流动光效只是装饰 | `blueprint-branches.tsx` | 导航依赖 JS / 爬虫看不到 |

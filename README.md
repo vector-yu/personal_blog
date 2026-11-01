@@ -171,7 +171,9 @@ URL 是语言的唯一来源：**同一路径永远返回同一语言**，不做
 > 中间没有独立标题或空白段；线加粗并使用原来的 iris → blush → sun 配色，内部只有一层很淡的
 > 白光缓慢经过（不循环换色、不做跑马灯），拐角是大半径圆角。总线再分成三条岔路，分别指向
 > **关于本人 / 从这开始 / 碎碎念** 三张卡；这三张卡是真实链接，替换了原来的「去读文章」胶囊。
-> 关于页仍用 `ResumeEntryRow` 的普通列表，两处共用同一份 `timeline`。
+> 关于页仍用 `ResumeEntryRow` 的单列列表，两处共用同一份 `timeline`；关于页不再显示学校/公司 logo，
+> 改用左下角被行边缘裁掉一部分的大号渐变编号，移动端只保留一条单列内容线。`<details>` 的展开/收起
+> 用 `::details-content` + `interpolate-size` 做 380ms 高度过渡，无 JS 仍是原生 details；reduced-motion 下立即切换。
 >
 > 顶栏不再有独立的「履历」入口：完整履历已经嵌进 `/zh/about` / `/en/about` 的 `#resume` 段，
 > 与首页共用同一份 `timeline` 数据。旧的 `/resume` 地址会 308 到 `/about#resume`。
