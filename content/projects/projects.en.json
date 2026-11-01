@@ -1,25 +1,36 @@
 {
-  "intro": "A few things I have built. Some are long-running projects, some were one-off experiments; the common thread is trying to make abstract ideas easier to see.",
+  "intro": "Personal Project History",
   "items": [
     {
-      "title": "This blog",
-      "year": "2026",
+      "title": "This Blog",
+      "year": "2025",
       "role": "Design / Development",
-      "summary": "A static personal site built with Next.js + TinaCMS: editable content, a résumé timeline, frosted glass, and a table of contents.",
-      "stack": ["Next.js", "TinaCMS", "Tailwind CSS"],
-      "link": "/en",
-      "repo": "https://github.com/yourname/personal-blog",
+      "summary": "A static personal website built with Next.js and TinaCMS.",
+      "stack": [
+        "Next.js",
+        "TinaCMS",
+        "Tailwind CSS"
+      ],
+      "image": "/uploads/main_zh.png",
+      "link": "/zh",
+      "repo": "https://github.com/vector-yu/personal-blog",
       "featured": true
     },
     {
-      "title": "Data visualization experiments",
+      "title": "Balanced Team Grouping Simulator",
       "year": "2025",
-      "role": "Frontend / Visualization",
-      "summary": "Turning abstract data structures into shapes you can drag and inspect. A sample project waiting for real content.",
-      "stack": ["TypeScript", "D3", "Canvas"],
+      "role": "Data Processing / Algorithms",
+      "summary": "A simulation tool for grouping a large number of individuals (up to 1,000) into balanced teams based on multiple criteria.",
+      "stack": [
+        "Python",
+        "Simulated Annealing",
+        "Greedy Algorithm",
+        "Data Visualization"
+      ],
+      "image": "/uploads/group_sim.jpg",
       "link": "",
-      "repo": "",
-      "featured": false
+      "repo": "https://github.com/vector-yu/NTU_SC1003_mini_project_25S1/",
+      "featured": true
     }
   ]
 }
