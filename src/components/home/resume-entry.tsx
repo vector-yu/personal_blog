@@ -77,11 +77,17 @@ export function ResumeEntryRow({
         ) : null}
       </div>
 
-      {/* Desktop index: a single numeral inside the blank margin. It is fully
-          visible; only the bottom of the gradient fades out at the row baseline. */}
+      {/* Desktop index: a single numeral inside the blank margin. Same colour
+          top to bottom; only its opacity is masked out toward the bottom. */}
       <span
         aria-hidden
-        className="pointer-events-none absolute bottom-0 left-8 z-0 hidden bg-gradient-to-t from-transparent via-blush/40 to-iris/45 bg-clip-text px-2 py-4 text-[clamp(9rem,16vw,14rem)] leading-[1.2] font-black tracking-[-0.06em] text-transparent opacity-45 select-none lg:block dark:from-transparent dark:via-rose-300/25 dark:to-indigo-300/30 dark:opacity-40"
+        className="pointer-events-none absolute bottom-0 left-8 z-0 hidden px-2 py-4 text-[clamp(9rem,16vw,14rem)] leading-[1.2] font-black tracking-[-0.06em] text-ink/20 select-none lg:block dark:text-chalk/45"
+        style={{
+          maskImage:
+            'linear-gradient(to bottom, #000 0%, #000 38%, transparent 100%)',
+          WebkitMaskImage:
+            'linear-gradient(to bottom, #000 0%, #000 38%, transparent 100%)',
+        }}
       >
         {number}
       </span>
