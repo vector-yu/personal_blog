@@ -1,0 +1,52 @@
+---
+title: "2913. Subarrays Distinct Element Sum of Squares I"
+date: 2026-10-15T00:00:00.000Z
+description: "LeetCode 每日一题：Subarrays Distinct Element Sum of Squares I"
+tags:
+  - "看图写话"
+series: "每日一题"
+featured: false
+draft: false
+---
+
+<ProblemMeta review="明天如果出第二题 我就必须得去学最优解法了" difficulty="Easy" />
+
+[LeetCode 原题](https://leetcode.com/problems/subarrays-distinct-element-sum-of-squares-i/)
+
+You are given a **0-indexed** integer array `nums`.
+
+The **distinct count** of a subarray of `nums` is defined as:
+
+- Let `nums[i..j]` be a subarray of `nums` consisting of all the indices from `i` to `j` such that `0 <= i <= j < nums.length`. Then the number of distinct values in `nums[i..j]` is called the distinct count of `nums[i..j]`.
+
+Return *the sum of the **squares** of **distinct counts** of all subarrays of* `nums`.
+
+A subarray is a contiguous **non-empty** sequence of elements within an array.
+
+**Constraints:**
+
+- `1 <= nums.length <= 100`
+- `1 <= nums[i] <= 100`
+
+## 思路：暴力枚举
+
+这题其实肯定有更优解法的，且答案给出来了：BIT。笔者没学过，而且看代码，准备工作很长
+
+既然只是一道简单题，且数据规模很小，那么，暴力搜索反而是最经济的解法了。省下来的时间你可以拿去睡觉，而不是钻研逆天的nlogn解法
+
+如果明天给出一道II题，题干不变却把数据规模提升到了10^5级别，那笔者认栽，乖乖去学BIT了
+
+那么答案就很显然了
+
+```python
+class Solution:
+    def sumCounts(self, nums: List[int]) -> int:
+        n = len(nums)
+        ans = 0
+        for i in range(n):
+            cur = set()
+            for j in range(i, n):
+                cur.add(nums[j])
+                ans += len(cur)**2
+        return ans
+```

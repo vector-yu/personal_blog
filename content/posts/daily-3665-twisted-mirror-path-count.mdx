@@ -1,0 +1,86 @@
+---
+title: "3665. Twisted Mirror Path Count"
+date: 2026-10-31T00:00:00.000Z
+description: "LeetCode 每日一题：Twisted Mirror Path Count"
+tags:
+  - "动态规划"
+series: "每日一题"
+featured: false
+draft: false
+---
+
+<ProblemMeta review="镜面反射很新颖" difficulty="Medium" />
+
+[LeetCode 原题](https://leetcode.com/problems/twisted-mirror-path-count/)
+
+Given an `m x n` binary grid `grid` where:
+
+- `grid[i][j] == 0` represents an empty cell, and
+- `grid[i][j] == 1` represents a mirror.
+
+A robot starts at the top-left corner of the grid `(0, 0)` and wants to reach the bottom-right corner `(m - 1, n - 1)`. It can move only **right** or **down**. If the robot attempts to move into a mirror cell, it is **reflected** before entering that cell:
+
+- If it tries to move **right** into a mirror, it is turned **down** and moved into the cell directly below the mirror.
+- If it tries to move **down** into a mirror, it is turned **right** and moved into the cell directly to the right of the mirror.
+
+If this reflection would cause the robot to move outside the `grid` boundaries, the path is considered invalid and should not be counted.
+
+Return the number of unique valid paths from `(0, 0)` to `(m - 1, n - 1)`.
+
+Since the answer may be very large, return it **modulo** `109 + 7`.
+
+**Note**: If a reflection moves the robot into a mirror cell, the robot is immediately reflected again based on the direction it used to enter that mirror: if it entered while moving right, it will be turned down; if it entered while moving down, it will be turned right. This process will continue until either the last cell is reached, the robot moves out of bounds or the robot moves to a non-mirror cell.
+
+**Constraints:**
+
+- `m == grid.length`
+- `n == grid[i].length`
+- `2 <= m, n <= 500`
+- `grid[i][j]` is either `0` or `1`.
+- `grid[0][0] == grid[m - 1][n - 1] == 0`
+
+## 思路：动态规划
+
+笔者这里是从前往后推。答案给的方式是从后往前。笔者认为答案的方法更好，但笔者的算法也没有坏到哪里去。
+
+状态定义为：到达某位置的路线数量，base case是dp(0, 0) = 1, 我们求dp(m-1, n-1)
+
+思路很简单，从某处出发，向右或向下，经过反射之后到达的点，要加上到达起点的路径数。
+
+剪枝操作是，对于不可能到达的点（包括那些镜面点），直接跳过。
+
+## 代码
+
+```python
+class Solution:
+    def uniquePaths(self, grid: List[List[int]]) -> int:
+        m, n = len(grid), len(grid[0])
+        MOD = 10**9 + 7
+        dp = [[0]*n for _ in range(m)]
+        dp[0][0] = 1
+        for i in range(m):
+            for j in range(n):
+                if dp[i][j] == 0 or grid[i][j] == 1:
+                    continue
+                if j+1 < n:
+                    nxt_i, nxt_j = i, j+1
+                    cnt = 0
+                    while nxt_i < m and nxt_j < n and grid[nxt_i][nxt_j] == 1:
+                        nxt_i += (cnt+1) % 2
+                        nxt_j += cnt % 2
+                        cnt += 1
+                        cnt %= 2
+                    if nxt_i < m and nxt_j < n:
+                        dp[nxt_i][nxt_j] += dp[i][j]
+                if i + 1 < m:
+                    nxt_i, nxt_j = i+1, j
+                    cnt = 0
+                    while nxt_i < m and nxt_j < n and grid[nxt_i][nxt_j] == 1:
+                        nxt_i += cnt % 2
+                        nxt_j += (cnt+1) % 2
+                        cnt += 1
+                        cnt %= 2
+                    if nxt_i < m and nxt_j < n:
+                        dp[nxt_i][nxt_j] += dp[i][j]
+        return dp[-1][-1] % MOD
+```

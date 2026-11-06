@@ -1,0 +1,67 @@
+---
+title: "22. Generate Parentheses"
+date: 2026-10-02T00:00:00.000Z
+description: "LeetCode 每日一题：Generate Parentheses"
+tags:
+  - "BFS"
+  - "DFS"
+series: "每日一题"
+featured: false
+draft: false
+---
+
+<ProblemMeta review="披着狗皮的猪" difficulty="Medium" />
+
+[LeetCode 原题](https://leetcode.com/problems/generate-parentheses/)
+
+Given `n` pairs of parentheses, write a function to *generate all combinations of well-formed parentheses*.
+
+**Constraints:**
+
+- `1 <= n <= 8`
+
+## 思路：DFS/BFS
+
+又是括号类问题 在笔者出游的这一周 全都是括号
+
+你可以把输出一个括号字符串看作遍历一个二叉树所有边的合法组合，左边表示左括号，右边表示右括号。
+
+既然如此，那么题回归到如何遍历一个二叉树的问题上了。
+
+遍历二叉树，有深度优先和广度优先两种。此题因需要额外保证路径的合规，因此需要额外记录左右括号的数量/差值。据此，不难写出如下两种方法
+
+```python
+# DFS
+ans = []
+def dfs(cur='', left=0, right=0):
+    if left == n and right == n:
+        ans.append(cur)
+        return
+    if 0 <= right < left:
+        dfs(cur+')',left, right+1)
+    if right <= left < n:
+        dfs(cur+'(', left+1, right)
+dfs()     
+return ans 
+```
+
+```python
+# BFS
+temp = deque([('',0,0)])
+ans = []
+while temp:
+    cur_str, left, right = temp.popleft()
+    if left == n and right == n:
+        ans.append(cur_str)
+    else:
+        if 0 <= right < left:
+            temp.append((cur_str+')',left, right+1))
+        if right <= left < n:
+            temp.append((cur_str+'(', left+1, right))
+return ans 
+```
+
+## 复杂度
+
+- 时间复杂度：O(4n/√n) ，卡特兰数
+- 空间复杂度：O(n)

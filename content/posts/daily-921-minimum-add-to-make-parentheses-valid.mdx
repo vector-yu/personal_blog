@@ -1,0 +1,52 @@
+---
+title: "921. Minimum Add to Make Parentheses Valid"
+date: 2026-10-06T00:00:00.000Z
+description: "LeetCode 每日一题：Minimum Add to Make Parentheses Valid"
+tags:
+  - "栈"
+series: "每日一题"
+featured: false
+draft: false
+---
+
+<ProblemMeta review="这是简单题吧" difficulty="Medium" />
+
+[LeetCode 原题](https://leetcode.com/problems/minimum-add-to-make-parentheses-valid/)
+
+A parentheses string is valid if and only if:
+
+- It is the empty string,
+- It can be written as `AB` (`A` concatenated with `B`), where `A` and `B` are valid strings, or
+- It can be written as `(A)`, where `A` is a valid string.
+
+You are given a parentheses string `s`. In one move, you can insert a parenthesis at any position of the string.
+
+- For example, if `s = "()))"`, you can insert an opening parenthesis to be `"(**(**)))"` or a closing parenthesis to be `"())**)**)"`.
+
+Return *the minimum number of moves required to make* `s` *valid*.
+
+**Constraints:**
+
+- `1 <= s.length <= 1000`
+- `s[i]` is either `'('` or `')'`.
+
+## 思路：栈
+
+笔者其实一开始有一些天马行空的想法 可惜失败了。最后发现，说到括号，还得是用栈
+
+用栈就太简单了，匹配成功的拿走，没匹配上的留着，最后栈内元素都需要额外找个伴
+
+```python
+class Solution:
+    def minAddToMakeValid(self, s: str) -> int:
+        stack = []
+        for c in s:
+            if c == '(':
+                stack.append(c)
+            else:
+                if stack and stack[-1] == '(':
+                    stack.pop()
+                else:
+                    stack.append(c)
+        return len(stack)
+```

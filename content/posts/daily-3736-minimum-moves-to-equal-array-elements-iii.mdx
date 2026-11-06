@@ -1,0 +1,34 @@
+---
+title: "3736. Minimum Moves to Equal Array Elements III"
+date: 2026-11-03T00:00:00.000Z
+description: "LeetCode 每日一题：Minimum Moves to Equal Array Elements III"
+tags:
+  - "看图写话"
+series: "每日一题"
+featured: false
+draft: false
+---
+
+<ProblemMeta review="太简单了" difficulty="Easy" />
+
+[LeetCode 原题](https://leetcode.com/problems/minimum-moves-to-equal-array-elements-iii/)
+
+You are given an integer array `nums`.
+
+In one move, you may **increase** the value of any single element `nums[i]` by 1.
+
+Return the **minimum total** number of **moves** required so that all elements in `nums` become **equal**.
+
+**Constraints:**
+
+- `1 <= nums.length <= 100`
+- `1 <= nums[i] <= 100`
+
+## 思路
+
+```python
+class Solution:
+    def minMoves(self, nums: List[int]) -> int:
+        max_num = max(nums)
+        return sum((max_num-num for num in nums))
+```

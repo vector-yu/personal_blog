@@ -1,0 +1,154 @@
+---
+title: "301. Remove Invalid Parentheses"
+date: 2026-10-07T00:00:00.000Z
+description: "LeetCode 每日一题：Remove Invalid Parentheses"
+tags:
+  - "DFS"
+  - "回溯"
+  - "栈"
+series: "每日一题"
+featured: false
+draft: false
+---
+
+<ProblemMeta review="昨天的题竟然是今天的前奏" difficulty="Hard" />
+
+[LeetCode 原题](https://leetcode.com/problems/remove-invalid-parentheses/)
+
+Given a string `s` that contains parentheses and letters, remove the minimum number of invalid parentheses to make the input string valid.
+
+Return *a list of **unique strings** that are valid with the minimum number of removals*. You may return the answer in **any order**.
+
+**Constraints:**
+
+- `1 <= s.length <= 25`
+- `s` consists of lowercase English letters and parentheses `'('` and `')'`.
+- There will be at most `20` parentheses in `s`.
+
+## 思路：回溯
+
+递归应该不难想到。每一个位置的括号 我们可以要也可以不要。限制条件就是，使用的右括号数量不能大于左括号数量，以及到结尾时，左右括号数量必须相等。这样，我们就能找到所有的合法的子序列，从中挑出最长的几个，即删除元素最少的，去重后就是想要的答案。这么做相当于在遍历一棵深度为n的二叉树，最坏的情况，时间复杂度是O(2^n)（假设全都是左括号）
+
+然而此题最多20个括号，2^20才一百万出头，尽管笔者没有尝试最直白的解法，但是应该是能通过的。可是显然 我们做了许多无谓的计算。
+
+因此，本题的关键在于剪枝。
+
+### 剪枝1：尽可能少的移除括号
+
+我们可以提前找出需要移除的括号数量，这样按照数量移除，就少了很多尝试，得到的答案也自然是我们想要的。因此本题前半部分和[921. Minimum Add to Make Parentheses Valid](921%20Minimum%20Add%20to%20Make%20Parentheses%20Valid%203f15e4c93a2980959596f36f4d38f680.md) 是一样的。921题让我们统计落单括号的总数，来给他们找伴；而这题是要分开统计两种落单括号的数量，然后把他们消灭（好残忍）
+
+```python
+removed_left, removed_right = 0, 0
+for c in s:
+    if c == '(':
+        removed_left += 1
+    elif c == ')':
+        if removed_left > 0:
+            removed_left -= 1
+        else:
+            removed_right += 1
+```
+
+在随后的回溯中，也需要额外两个参数来记录被移除的左右两个括号的数量。
+
+```python
+ans = set()
+def dfs(cur='', idx=0, left=0, right=0, diff=0):
+		# 括号必须合法
+    if diff < 0:
+        return
+    # 剩余长度如果比要删除的个数还要小，就没必要删了
+    if len(s) - idx < (removed_left - left) + (removed_right - right):
+        return 
+    if idx == len(s):
+		    # 能走到头的一定是：1.合法的 2.按照要求删掉括号的，也正是我们想要的
+        ans.add(cur)
+        return
+     
+    if s[idx] == '(':
+        if left < removed_left:
+            dfs(cur, idx+1, left+1, right, diff)
+        dfs(cur+'(', idx+1, left, right, diff+1)
+    
+    elif s[idx] == ')':
+        if right < removed_right:
+            dfs(cur, idx+1, left, right+1, diff)
+        dfs(cur+')', idx+1, left, right, diff-1)
+    
+    else:
+        dfs(cur+s[idx], idx+1, left, right, diff)
+```
+
+### 剪枝2：连续相同括号的处理
+
+这也算回溯问题里常见的剪枝技巧。一串连续的相同元素假设有m个，倘若你要删除其中k个，那么删除前k个和删除任意k个效果是一样的。如果不加以处理，我们就多算了C(k,m)-1次。对于多个连续相同的元素，这些数量会以乘法累计，可想而知会，不仅会产生很多重复的答案，而且还很浪费时间。所以，不如每次只移除开头的元素。
+
+因此，我们需要额外引入一个变量，来记录前一个元素是否被移除。一旦前一个没有被移除，表明哪怕以前一个元素更大的优先级，都没有蹭上移除元素的末班车 就更别提后面了。因此就没有必要尝试去移除了
+
+因此可以修改回溯部分的代码：
+
+```python
+ans = [] # 保证了每次产生的结果都是独一无二的，因此直接用列表
+def dfs(cur='', idx=0, left=0, right=0, diff=0, prev_kept=False):
+    if diff < 0:
+        return
+    if len(s) - idx < (removed_left - left) + (removed_right - right):
+        return 
+    if idx == len(s):
+        ans.append(cur)
+        return
+    can_drop = True
+    if idx > 0 and s[idx] == s[idx-1] and prev_kept:
+        can_drop = False
+    if s[idx] == '(':
+        if can_drop and left < removed_left:
+            dfs(cur, idx+1, left+1, right, diff, False)
+        dfs(cur+'(', idx+1, left, right, diff+1, True)
+    elif s[idx] == ')':
+        if can_drop and right < removed_right:
+            dfs(cur, idx+1, left, right+1, diff, False)
+        dfs(cur+')', idx+1, left, right, diff-1, True)
+    else:
+        dfs(cur+s[idx], idx+1, left, right, diff, True)
+```
+
+## 代码
+
+```python
+class Solution:
+    def removeInvalidParentheses(self, s: str) -> list[str]:
+        removed_left, removed_right = 0, 0
+        for c in s:
+            if c == '(':
+                removed_left += 1
+            elif c == ')':
+                if removed_left > 0:
+                    removed_left -= 1
+                else:
+                    removed_right += 1
+        ans = []
+        def dfs(cur='', idx=0, left=0, right=0, diff=0, prev_kept=False):
+            if diff < 0:
+                return
+            if len(s) - idx < (removed_left - left) + (removed_right - right):
+                return 
+            if idx == len(s):
+                ans.append(cur)
+                return
+            can_drop = True
+            if idx > 0 and s[idx] == s[idx-1] and prev_kept:
+                can_drop = False
+            if s[idx] == '(':
+                if can_drop and left < removed_left:
+                    dfs(cur, idx+1, left+1, right, diff, False)
+                dfs(cur+'(', idx+1, left, right, diff+1, True)
+            elif s[idx] == ')':
+                if can_drop and right < removed_right:
+                    dfs(cur, idx+1, left, right+1, diff, False)
+                dfs(cur+')', idx+1, left, right, diff-1, True)
+            else:
+                dfs(cur+s[idx], idx+1, left, right, diff, True)
+        
+        dfs()
+        return ans
+```

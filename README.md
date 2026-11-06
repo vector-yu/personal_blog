@@ -92,6 +92,7 @@ URL 是语言的唯一来源：**同一路径永远返回同一语言**，不做
 - 首页 / 项目 / 随笔 / 阅读仍是**单文档 JSON 集合**，英文是同一目录下的 `*.en.json`；Tina 的 `match: '*'` 让两份文档都出现在编辑器里。
 - 标签、系列名是**内容**，中英可以不同；语言切换在标签/系列详情页会回到该语言的索引页，避免 404。
 - 英文文章缺失时：不出现在 `/en/posts`；直接访问 `/en/posts/<slug>` 若中文存在则回到 `/en/posts`，否则 404。必需页面（首页 / 关于 / Start here）缺失会让 `check:i18n --strict` 失败。
+- **例外：`每日一题` 系列是 Chinese-only**，在 `scripts/check-i18n.mjs` 的 `CHINESE_ONLY_SERIES` 里显式允许；新增其他系列不要照抄这个例外。
 
 ### 新增/修改内容的流程
 
@@ -319,6 +320,34 @@ git diff -- "D:\notes\math"
 
 ---
 
+## 每日一题（Chinese-only series）
+
+`content/posts/daily-*.mdx` 是从 `notes/` 的 Notion 导出批量导入的 LeetCode 每日一题：
+
+- **标题**：题号 + 题目名，例如 `20. Valid Parentheses`；
+- **日期**：取每篇开头的“日期”（年份按 2026）；
+- **标签**：取“知识点”列（如 `栈`、`动态规划`、`看图写话`）；
+- **系列**：`series: 每日一题`，自动生成 `/zh/series/每日一题`；
+- **开头卡片**：`<ProblemMeta review="..." difficulty="Easy|Medium|Hard" />`；
+- **原文链接**：正文开头的 `[LeetCode 原题](...)`；
+- **插图**：`public/uploads/daily-problems/`；其中 OI Wiki 的线段树图标注了来源。
+
+这个系列**故意只有中文**：44 篇没有英文对照，`check:i18n` 的 `CHINESE_ONLY_SERIES`
+允许它们缺席英文集合。/en 不展示这些文章，直接访问会 307 到 `/en/posts`。
+以后如果要翻译，给同 slug 补 `content/posts-en/daily-*.mdx` 即可，allowlist 可以再收紧。
+
+批量导入脚本（原 `notes/` 不删除）：
+
+```bash
+node scripts/import-daily-problems.mjs          # dry-run
+node scripts/import-daily-problems.mjs --write --force
+node scripts/convert-math.mjs --all --write content/posts
+```
+
+`一语成谶` 没有题号，是 10/16 的占位，导入时跳过。
+
+---
+
 ## 如何新增一个「可视化编辑器里可插入」的自定义组件
 
 核心是**四处同名**（PascalCase）；漏掉第 4 处是最常见的构建失败原因：
@@ -388,8 +417,9 @@ HTML（非 strict 警告，strict 直接失败）。字段名和类型必须和 
 | 图片 + 图注 | `type: 'image'` + `string` | `Figure` |
 | 第三方嵌入 | 白名单 `provider` + ID，组件内拼 URL | `VideoEmbed` |
 | 数学公式 | `formula` 字符串 + `display` 布尔 | `Math` |
+| 每日一题信息 | `review` 一句话点评 + `difficulty` | `ProblemMeta` |
 
-已内置的 6 个组件（都会出现在编辑器「插入组件」菜单里）：
+已内置的 7 个组件（都会出现在编辑器「插入组件」菜单里）：
 
 | 组件 | 说明 |
 | --- | --- |
@@ -399,6 +429,7 @@ HTML（非 strict 警告，strict 直接失败）。字段名和类型必须和 
 | `Figure` | 图片 + 图注；本地图走 `public/uploads`，远程图走 `next/image` |
 | `VideoEmbed` | YouTube / Bilibili，填 ID 或整条链接均可，src 由组件按白名单拼接 |
 | `Math` | KaTeX 公式；`formula` 写 LaTeX，`display` 控制行内/块级 |
+| `ProblemMeta` | 每日一题开头的「一句话点评 + 难度」卡片 |
 
 ### 远程图片：新主机要加白名单
 

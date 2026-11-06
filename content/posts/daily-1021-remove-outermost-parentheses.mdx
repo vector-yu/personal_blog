@@ -1,0 +1,54 @@
+---
+title: "1021. Remove Outermost Parentheses"
+date: 2026-10-08T00:00:00.000Z
+description: "LeetCode 每日一题：Remove Outermost Parentheses"
+tags:
+  - "栈"
+  - "看图写话"
+series: "每日一题"
+featured: false
+draft: false
+---
+
+<ProblemMeta review="白给" difficulty="Easy" />
+
+[LeetCode 原题](https://leetcode.com/problems/remove-outermost-parentheses/)
+
+A valid parentheses string is either empty `""`, `"(" + A + ")"`, or `A + B`, where `A` and `B` are valid parentheses strings, and `+` represents string concatenation.
+
+- For example, `""`, `"()"`, `"(())()"`, and `"(()(()))"` are all valid parentheses strings.
+
+A valid parentheses string `s` is primitive if it is nonempty, and there does not exist a way to split it into `s = A + B`, with `A` and `B` nonempty valid parentheses strings.
+
+Given a valid parentheses string `s`, consider its primitive decomposition: `s = P1 + P2 + ... + Pk`, where `Pi` are primitive valid parentheses strings.
+
+Return `s` *after removing the outermost parentheses of every primitive string in the primitive decomposition of* `s`.
+
+**Constraints:**
+
+- `1 <= s.length <= 105`
+- `s[i]` is either `'('` or `')'`.
+- `s` is a valid parentheses string.
+
+## 思路：看图写话
+
+这题的意思很明确：删除所有深度为0的括号。那么只要遍历一遍 排除掉他们就可以了
+
+标答给了两种方法 实际上是等价的。栈方法是用栈是否为空来标记当前层数是否为0
+
+为何右括号要写在深度判断的前面，深度判断要写在左括号的前面？因为左括号真正的深度产生于进入左括号之前；右括号的真正的深度产生于离开右括号之后。
+
+```python
+class Solution:
+    def removeOuterParentheses(self, s: str) -> str:
+        dph = 0
+        ans = ''
+        for c in s:
+            if c == ')':
+                dph -= 1
+            if dph > 0:
+                ans += c
+            if c == '(':
+                dph += 1
+        return ans
+```

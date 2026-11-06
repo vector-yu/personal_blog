@@ -1,0 +1,72 @@
+---
+title: "1254. Number of Closed Islands"
+date: 2026-10-25T00:00:00.000Z
+description: "LeetCode 每日一题：Number of Closed Islands"
+tags:
+  - "BFS"
+  - "DFS"
+series: "每日一题"
+featured: false
+draft: false
+---
+
+<ProblemMeta review="之前做过" difficulty="Medium" />
+
+[LeetCode 原题](https://leetcode.com/problems/number-of-closed-islands/)
+
+Given a 2D `grid` consists of `0s` (land) and `1s` (water).  An *island* is a maximal 4-directionally connected group of `0s` and a *closed island* is an island **totally** (all left, top, right, bottom) surrounded by `1s.`
+
+Return the number of *closed islands*.
+
+**Constraints:**
+
+- `1 <= grid.length, grid[0].length <= 100`
+- `0 <= grid[i][j] <=1`
+
+## 思路：洪水填充
+
+先想一个简单的情形：判断岛屿的数量
+
+我们可以这么做：每遇到一块陆地，就让洪水淹没整块连续的陆地。那么，淹没的次数就是岛屿的数量
+
+如何淹没与这块陆地直接相连的所有陆地呢？两个思路，广度或者深度优先搜索。如果旁边是陆地，就让水过去淹了。
+
+现在让找完全被水包围的陆地。换言之，有陆地在边界上的岛屿，要舍弃。这很简单，我们先把边界洪水填充一遍，再去填中间就好了
+
+## 代码
+
+```python
+class Solution:
+    def closedIsland(self, grid: list[list[int]]) -> int:
+        m, n = len(grid), len(grid[0])
+        def fill_land(x, y):
+            if x < 0 or x >= m or y < 0 or y >= n:
+                return
+            if grid[x][y] == 1:
+                return
+            grid[x][y] = 1
+            fill_land(x-1, y)
+            fill_land(x+1, y)
+            fill_land(x, y-1)
+            fill_land(x, y+1)
+        
+        res = 0
+        for i in range(m):
+            fill_land(i, 0)
+            fill_land(i, n-1)
+        for j in range(n):
+            fill_land(0, j)
+            fill_land(m-1, j)
+        for i in range(1, m-1):
+            for j in range(1, n-1):
+                if grid[i][j] == 0:
+                    res += 1
+                    fill_land(i, j)
+        return res
+
+```
+
+## 复杂度
+
+- 时间：O(mn), 我们要遍历每一个单元格。洪水填充时，无非是又要对周围四个单元格操作。最差需要O(4mn)复杂度
+- 空间：O(m+n): 栈最深压到从岛屿一角到另一角的最远距离，这个距离最远不超过棋盘的长宽之和。当然 如果我们要保留原来的数据，就必须新开辟一个棋盘格 复杂度就是O(mn)了

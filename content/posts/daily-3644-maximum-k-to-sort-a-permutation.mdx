@@ -1,0 +1,50 @@
+---
+title: "3644. Maximum K to Sort a Permutation"
+date: 2026-10-23T00:00:00.000Z
+description: "LeetCode 每日一题：Maximum K to Sort a Permutation"
+tags:
+  - "位运算"
+  - "数学题"
+series: "每日一题"
+featured: false
+draft: false
+---
+
+<ProblemMeta review="对位运算的理解更上一层楼了" difficulty="Medium" />
+
+[LeetCode 原题](https://leetcode.com/problems/maximum-k-to-sort-a-permutation/)
+
+You are given an integer array `nums` of length `n`, where `nums` is a **permutation** of the numbers in the range `[0..n - 1]`.
+
+You may swap elements at indices `i` and `j` **only if** `nums[i] AND nums[j] == k`, where `AND` denotes the bitwise AND operation and `k` is a **non-negative** integer.
+
+Return the **maximum** value of `k` such that the array can be sorted in **non-decreasing** order using any number of such swaps. If `nums` is already sorted, return 0.
+
+## 思路：位运算的性质
+
+想要让数组变得有序，必然要交换那些错位的数字。这些错位的数字可能是在内部互相交换，可能是与外面已经在对的位置上的数字交换。无论如何，k = 很多个k的AND = 所有交换的AND = 所有错位数字的AND 与 其余可能被使用的数字的AND。这表明 所有错位数字的AND ≥k,也就是所有错位数字的公共的1与k是完全一致的 是k能取到的一个严格的上界
+
+能否取等呢？想要取等，最理想的情况，只需要让其余可能被使用的数字的AND等于k就行。也就是说，哪怕数组中数值为k的数字已经处于对应的位置上了，我们还是可以通过与他交换，来实现有序。使用k作为唯一的中转站完全可以做到：
+
+- 比如，想要交换两个错位的a和b, 但是a AND b ≠ k
+- 因为 a AND k = b AND k = k，因为前面说过，错位数字与k的1是完全重合的
+- 这时可以交换ak, bk, ka. 来实现交换ba
+- 因此，等号可以取到
+
+故k的最大值就是：所有错位数字的AND 
+
+## 代码
+
+```python
+class Solution:
+    def sortPermutation(self, nums: List[int]) -> int:
+        k = -1 # 因为-1的二进制是 ... 1111 1111, -1 & a = a
+        for i, num in enumerate(nums):
+            if i != num:
+                k = k & num
+        return k if k != -1 else 0
+```
+
+## 复杂度
+
+时间O(n), 空间O(1)

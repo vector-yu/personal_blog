@@ -1,0 +1,76 @@
+---
+title: "3863. Minimum Operations to Sort a String"
+date: 2026-10-21T00:00:00.000Z
+description: "LeetCode 每日一题：Minimum Operations to Sort a String"
+tags:
+  - "数学题"
+series: "每日一题"
+featured: false
+draft: false
+---
+
+<ProblemMeta review="完全没想到的结果 这还是算法题吗" difficulty="Medium" />
+
+[LeetCode 原题](https://leetcode.com/problems/minimum-operations-to-sort-a-string/)
+
+You are given a string `s` consisting of lowercase English letters.
+
+In one operation, you can select any **substring** of `s` that is **not** the entire string and **sort** it in **non-descending alphabetical** order.
+
+Return the **minimum** number of operations required to make `s` sorted in **non-descending** order. If it is not possible, return -1.
+
+**Constraints:**
+
+- `1 <= s.length <= 105`
+- `s` consists of only lowercase English letters.
+
+## 思路：分类讨论
+
+笔者尝试模拟这一过程无果后，翻看四个提示，才发现居然分类讨论就能做到。这谁能想得到啊？
+
+按照答案给出的思路，我们需要追踪两个锚点，即排序后一定会在开头和结尾的最小值与最大值。
+
+这两个锚点的原始分布大致有四种情况：
+
+<Figure src="/uploads/daily-problems/3863-anchor-distribution.jpg" alt="两个锚点的四种分布" />
+
+其中横线代表大于等于1个元素。规律很容易发现：
+
+- 首先最简单的，如果本来就有序，那么答案是0
+- 在这之后，最小值在开头，最大值在结尾，答案是1
+- 最小值，最大值中的一个或两个在中间，答案是2
+- 最大值在开头，最小值在结尾，答案是3
+
+由于我们求最小值，因此如果某个字符串满足多个条件，应当选择最小的那个
+
+上图中没有列出的是只有一个元素和两个元素的情况，我们来讨论：
+
+- 只有一个元素，自然有序，返回0
+- 只有两个元素，要么有序返回0，要么无序，且没法排序，返回-1
+
+至此分析完毕，可以翻译成代码了
+
+## 代码
+
+```python
+class Solution:
+    def minOperations(self, s: str) -> int:
+        n = len(s)
+        mx, mn = max(s), min(s)
+        if all(a <= b for a, b in zip(s, s[1:])):
+            return 0
+        if n == 2:
+            return -1
+        if s[0] == mn or s[-1] == mx:
+            return 1
+        for i in range(1, n - 1):
+            if s[i] == mn or s[i] == mx:
+                return 2
+        return 3
+```
+
+## 复杂度
+
+时间复杂度：O(n)，仅仅在开头判断是否有序时，求最小最大元素时遍历过
+
+空间复杂度：O(1)

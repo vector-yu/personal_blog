@@ -1,0 +1,81 @@
+---
+title: "3551. Minimum Swaps to Sort by Digit Sum"
+date: 2026-10-17T00:00:00.000Z
+description: "LeetCode 每日一题：Minimum Swaps to Sort by Digit Sum"
+tags:
+  - "图"
+series: "每日一题"
+featured: false
+draft: false
+---
+
+<ProblemMeta review="让我回忆起一道很巧妙的题 可惜我忘记那题的细节了" difficulty="Medium" />
+
+[LeetCode 原题](https://leetcode.com/problems/minimum-swaps-to-sort-by-digit-sum/)
+
+You are given an array `nums` of **distinct** positive integers. You need to sort the array in **increasing** order based on the sum of the digits of each number. If two numbers have the same digit sum, the **smaller** number appears first in the sorted order.
+
+Return the **minimum** number of swaps required to rearrange `nums` into this sorted order.
+
+A **swap** is defined as exchanging the values at two distinct positions in the array.
+
+**Constraints:**
+
+- `1 <= nums.length <= 105`
+- `1 <= nums[i] <= 109`
+- `nums` consists of **distinct** positive integers.
+
+## 思路：环的检测
+
+这题排序很简单，关键在于如何求交换的最少次数
+
+```python
+ # 交换后的索引顺序
+ idx = sorted(list(range(n)), key=lambda i: (sum((int(i) for i in str(nums[i]))), nums[i]))
+```
+
+假设我们找到一个“鸠占鹊巢”的索引，我们就要探究，它为何明明有自己的位置不呆着，把原主人的窝给抢了。我们就要找这个索引的家。也许它的家也被占领了……一路找上去，一定会找到最开始的原主人。假设找不到，那么我们按理说把这几个排错的索引依次归位，是可以办到的。问题来了，最开始原主人的位置，谁来占领呢？显然只能是原主人。
+
+因此，整个过程可以抽象成一个闭合的环。最少的交换次数，自然是规规整整的按照这个环走一遍，而不是在环上面来回反复走。因此，环的大小-1就是实现当前环所需最小交换次数（因为总有一个索引是“被迫”搬家的）
+
+特别的，如果某个索引就在他原本的位置，那么它算一个长度为1的环，对应的交换次数是0，也是符合实际的
+
+```python
+count = 0
+n = len(nums)
+visited = [False] * n
+for i, new_i in enumerate(idx):
+    if visited[i]:
+        continue
+    visited[i] = True
+    cur_idx, nxt_idx = i, new_i
+    while nxt_idx != i:
+        cur_idx = nxt_idx
+        nxt_idx = idx[cur_idx]
+        visited[cur_idx] = True
+		    count += 1
+```
+
+综合到一起，就是这样的：
+
+```python
+class Solution:
+    def minSwaps(self, nums: List[int]) -> int:
+        count = 0
+        n = len(nums)
+        visited = [False] * n
+        idx = sorted(list(range(n)), key=lambda i: (sum((int(i) for i in str(nums[i]))), nums[i]))
+        for i, new_i in enumerate(idx):
+            if visited[i]:
+                continue
+            visited[i] = True
+            cur_idx, nxt_idx = i, new_i
+            while nxt_idx != i:
+                cur_idx = nxt_idx
+                nxt_idx = idx[cur_idx]
+                visited[cur_idx] = True
+                count += 1
+        return count
+```
+
+当然，力扣给出的提示告诉我们，答案也是n-环的个数。这很好想。环的长度之和就是n，每个环在计数时长度都要减去1，一共减去环的个数个1，正是n-环的个数

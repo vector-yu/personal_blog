@@ -276,6 +276,8 @@ export const en: Messages = {
     calloutWarning: 'Note',
     calloutSuccess: 'Success',
     calloutDanger: 'Warning',
+    problemReview: 'One-line review',
+    problemDifficulty: 'Difficulty',
     copy: 'Copy',
     copied: 'Copied',
     zoomImage: 'Zoom image',

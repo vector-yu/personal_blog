@@ -1,0 +1,35 @@
+---
+title: "2778. Sum of Squares of Special Elements"
+date: 2026-10-11T00:00:00.000Z
+description: "LeetCode 每日一题：Sum of Squares of Special Elements"
+tags:
+  - "看图写话"
+series: "每日一题"
+featured: false
+draft: false
+---
+
+<ProblemMeta review="白给" difficulty="Easy" />
+
+[LeetCode 原题](https://leetcode.com/problems/sum-of-squares-of-special-elements/)
+
+You are given a **1-indexed** integer array `nums` of length `n`.
+
+An element `nums[i]` of `nums` is called **special** if `i` divides `n`, i.e. `n % i == 0`.
+
+Return *the **sum of the squares** of all **special** elements of* `nums`.
+
+**Constraints:**
+
+- `1 <= nums.length == n <= 50`
+- `1 <= nums[i] <= 50`
+
+## 思路
+
+白给的题 太简单了
+
+```python
+class Solution:
+    def sumOfSquares(self, nums: List[int]) -> int:
+        return sum([num**2 for i, num in enumerate(nums) if len(nums) % (i+1) == 0])
+```

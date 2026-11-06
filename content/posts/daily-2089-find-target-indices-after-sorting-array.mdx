@@ -1,0 +1,35 @@
+---
+title: "2089. Find Target Indices After Sorting Array"
+date: 2026-10-19T00:00:00.000Z
+description: "LeetCode 每日一题：Find Target Indices After Sorting Array"
+tags:
+  - "看图写话"
+series: "每日一题"
+featured: false
+draft: false
+---
+
+<ProblemMeta review="送分" difficulty="Easy" />
+
+[LeetCode 原题](https://leetcode.com/problems/find-target-indices-after-sorting-array/)
+
+You are given a **0-indexed** integer array `nums` and a target element `target`.
+
+A **target index** is an index `i` such that `nums[i] == target`.
+
+Return *a list of the target indices of* `nums` after *sorting* `nums` *in **non-decreasing** order*. If there are no target indices, return *an **empty** list*. The returned list must be sorted in **increasing** order.
+
+## 思路
+
+其实直接写很简单 当然完全存在优化的空间。比如，提前遍历一遍数组，找到比target小的个数与target的个数，然后直接生成就行了，这样复杂度能低一些
+
+```python
+class Solution:
+    def targetIndices(self, nums: list[int], target: int) -> list[int]:
+        nums.sort()
+        res = []
+        for i, num in enumerate(nums):
+            if num == target:
+                res.append(i)
+        return res
+```

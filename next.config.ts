@@ -65,6 +65,24 @@ const nextConfig: NextConfig = {
       { source: '/', destination: '/zh', permanent: true },
       ...legacyChineseRoutes.map((route) => ({ ...route, permanent: true })),
       ...retiredRoutes.map((route) => ({ ...route, permanent: true })),
+      {
+        source: '/:lang(zh|en)/posts/p/:pageNumber',
+        destination: '/:lang/posts/page/:pageNumber',
+        permanent: true,
+      },
+    ];
+  },
+  /**
+   * Public pagination URLs are `/posts/page/2`, but a folder literally named
+   * `page` makes Next skip the nested dynamic route's generateStaticParams.
+   * The route is generated at `/posts/p/2` and exposed at the public URL here.
+   */
+  async rewrites() {
+    return [
+      {
+        source: '/:lang(zh|en)/posts/page/:pageNumber',
+        destination: '/:lang/posts/p/:pageNumber',
+      },
     ];
   },
 };

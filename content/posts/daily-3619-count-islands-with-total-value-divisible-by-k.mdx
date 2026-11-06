@@ -1,0 +1,66 @@
+---
+title: "3619. Count Islands With Total Value Divisible by K"
+date: 2026-10-26T00:00:00.000Z
+description: "LeetCode 每日一题：Count Islands With Total Value Divisible by K"
+tags:
+  - "BFS"
+  - "DFS"
+series: "每日一题"
+featured: false
+draft: false
+---
+
+<ProblemMeta review="换汤不换药 到了岛屿系列 希望能出一些让我眼前一亮的题" difficulty="Medium" />
+
+[LeetCode 原题](https://leetcode.com/problems/count-islands-with-total-value-divisible-by-k/)
+
+You are given an `m x n` matrix `grid` and a positive integer `k`. An **island** is a group of **positive** integers (representing land) that are **4-directionally** connected (horizontally or vertically).
+
+The **total value** of an island is the sum of the values of all cells in the island.
+
+Return the number of islands with a total value **divisible by** `k`.
+
+**Constraints:**
+
+- `m == grid.length`
+- `n == grid[i].length`
+- `1 <= m, n <= 1000`
+- `1 <= m * n <= 105`
+- `0 <= grid[i][j] <= 106`
+- `1 <= k <= 106`
+
+## 思路：洪水填充
+
+和昨天的题一样 只不过这次要统计岛屿的数字之和。只需要每一步返回当前数值即可。遇到走过的陆地或者海洋或者超出边界，返回0即可
+
+使用DFS和BFS都可以，笔者图省事使用了DFS
+
+## 代码
+
+```python
+class Solution:
+    def countIslands(self, grid: List[List[int]], k: int) -> int:
+        m, n = len(grid), len(grid[0])
+        def fill_land(x,y):
+            if x < 0 or x >=m or y < 0 or y >= n:
+                return 0
+            if grid[x][y] == 0:
+                return 0
+            number = grid[x][y]
+            grid[x][y] = 0
+            return number + fill_land(x-1, y) + fill_land(x+1, y) + fill_land(x, y-1) + fill_land(x, y+1)
+        res = 0
+        for i in range(m):
+            for j in range(n):
+                if grid[i][j] != 0:
+                    if fill_land(i, j) % k == 0:
+                        res += 1
+        return res
+```
+
+## 复杂度
+
+和昨天的一样：
+
+- 时间：O(mn)
+- 空间：O(m+n)

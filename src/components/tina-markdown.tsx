@@ -13,6 +13,7 @@ import { Figure } from '@/components/mdx/figure';
 import { codeTokenClass, highlightCode } from '@/components/mdx/highlight-code';
 import { InvalidMarkdown } from '@/components/mdx/invalid-markdown';
 import { MathFormula } from '@/components/mdx/math';
+import { ProblemMeta } from '@/components/mdx/problem-meta';
 import { sanitizeUrl } from '@/components/mdx/sanitize-url';
 import { Tabs } from '@/components/mdx/tabs';
 import { VideoEmbed } from '@/components/mdx/video-embed';
@@ -109,6 +110,11 @@ export interface MathBlockProps extends Record<string, unknown> {
   display?: boolean | null;
 }
 
+export interface ProblemMetaBlockProps extends Record<string, unknown> {
+  review?: string | null;
+  difficulty?: string | null;
+}
+
 /**
  * Maps MDX/rich-text element names to React components.
  *
@@ -156,6 +162,12 @@ const components = {
     <span data-tina-field={tinaField(props)}>
       <MathFormula formula={props.formula} display={props.display} />
     </span>
+  ),
+
+  ProblemMeta: (props: ProblemMetaBlockProps) => (
+    <div data-tina-field={tinaField(props)}>
+      <ProblemMeta review={props.review} difficulty={props.difficulty} />
+    </div>
   ),
 
   // --- Parser failure nodes ----------------------------------------------------

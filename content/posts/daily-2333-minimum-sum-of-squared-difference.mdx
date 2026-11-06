@@ -1,0 +1,80 @@
+---
+title: "2333. Minimum Sum of Squared Difference"
+date: 2026-10-10T00:00:00.000Z
+description: "LeetCode 每日一题：Minimum Sum of Squared Difference"
+tags:
+  - "二分查找"
+  - "哈希表"
+  - "贪心"
+series: "每日一题"
+featured: false
+draft: false
+---
+
+<ProblemMeta review="数学题 但是二分查找真的很令我意外 我还是欠练" difficulty="Medium" />
+
+[LeetCode 原题](https://leetcode.com/problems/minimum-sum-of-squared-difference/)
+
+You are given two positive **0-indexed** integer arrays `nums1` and `nums2`, both of length `n`.
+
+The **sum of squared difference** of arrays `nums1` and `nums2` is defined as the **sum** of `(nums1[i] - nums2[i])2` for each `0 <= i < n`.
+
+You are also given two positive integers `k1` and `k2`. You can modify any of the elements of `nums1` by `+1` or `-1` at most `k1` times. Similarly, you can modify any of the elements of `nums2` by `+1` or `-1` at most `k2` times.
+
+Return *the minimum **sum of squared difference** after modifying array* `nums1` *at most* `k1` *times and modifying array* `nums2` *at most* `k2` *times*.
+
+**Note**: You are allowed to modify the array elements to become **negative** integers.
+
+**Constraints:**
+
+- `n == nums1.length == nums2.length`
+- `1 <= n <= 105`
+- `0 <= nums1[i], nums2[i] <= 105`
+- `0 <= k1, k2 <= 109`
+
+## 思路：贪心
+
+这题翻译一下，就是给定了一个非负数组 最多进行k1+k2次-1操作 让总的平方的和最小
+
+根据平方差公式，我们知道，每次进行-1操作一定是要挑最大的那个数，如此反复，最后剩下的一定是平方的和最小的。
+
+现在问题转换为：如何判断这该-1操作的“界限”在哪里？即我应该对哪些大的数字进行减一操作？最后这些大的数字都被削减到了哪一个新的数字？如果我一次性全都知道了，岂不是可以一步登天？
+
+### 法1：哈希表
+
+找到最大的数字很容易，因此这个方法的思路是，每次对所有最大的数字执行一次-1操作，直到操作数用光为止
+
+这就需要我们能快捷的通过数值来找到数值对应的个数，因此我们想到了哈希表
+
+```python
+class Solution:
+    def minSumSquareDiff(self, nums1: list[int], nums2: list[int], k1: int, k2: int) -> int:
+        n = len(nums1)
+        nums = [abs(nums1[i]-nums2[i]) for i in range(n)]
+        if sum(nums) <= k1+k2:
+            return 0
+        nums_dict = {}
+        for num in nums:
+            nums_dict[num] = nums_dict.get(num, 0) + 1
+        ordered_keys = sorted(list(nums_dict.keys()))
+        ops = k1+k2
+        while ops > 0:
+            max_key = ordered_keys.pop()
+            max_num = nums_dict.pop(max_key)
+            if max_num <= ops:
+                nums_dict[max_key-1] = nums_dict.get(max_key-1, 0) + max_num
+                if ordered_keys and ordered_keys[-1] != max_key-1 or not ordered_keys:
+                    ordered_keys.append(max_key-1)
+                ops -= max_num
+            else:
+                nums_dict[max_key-1] = nums_dict.get(max_key-1, 0) + ops
+                nums_dict[max_key] = max_num - ops
+                break
+        return sum((k**2*v for k, v in nums_dict.items()))
+```
+
+### 法2：二分查找
+
+延续上一个方法的思路，我们还是假定，每次削减都是对这个大小的所有数值削减，剩下的削减次数看情况分配给剩余最大的数字即可。那么，更好的方式其实使用二分查找来找到“暴力削减”情况下，被削减到的数值
+
+为何能用二分查找？因为我们搜寻的目标，需要削减的次数随着那个被削减到的目标数字递增而单调递减，既然单调，就可以使用二分查找。当然，这么找到的那个削减目标，仅仅是相对于大多数而言，事实上可能还会剩下一些削减的次数，我们再分配给此时一定数量的最大的数即可（二分查找保证了剩下的削减次数一定小于此时最大的数的数量）

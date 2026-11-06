@@ -1,0 +1,55 @@
+---
+title: "20. Valid Parentheses"
+date: 2026-10-01T00:00:00.000Z
+description: "LeetCode 每日一题：Valid Parentheses"
+tags:
+  - "栈"
+series: "每日一题"
+featured: false
+draft: false
+---
+
+<ProblemMeta review="基本功" difficulty="Easy" />
+
+[LeetCode 原题](https://leetcode.com/problems/valid-parentheses/)
+
+Given a string `s` containing just the characters `'('`, `')'`, `'{'`, `'}'`, `'['` and `']'`, determine if the input string is valid.
+
+An input string is valid if:
+
+1. Open brackets must be closed by the same type of brackets.
+2. Open brackets must be closed in the correct order.
+3. Every close bracket has a corresponding open bracket of the same type.
+
+**Constraints:**
+
+- `1 <= s.length <= 104`
+- `s` consists of parentheses only `'()[]{}'`.
+
+## 思路：栈
+
+最近几乎全是括号类的题目，谈到括号就让人想到栈。此题有三种括号，因此除了判断左右之外，还要判断种类。
+
+笔者记得之前研究出过一种方法，就是使用字典，把右括号和左括号一一对应起来
+
+然后就直接写代码吧，毕竟是一道eazy的题目
+
+```python
+class Solution:
+    def isValid(self, s: str) -> bool:
+        refer = {')':'(', ']':'[','}':'{'}
+        stack = []
+        for c in s:
+            if c in refer:
+                if stack and stack[-1] == refer[c]:
+                    stack.pop()
+                else:
+                    return False
+            else:
+                stack.append(c)
+        return len(stack) == 0
+```
+
+## 复杂度：
+
+- 时间，空间复杂度：O(n)

@@ -1,0 +1,42 @@
+---
+title: "32. Longest Valid Parentheses"
+date: 2026-10-03T00:00:00.000Z
+description: "LeetCode 每日一题：Longest Valid Parentheses"
+tags:
+  - "栈"
+series: "每日一题"
+featured: false
+draft: false
+---
+
+<ProblemMeta review="啊？这么巧妙？" difficulty="Hard" />
+
+[LeetCode 原题](https://leetcode.com/problems/longest-valid-parentheses/)
+
+Given a string containing just the characters `'('` and `')'`, return *the length of the longest valid (well-formed) parentheses substring*.
+
+**Constraints:**
+
+- `0 <= s.length <= 3 * 104`
+- `s[i]` is `'('`, or `')'`.
+
+## 思路
+
+完全没思路，冥思苦想40分钟
+
+```python
+class Solution:
+    def longestValidParentheses(self, s: str) -> int:
+        stack = [-1]
+        ans = 0
+        for i, c in enumerate(s):
+            if c == '(':
+                stack.append(i)
+            else:
+                stack.pop()
+                if not stack:
+                    stack.append(i)
+                else:
+                    ans = max(ans, i-stack[-1])
+        return ans
+```

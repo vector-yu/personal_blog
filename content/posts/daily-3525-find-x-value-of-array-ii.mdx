@@ -1,0 +1,350 @@
+---
+title: "3525. Find X Value of Array II"
+date: 2026-09-23T00:00:00.000Z
+description: "LeetCode 每日一题：Find X Value of Array II"
+tags:
+  - "线段树"
+series: "每日一题"
+featured: false
+draft: false
+---
+
+<ProblemMeta review="恶心 跟前一问有什么关系？" difficulty="Hard" />
+
+[LeetCode 原题](https://leetcode.com/problems/find-x-value-of-array-ii/)
+
+You are given an array of **positive** integers `nums` and a **positive** integer `k`. You are also given a 2D array `queries`, where `queries[i] = [indexi, valuei, starti, xi]`.
+
+You are allowed to perform an operation **once** on `nums`, where you can remove any **suffix** from `nums` such that `nums` remains **non-empty**.
+
+The **x-value** of `nums` **for a given** `x` is defined as the number of ways to perform this operation so that the **product** of the remaining elements leaves a *remainder* of `x` **modulo** `k`.
+
+For each query in `queries` you need to determine the **x-value** of `nums` for `xi` after performing the following actions:
+
+- Update `nums[indexi]` to `valuei`. Only this step persists for the rest of the queries.
+- **Remove** the prefix `nums[0..(starti - 1)]` (where `nums[0..(-1)]` will be used to represent the **empty** prefix).
+
+Return an array `result` of size `queries.length` where `result[i]` is the answer for the `ith` query.
+
+A **prefix** of an array is a subarray that starts from the beginning of the array and extends to any point within it.
+
+A **suffix** of an array is a subarray that starts at any point within the array and extends to the end of the array.
+
+**Note** that the prefix and suffix to be chosen for the operation can be **empty**.
+
+**Note** that x-value has a *different* definition in this version.
+
+**Constraints:**
+
+- `1 <= nums[i] <= 109`
+- `1 <= nums.length <= 105`
+- `1 <= k <= 5`
+- `1 <= queries.length <= 2 * 104`
+- `queries[i] == [indexi, valuei, starti, xi]`
+- `0 <= indexi <= nums.length - 1`
+- `1 <= valuei <= 109`
+- `0 <= starti <= nums.length - 1`
+- `0 <= xi <= k - 1`
+
+## 思路：线段树
+
+### 第一感受
+
+这道题与昨天的题除了长得像之外，真的没什么关系了。
+
+昨天的习题要求任取一个子区间，为了避免O(n**2)的枚举我们利用模的性质将其降为O(kn)
+
+而今天的习题只要求取前缀，对于任意一次查询，只要从头到尾遍历一次，O(n)的复杂度不就好了？
+
+然而我们面临的是q次查询，且q也很大，复杂度会飙升到O(qn)，近似于平方级别了。
+
+假设查询的过程中不修改数据，那其中一个可行的解法就是先穷尽所有的可能，这样查询就到O(1)级别了。然而本题在查询之前对数组进行了永久的更改。个方法行不通
+
+因此本题的难点在于，如何使用O(logn)的复杂度完成每次数据更新以及查询
+
+### 线段树
+
+[线段树基础 - OI Wiki](https://oi-wiki.org/ds/seg/)
+
+leetcode给出的提示指向了这一数据结构，笔者花费了四个小时，结合上述链接的内容与个人思考，勉强写出了代码。我斗胆展示一下自己的思路
+
+线段树是一棵二叉树，每个节点表示一个区间，蕴含这一区间所具有的信息，同级节点表示的区间互斥，某节点子节点的并等于该节点的区间。通俗的讲，就是横看把整个区间切成了若干段，竖看把一个区间切成了两段。
+
+为了让树的高度尽可能的小，每次选择从中间切开，这样树的高度就近似为ceil(logn)
+
+<Callout type="info">
+线段树图示
+
+![线段树区间划分示意](/uploads/daily-problems/segment-tree.svg)
+
+图源：[OI Wiki](https://oi-wiki.org/ds/seg/)（CC BY-SA）
+</Callout>
+
+能被用线段树分区间表示的信息必须具有结合律，即任意一区间的信息能由它左右两部分的信息求出，比如区间和（left+right），区间最大值（max(left, right)）等等，当然，包括这道题问的“前缀数组之积模k后各个余数的个数”
+
+如果要查询某一个区间，只需要把这一任务分配下去，一层一层分别传给左右节点，直到恰好遇见已经算完的这块区间，再合并返回。合并后的结果就是这一区间的结果。因为最坏的情况要走logn层才能查到对应的区间，因此不论更新数据还是查询，一来一回，只要在每个节点的操作是O(1)级别的，整体的时间复杂度就是O(logn)
+
+那么，想要求出某一区间的“前缀数组之积模k后各个余数的个数”，除了已知它的左右两部分的“前缀数组之积模k后各个余数的个数”之外，还需要知道什么呢？
+
+还需要知道左部分的乘积，因为右部分的前缀拿出来后，必须乘以全部的左部分元素，才能成为整个区间的一个合法前缀。因此，除了一个长度为k的表示“前缀数组之积模k后各个余数的个数”的列表外，还需要一个变量表示区间的乘积（根据模的性质，实际上存储乘积模k即可）
+
+### 定义树节点
+
+树需要左右节点，需要区间的起始与结束，需要前缀积模k数组，需要区间内乘积模k。这里为了后序分区间时不重复计算，笔者还记录了mid表示在哪里切割这一区间
+
+```python
+class TreeNode:
+    __slots__ = ('start', 'end', 'mid', 'left', 'right', 'pref', 'total') # 优化对象的访问速度
+    def __init__(self, start, end, k):
+        self.start = start
+        self.end = end
+        self.mid = (start + end) // 2
+        self.left = None
+        self.right = None
+        self.pref = [0]*k
+        self.total = 0
+```
+
+### 创建树
+
+递归的创建整棵树，再利用结合律在后序位置合并左右，得到当前节点的各个属性
+
+```python
+def build(start, end, k):
+    node = TreeNode(start, end, k)
+    if start == end:
+        node.pref[nums[start]%k] = 1 
+        node.total = nums[start]%k
+        return node
+    
+    node.left = build(start, node.mid, k)
+    node.right = build(node.mid+1, end, k)
+    merge(node) # 如何合并呢？
+    return node
+```
+
+合并的具体过程正如前面所言，左节点的前缀可以直接拿来用，而右节点则需要乘以左侧的乘积：
+
+```python
+def merge(node):
+    left, right = node.left, node.right
+    node.total = (left.total*right.total)%k
+    for i in range(k):
+        node.pref[i] = left.pref[i] # 直接拿来用
+    for i in range(k):
+        node.pref[(i*left.total)%k] += right.pref[i] # 原本余数为i，到了新的区间里余数变为(i*left.total)%k
+```
+
+### 更新叶节点
+
+根据题意，每次查询之前，都要更新一个数字。从线段树的角度来看，就是更新一个叶节点。这样，这个叶节点的所有祖先就都收到了影响。因此，我们要递归的找到这个节点，然后从子孙到祖先，即在后序位置更新数据
+
+其实就是二分查找
+
+这道题笔者直接对value取模了，没有影响
+
+```python
+def update(index, value, root):
+    nums[index] = value # 其实可以不改，因为创建完线段树后就用不上数组了
+    def _update(start, end, node):
+        if end < index or start > index:
+            return
+        if start == end: # 也就是到达了区间为[index, index]的叶节点
+            node.pref = [0]*k
+            node.pref[value] = 1
+            node.total = value
+            return
+ 
+        if index <= node.mid:
+            _update(start, node.mid, node.left)
+        else:
+            _update(node.mid+1, end, node.right)
+        merge(node)
+    _update(0, len(nums)-1, root)
+        
+```
+
+### 查找区间
+
+在每一个节点上，要查询区间有三种情况
+
+- 完全位于左侧子节点区间内，直接查左侧
+- 完全位于右侧子节点区间内，直接查右侧
+- 横跨左右节点的区间
+    - 如果要查询的区间就是当前节点的区间，那就直接找到了！返回就好
+    - 从中间劈开，左右都查，查完的结果再合并。合并又要涉及到左区间的乘积了，因此，区间的乘积也要一并查询
+
+笔者图省事，把三种情况写到了一起，其实都是一样的。
+
+```python
+def find(start, end, node):
+    if start > end:
+        return [0]*k, 1
+    if node.start == start and node.end == end:
+        return list(node.pref), node.total
+    
+    left_pref, left_total = find(start, min(node.mid, end), node.left)
+    right_pref, right_total = find(max(node.mid+1, start), end, node.right)
+    pref = list(left_pref)
+    for i in range(k):
+        pref[(i*left_total)%k] += right_pref[i] 
+    return pref, (left_total*right_total) % k
+```
+
+### 实现线段树
+
+我们完成了线段树的改与查两种操作，可以将其实例化（选做，笔者在提交代码时没这么做）
+
+```python
+class SegmentTree:
+		def __init__(self, n, k):
+				def build(start, end, k):
+						pass
+				self.size = n
+				self.modulus = k
+				self.root = build(0, n-1, k)
+		
+		def merge(self, node):
+				pass		
+			
+		def update(self, index, value):
+				def _update(index, value, node=self.root):
+						pass
+				pass
+			
+		def find(self, start, end):
+				def _find(start, end, node=self.root):
+						pass
+				pass
+```
+
+### 实现多次查询
+
+创建树和记录答案的列表并写出循环框架后：
+
+```python
+root = build(0, len(nums)-1, k)
+res = []
+for index, value, start, x in queries:
+    value %= k # 前文提到过的
+    ...
+    res.append(ans)
+return res
+```
+
+来思考内部应该进行什么操作。
+
+读题，先更新，再查询。查询后我们得到两个东西，一是查询区间的x-values列表，二是查询区间的乘积模k。
+
+我们需要的是什么？x-values里面索引为x的数据
+
+对，就这些：
+
+```python
+for index, value, start, x in queries:
+    value %= k
+    
+    update(index, value, root) # 更新数据
+    pref, _ = find(start, len(nums)-1, root) # 查询x-values
+    ans = pref[x] # 找到需要的
+    
+    res.append(ans)
+return res
+```
+
+至此本题完结。
+
+## 代码
+
+```python
+class TreeNode:
+    __slots__ = ('start', 'end', 'mid', 'left', 'right', 'pref', 'total')
+    def __init__(self, start, end, k):
+        self.start = start
+        self.end = end
+        self.mid = (start + end) // 2
+        self.left = None
+        self.right = None
+        self.pref = [0]*k
+        self.total = 0
+
+class Solution:
+    def resultArray(self, nums: List[int], k: int, queries: List[List[int]]) -> List[int]:
+        def merge(node):
+            left, right = node.left, node.right
+            node.total = (left.total*right.total)%k
+            for i in range(k):
+                node.pref[i] = left.pref[i]
+            for i in range(k):
+                node.pref[(i*left.total)%k] += right.pref[i]
+        def build(start, end, k):
+            node = TreeNode(start, end, k)
+            if start == end:
+                node.pref[nums[start]%k] = 1
+                node.total = nums[start]%k
+                node.mid = start
+                return node
+            
+            mid = (start+end)//2
+            node.left = build(start, mid, k)
+            node.right = build(mid+1, end, k)
+            node.mid = mid
+            merge(node)
+            return node
+        
+        def update(index, value, root):
+            nums[index] = value
+            def _update(start, end, node):
+                if end < index or start > index:
+                    return
+                if start == end:
+                    node.pref = [0]*k
+                    node.pref[value] = 1
+                    node.total = value
+                    return
+                    
+                mid = (start+end)//2
+                if index <= mid:
+                    _update(start, mid, node.left)
+                else:
+                    _update(mid+1, end, node.right)
+                merge(node)
+
+            _update(0, len(nums)-1, root)
+        def find(start, end, node):
+            if start > end:
+                return [0]*k, 1
+            if node.start == start and node.end == end:
+                return list(node.pref), node.total
+            
+            left_pref, left_total = find(start, min(node.mid, end), node.left)
+            right_pref, right_total = find(max(node.mid+1, start), end, node.right)
+            pref = list(left_pref)
+            for i in range(k):
+                pref[(i*left_total)%k] += right_pref[i] 
+            return pref, (left_total*right_total) % k
+        root = build(0, len(nums)-1, k)
+        res = []
+        for index, value, start, x in queries:
+            value %= k
+            update(index, value, root)
+            pref, total = find(start, len(nums)-1, root)
+            res.append(pref[x])
+        return res
+
+```
+
+## 复杂度分析
+
+- 时间复杂度：O(qklogn), q次查询，每次查询要遍历logn数量级个节点，每个节点要对若干个长度为k的数组做运算
+- 空间复杂度：O(kn), n个节点，每个节点有若干个长度为k的列表
+
+## 总结
+
+这题最难的地方就在于实现线段树。搞清楚如何修改和查找，这题就已经成功95%了
+
+## 进一步思考
+
+- 假设这题x-values的定义和昨天的一样，还能做吗？能，不过需要引入额外的信息：子区间的x-values和后缀的x-values。为何？因为左右区间合并时，左右各自的子区间是新区间的子区间没错，但左区间的后缀与右区间的前缀的组合也是新区间的子区间，因此必须一并维护。然后merge的过程要修改，其余不变
+- 307题https://leetcode.com/problems/range-sum-query-mutable/description/ 就让我们实现线段树的修改与查找操作，道理是一样的
+- 53题https://leetcode.com/problems/maximum-subarray/description/ 也可以使用线段树解决最大区间和的问题。无非是创建好线段树后，再次遍历一遍找出最大值

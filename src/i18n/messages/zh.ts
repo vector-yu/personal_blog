@@ -275,6 +275,8 @@ export const zh = {
     calloutWarning: '注意',
     calloutSuccess: '成功',
     calloutDanger: '警告',
+    problemReview: '一句话点评',
+    problemDifficulty: '难度',
     copy: '复制',
     copied: '已复制',
     zoomImage: '放大图片',

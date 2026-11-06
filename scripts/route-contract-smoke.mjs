@@ -33,9 +33,9 @@ function isPublishedPage(dir, baseName) {
   }
 }
 
-/** Internal and public routes are identical in the symmetric `/zh` + `/en` tree. */
+/** Internal pagination route is rewritten to the public `/posts/page/N` URL. */
 function toPublic(route) {
-  return route;
+  return route.replace(/\/posts\/p\/(\d+)$/, '/posts/page/$1');
 }
 
 function prerenderedPostRoutes(locale) {

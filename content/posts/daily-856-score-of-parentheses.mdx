@@ -1,0 +1,60 @@
+---
+title: "856. Score of Parentheses"
+date: 2026-10-05T00:00:00.000Z
+description: "LeetCode 每日一题：Score of Parentheses"
+tags:
+  - "栈"
+series: "每日一题"
+featured: false
+draft: false
+---
+
+<ProblemMeta review="括号与栈是天作之合" difficulty="Medium" />
+
+[LeetCode 原题](https://leetcode.com/problems/score-of-parentheses/)
+
+Given a balanced parentheses string `s`, return *the **score** of the string*.
+
+The **score** of a balanced parentheses string is based on the following rule:
+
+- `"()"` has score `1`.
+- `AB` has score `A + B`, where `A` and `B` are balanced parentheses strings.
+- `(A)` has score `2 * A`, where `A` is a balanced parentheses string.
+
+**Constraints:**
+
+- `2 <= s.length <= 50`
+- `s` consists of only `'('` and `')'`.
+- `s` is a balanced parentheses string.
+
+## 思路1：栈
+
+括号类的题目真是有趣，这几天每一道都不难，但都让笔者想了一段时间。
+
+笔者注意到，无论出什么样的题型，“栈”是括号绕不开的数据结构。因此，笔者一开始就在构思使用栈来解决
+
+先来解释一下代码吧：
+
+- 遇到左括号，让表示左括号的‘0’入栈
+- 遇到右括号，则有以下几种情况
+    - 上一个恰好就是左括号，即栈顶是0
+    - 上一个不是右括号，是之前已经匹配好的一个括号的分数
+    - 这时0的作用就显现出来了。因为匹配好的括号必然得分大于0，所以0充当了分隔符；此外，0加上任何数字都是这个数字，也可以用来免除出栈再入栈的操作
+
+```python
+class Solution:
+    def scoreOfParentheses(self, s: str) -> int:
+        stack = []
+        for c in s:
+            if c == '(':
+                stack.append(0)
+            else:
+                if stack[-1] == 0:
+                    stack[-1] += 1
+                else:
+                    acc = 0
+                    while stack[-1] != 0:
+                        acc += stack.pop()
+                    stack[-1] += acc*2
+        return sum(stack)
+```

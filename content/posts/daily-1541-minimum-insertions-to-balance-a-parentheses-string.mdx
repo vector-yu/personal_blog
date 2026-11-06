@@ -1,0 +1,124 @@
+---
+title: "1541. Minimum Insertions to Balance a Parentheses String"
+date: 2026-10-09T00:00:00.000Z
+description: "LeetCode 每日一题：Minimum Insertions to Balance a Parentheses String"
+tags:
+  - "栈"
+  - "贪心"
+series: "每日一题"
+featured: false
+draft: false
+---
+
+<ProblemMeta review="情况有点多 需要思考" difficulty="Medium" />
+
+[LeetCode 原题](https://leetcode.com/problems/minimum-insertions-to-balance-a-parentheses-string/)
+
+Given a parentheses string `s` containing only the characters `'('` and `')'`. A parentheses string is **balanced** if:
+
+- Any left parenthesis `'('` must have a corresponding two consecutive right parenthesis `'))'`.
+- Left parenthesis `'('` must go before the corresponding two consecutive right parenthesis `'))'`.
+
+In other words, we treat `'('` as an opening parenthesis and `'))'` as a closing parenthesis.
+
+- For example, `"())"`, `"())(())))"` and `"(())())))"` are balanced, `")()"`, `"()))"` and `"(()))"` are not balanced.
+
+You can insert the characters `'('` and `')'` at any position of the string to balance it if needed.
+
+Return *the minimum number of insertions* needed to make `s` balanced.
+
+**Constraints:**
+
+- `1 <= s.length <= 105`
+- `s` consists of `'('` and `')'` only.
+
+## 思路：栈+贪心
+
+本题难点在于如何处理右括号。贪心的思路是：就近匹配。
+
+之前左右括号一对一匹配时，遇到右括号，只有两种情况：
+
+1. 栈顶是左括号，匹配成功，直接出栈
+2. 栈顶是右括号，匹配失败
+
+现在变成了一对二匹配，这就需要每遇到一个右括号，都要额外往后看一个
+
+1. 栈顶是左括号
+    1. 当前括号和下一个括号都是右括号，那么匹配成功，出栈，从大下个括号继续
+    2. 当前括号是右括号，而下一个括号是左括号，这表明此处缺失一个右括号。把答案加上1，假装补上了缺失的括号，然后出栈，从下一个括号继续
+2. 栈是空的
+    1. 右括号不可能入栈
+    2. 当前括号和下一个都是右括号，那么这两个右括号合在一起需要一个左括号，直接让答案加一，然后从大下一个括号继续
+    3. 当前括号是右括号而下一个括号是左括号，那么当前括号需要一个右括号和一个左括号，直接让答案+2，然后从下一个括号继续
+
+最后栈内剩下一大堆未匹配的左括号，乘以二就是需要的右括号
+
+与一对一匹配判断插入括号个数不同的是，一对二匹配强制我们边遍历边计算出需要插入的个数，因为一对一匹配，只要匹配失败 就意味着一定要额外插入一个，即匹配失败字符数=插入字符数；而一对二匹配不是。匹配失败有四种情况：（，（），），））。这四种情况对应的额外插入个数是2，1，2，1，显然这个等式就不成立了。因此，只能实时识别出这四种非法的情况，并实时演算需要插入的字符个数
+
+```python
+class Solution:
+    def minInsertions(self, s: str) -> int:
+        left_count = 0
+        idx = 0
+        ans = 0
+        while idx < len(s):
+            if s[idx] == '(':
+                left_count += 1
+                idx += 1
+            else:
+		            # A1: ()),合法的情况
+		            # A2: (),需要额外插入1个
+		            # B1: )),需要额外插入1个
+		            # B2: ), 需要额外插入2个
+                if left_count > 0: # A
+                    left_count -= 1
+                else: # B
+                    ans += 1
+                
+                if idx < len(s)-1 and s[idx+1] == ')': # 1
+                    idx += 2
+                else: # 2
+                    ans += 1
+                    idx += 1
+	       
+        return left_count * 2 + ans
+```
+
+## 拓展思考
+
+如果要进行1对n的匹配呢？不难发现，其实有2n种失败的匹配方式：
+
+- 其中n种是一个左括号+k(k&lt;n)个右括号，这种情况需要额外n-k个括号
+- 另外n种是k(k≤n)个右括号，这种情况需要额外n-k+1个括号
+
+那么，代码就变成了：
+
+```python
+ class Solution:
+    def minInsertions(self, s: str, n:int) -> int:
+        left_count = 0
+        idx = 0
+        ans = 0
+        while idx < len(s):
+            if s[idx] == '(':
+                left_count += 1
+                idx += 1
+            else:
+                if left_count > 0:
+                    left_count -= 1
+                else: 
+                    ans += 1 # 先把缺的右括号补上
+                # 寻找右括号最大连续长度，最长找到n
+                right_len = 1
+                while right_len + idx < len(s) and s[idx+right_len] == ')' and right_len < n:
+		                right_len += 1
+		            ans += n - right_len
+		            idx += right_len
+        return left_count * n + ans
+```
+
+再思考，如果是m对n的匹配呢？
+
+```python
+
+```

@@ -1,0 +1,128 @@
+---
+title: "2747. Count Zero Request Servers"
+date: 2026-11-06T00:00:00.000Z
+description: "LeetCode 每日一题：Count Zero Request Servers"
+tags:
+  - "滑动窗口"
+series: "每日一题"
+featured: false
+draft: false
+---
+
+<ProblemMeta review="很难想到排序 但是想到了这题就没什么了" difficulty="Medium" />
+
+[LeetCode 原题](https://leetcode.com/problems/count-zero-request-servers/)
+
+You are given an integer `n` denoting the total number of servers and a **2D** **0-indexed** integer array `logs`, where `logs[i] = [server_id, time]` denotes that the server with id `server_id` received a request at time `time`.
+
+You are also given an integer `x` and a **0-indexed** integer array `queries`.
+
+Return *a **0-indexed** integer array* `arr` *of length* `queries.length` *where* `arr[i]` *represents the number of servers that **did not receive** any requests during the time interval* `[queries[i] - x, queries[i]]`.
+
+Note that the time intervals are inclusive.
+
+**Constraints:**
+
+- `1 <= n <= 105`
+- `1 <= logs.length <= 105`
+- `1 <= queries.length <= 105`
+- `logs[i].length == 2`
+- `1 <= logs[i][0] <= n`
+- `1 <= logs[i][1] <= 106`
+- `1 <= x <= 105`
+- `x < queries[i] <= 106`
+
+## 思路：排序+滑动窗口
+
+首先很容易想到此题的暴力解法，即对每一个查询的时间窗口，依次检测在窗口内没有收到请求的服务器的数量，然后返回。然而，看数据量，这需要我们至多<Math formula="10^{12}" />次操作，显然超时了。看数据量，我们大概率要将复杂度里面塞入一个`log`
+
+其实，想到本题题眼“查询时间窗口内数据个数”就已经暗示了滑动窗口的解法。既然滑动的是时间窗口，那必然要保证数据在时间上是有序的。另外，我们要查询多个时间窗口，因此，时间窗口也应该有序
+
+于是`Log`的位置确定下来了：排序。滑动窗口仅仅是常数级别遍历，因此时间复杂度在`Llog(L)+Qlog(Q)`，完全符合题目的数据量
+
+唯一需要注意的一点是，需要保留`queries` 的原序号，以便查询后及时还原。答案采用了一种更好的方式。这里仅仅是笔者不成熟的第一直觉。
+
+```python
+logs.sort(key=lambda x:x[-1])
+ordered_q = sorted(list(enumerate(queries)), key=lambda x:x[-1])
+```
+
+然后，考虑滑动窗口的实现。笔者习惯使用左闭右开的窗口表示，这样，左右指针的更新全都可以统一放置在窗口更新的后面，比较无脑。
+
+假设当前查询的时间是q, 那么对应的时间窗口就是`[q-x, q]`。我们对不在窗口内的服务器数量感兴趣，因此窗口内需要统计其包含的服务器数量，然后用n去减。自然，我们想到了字典。字典内值非零的键的数量就是服务器的数量，而每次窗口的移动，都可以增减进入/离开窗口的服务器对应的值
+
+据此，可以写出左右指针移动的条件：
+
+- 但凡`right`处于的时间≤`q`，`right`就右移一步
+- 但凡`left`处于的时间&lt;`q-x`，`left`就右移一步
+
+注意不等号是否取等，以确保`[q-x, q]`窗口内的`log`全部被囊括在窗口内
+
+这样，每次左右指针移动完毕，就可以知道`q`对应的答案
+
+```python
+left, right = 0, 0
+q_idx = 0
+ans = [0]*len(queries)
+server = {}
+while left < len(logs) and q_idx < len(queries):
+    while right < len(logs) and logs[right][-1] <= ordered_q[q_idx][-1]:
+        server[logs[right][0]] = server.get(logs[right][0], 0) + 1
+        right += 1
+    while left < len(logs) and logs[left][-1] < ordered_q[q_idx][-1] - x:
+        server[logs[left][0]] -= 1
+        if server[logs[left][0]] == 0:
+            server.pop(logs[left][0], None) # 答案写的更好，单独拿了一个变量来记录非零数
+        left += 1
+    ans[ordered_q[q_idx][0]] = n-len(server)
+    q_idx += 1
+```
+
+循环结束有两种情况：
+
+1. `left`指针走到头，这意味着对于剩余的`queries`, 没有任何的`log`与之对应，因此他们的答案就是n
+2. `q_idx`指针走到头，这意味着所有的查询全部完毕，不必在乎窗口滑动到了哪里
+
+对于第一种情况，需要额外补充这几个没来的及查询的答案。循环的条件恰好避开了第二种情况。
+
+```python
+while q_idx < len(queries):
+    ans[ordered_q[q_idx][0]] = n
+    q_idx += 1
+```
+
+把代码合到一起，就是最终的答案了
+
+## 代码
+
+```python
+class Solution:
+    def countServers(self, n: int, logs: List[List[int]], x: int, queries: List[int]) -> List[int]:
+        logs.sort(key=lambda x:x[-1])
+        ordered_q = sorted(list(enumerate(queries)), key=lambda x:x[-1])
+        left, right = 0, 0
+        q_idx = 0
+        ans = [0]*len(queries)
+        server = {}
+        while left < len(logs) and q_idx < len(queries):
+            while right < len(logs) and logs[right][-1] <= ordered_q[q_idx][-1]:
+                server[logs[right][0]] = server.get(logs[right][0], 0) + 1
+                right += 1
+            while left < len(logs) and logs[left][-1] < ordered_q[q_idx][-1] - x:
+                server[logs[left][0]] -= 1
+                if server[logs[left][0]] == 0:
+                    server.pop(logs[left][0], None)
+                left += 1
+            ans[ordered_q[q_idx][0]] = n-len(server)
+            q_idx += 1
+        while q_idx < len(queries):
+            ans[ordered_q[q_idx][0]] = n
+            q_idx += 1
+        return ans
+
+```
+
+## 复杂度
+
+- 时间：如前面分析，复杂度全在排序上，为<Math formula="O(L\log L+Q\log Q)" />
+- 空间：对于长度为`n`的列表，Timsort消耗的空间为<Math formula="O(n)" />级别；最坏的情况下`n`台服务器全在窗口内。因此，总的空间复杂度为<Math formula="O(L+Q+n)" />

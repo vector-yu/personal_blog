@@ -1,0 +1,68 @@
+---
+title: "462. Minimum Moves to Equal Array Elements II"
+date: 2026-11-02T00:00:00.000Z
+description: "LeetCode 每日一题：Minimum Moves to Equal Array Elements II"
+tags:
+  - "二分查找"
+  - "数学题"
+series: "每日一题"
+featured: false
+draft: false
+---
+
+<ProblemMeta review="— 根本没有这样的习题！— 你只是怕了" difficulty="Medium" />
+
+[LeetCode 原题](https://leetcode.com/problems/minimum-moves-to-equal-array-elements-ii/)
+
+Given an integer array `nums` of size `n`, return *the minimum number of moves required to make all array elements equal*.
+
+In one move, you can increment or decrement an element of the array by `1`.
+
+Test cases are designed so that the answer will fit in a **32-bit** integer
+
+**Constraints:**
+
+- `n == nums.length`
+- `1 <= nums.length <= 105`
+- `109 <= nums[i] <= 109`
+
+## 思路1：二分查找
+
+观察注意到，距离差之和随着目标值的增加，先减小再不变再增加。这意味着可以使用二分查找：
+
+```python
+class Solution:
+    def minMoves2(self, nums: list[int]) -> int:
+        def oper_count(target):
+            return sum((abs(num-target) for num in nums))
+        left, right = min(nums), max(nums)
+        while left <= right:
+            mid = (left + right) // 2
+            cur_left, cur, cur_right = oper_count(mid-1), oper_count(mid) , oper_count(mid+1)
+            if cur_left > cur > cur_right:
+                left = mid + 1
+            elif cur_left < cur < cur_right:
+                right = mid - 1
+            else:
+                return cur
+```
+
+## 思路2：数学
+
+笔者一开始用的是平均数，发现不对。**平均数**是使得距离差的**平方和**最小的。
+
+将数字从小到大排序，假设目标值是中间的某一个数字，可以发现
+
+- 只要左侧比右侧数字少，那么目标值向右移动，总和一定不增大
+- 只要右侧数字比左侧少，那么目标值往左移动，总和一定不增大
+
+因此，当左右数字数量一样的时候，就是总和最小的情况，因为往左往右动，总和都不会减小
+
+故最终选择了**中位数**
+
+```python
+class Solution:
+    def minMoves2(self, nums: List[int]) -> int:
+        mid = sorted(nums)[len(nums) // 2]
+        return sum(abs(x - mid) for x in nums)
+```

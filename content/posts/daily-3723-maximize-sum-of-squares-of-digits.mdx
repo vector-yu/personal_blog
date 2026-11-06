@@ -1,0 +1,57 @@
+---
+title: "3723. Maximize Sum of Squares of Digits"
+date: 2026-10-14T00:00:00.000Z
+description: "LeetCode 每日一题：Maximize Sum of Squares of Digits"
+tags:
+  - "贪心"
+series: "每日一题"
+featured: false
+draft: false
+---
+
+<ProblemMeta review="感谢前面几题的铺垫，这题做的格外顺畅" difficulty="Medium" />
+
+[LeetCode 原题](https://leetcode.com/problems/maximize-sum-of-squares-of-digits/)
+
+You are given two **positive** integers `num` and `sum`.
+
+A positive integer `n` is **good** if it satisfies both of the following:
+
+- The number of digits in `n` is **exactly** `num`.
+- The sum of digits in `n` is **exactly** `sum`.
+
+The **score** of a **good** integer `n` is the sum of the squares of digits in `n`.
+
+Return a **string** denoting the **good** integer `n` that achieves the **maximum** **score**. If there are multiple possible integers, return the **maximum** one. If no such integer exists, return an empty string.
+
+**Constraints:**
+
+- `1 <= num <= 2 * 105`
+- `1 <= sum <= 2 * 106`
+
+## 思路：贪心
+
+一连好几天考察平方的和的贪心算法，笔者试图总结一下规律。
+
+对于这种“总和一定”的条件，想要平方的和尽可能的大，则必须尽可能的拉大数字之间的差距
+
+如这题，每个数字最大是9，最小是0。那很显然，要尽可能创造多的9和0. 然而唯一的限制就是，总和可能不是9的倍数。这时还要留出一个空位给总和模9的余数
+
+想到这里就很简单了。注意要处理余数为0的情况
+
+且这种拼装方式是最全面的，保证了不会有0开头的非法情况（毕竟总和大于等于1）
+
+```python
+class Solution:
+    def maxSumOfSquares(self, num: int, total: int) -> str:
+        if 9*num < total:
+            return ''
+        nines = total // 9
+        other = str(total % 9) if total % 9 != 0 else ''
+        zeros = num - nines - len(other)
+        return '9'*nines + other + '0'*zeros
+        
+
+```
+
+时间和空间复杂度都是O(1)

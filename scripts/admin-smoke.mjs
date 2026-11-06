@@ -114,6 +114,7 @@ try {
     check('Embed menu offers Figure', /Figure|图片/.test(menuText));
     check('Embed menu offers VideoEmbed', /VideoEmbed|视频/.test(menuText));
     check('Embed menu offers Math', /Math|数学公式/.test(menuText));
+    check('Embed menu offers ProblemMeta', /ProblemMeta|每日一题信息/.test(menuText));
   }
 
   await page.screenshot({ path: OUT });

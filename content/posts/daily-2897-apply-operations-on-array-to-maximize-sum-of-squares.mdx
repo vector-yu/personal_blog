@@ -1,0 +1,86 @@
+---
+title: "2897. Apply Operations on Array to Maximize Sum of Squares"
+date: 2026-10-12T00:00:00.000Z
+description: "LeetCode 每日一题：Apply Operations on Array to Maximize Sum of Squares"
+tags:
+  - "贪心"
+series: "每日一题"
+featured: false
+draft: false
+---
+
+<ProblemMeta review="完全不会位运算 得学啊" difficulty="Hard" />
+
+[LeetCode 原题](https://leetcode.com/problems/apply-operations-on-array-to-maximize-sum-of-squares/)
+
+You are given a **0-indexed** integer array `nums` and a **positive** integer `k`.
+
+You can do the following operation on the array **any** number of times:
+
+- Choose any two distinct indices `i` and `j` and **simultaneously** update the values of `nums[i]` to `(nums[i] AND nums[j])` and `nums[j]` to `(nums[i] OR nums[j])`. Here, `OR` denotes the bitwise `OR` operation, and `AND` denotes the bitwise `AND` operation.
+
+You have to choose `k` elements from the final array and calculate the sum of their **squares**.
+
+Return *the **maximum** sum of squares you can achieve*.
+
+Since the answer can be very large, return it **modulo** `109 + 7`.
+
+**Constraints:**
+
+- `1 <= k <= nums.length <= 105`
+- `1 <= nums[i] <= 109`
+
+## 思路：贪心
+
+笔者这题数学上想出来了解决方法，奈何难以落实到实际。看了答案后算是有了一些启发，故尝试写这一答案
+
+我们需要注意到两点
+
+### 每次操作过后，和不变
+
+即原来有多少1和0，操作之后两个数就还有多少1和0，区别在于，OR运算后的数字可能会更大，AND运算后数字可能会更小。言外之意，构建数字的2^i的原材料总数永远不变，只是组合方式变了
+
+### 最大化平方的和，就是让每个数字的差距尽可能的大
+
+根据平方平均大于等于算数平均，且仅在各数相同时去等，不难看出，和一定，彼此的差异越大，平方平均越大，平方的和也就越大
+
+因此，本题最终转化为了：如何利用给定的若干2^i，尽可能多的构建出最大的数字？
+
+答案给了这样一种思路：
+
+1. 找出所有的原材料2^i的个数
+2. 创造现有条件下最大的数，就是只要有，那每种2^i都拿来用
+
+这就是贪心的位置
+
+### 获取原材料
+
+答案给了一种“肢解”某数二进制表达的方法，笔者受教了：
+
+```python
+cnt = [0] * 30
+for num in nums:
+    for i in range(30):
+        if num & (1 << i): # 肢解
+            cnt[i] += 1
+```
+
+这样cnt中就收集了各个原材料的个数（使用30是因为Log₂(10⁹)=29.897，意味着最大的一个原材料是2²⁹，从2⁰到2²⁹共有30种）
+
+### 贪心地组装
+
+答案同时也给了一种组装的方法，笔者受教了：
+
+```python
+res = 0
+MOD = 10**9 + 7
+for _ in range(k):
+    cur = 0
+    for j in range(29, -1, -1):
+        if cnt[j] > 0:
+            cur |= 1 << j # 拼装
+            cnt[j] -= 1
+    res = (res + cur * cur) % MOD
+```
+
+拼在一起就是最终的答案了

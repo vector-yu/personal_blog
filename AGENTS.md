@@ -89,7 +89,7 @@
 
 参考实现：`Callout`（嵌套富文本 + 固定选项）、`Counter`（客户端状态 + localStorage）、
 `Tabs`（对象列表 + ARIA）、`Figure`（image 字段 + 远程主机白名单）、`VideoEmbed`（白名单拼 URL）、
-`Math`（KaTeX 字符串 + `display`）。
+`Math`（KaTeX 字符串 + `display`）、`ProblemMeta`（每日一题的一句话点评 + 难度）。
 
 ---
 
@@ -112,6 +112,7 @@ URL 是语言的唯一来源，**不要**做 cookie-only 切换。所有页面�
 - **语言切换用 `<a>` 整页跳转**，不要用 `next/link`：`[lang]` 是根参数，必须让服务端重新输出 `<html lang>`。
 - **标签/系列详情页切换到另一语言时回索引页**（`switchLocalePath` 已处理），因为标签名是翻译内容，同路径不保证存在。
 - **英文文章缺失**：不出现在 `/en/posts`；`/en/posts/<slug>` 若中文存在则 redirect 到 `/en/posts`，否则 404。
+- **`每日一题` 是明确的 Chinese-only 系列**：`scripts/check-i18n.mjs` 的 `CHINESE_ONLY_SERIES` 允许这 44 篇没有英文对照；其他系列不要照抄这个例外。
 - **英文内容与中文同 slug**：`content/posts/foo.mdx` ↔ `content/posts-en/foo.mdx`；`content/pages/bar.mdx` ↔ `content/pages-en/bar.mdx`；JSON 是 `home.json` ↔ `home.en.json`。
 - **MDX chrome** 的文案走 `LocaleProvider` / `useLocaleCopy()`；不要在每个 MDX 组件里另写一份中文。
 - 新增英文内容后跑 `npm run check:i18n -- --strict`；`build` / `build:local` 已内置。
@@ -204,6 +205,12 @@ npm run smoke                      # http / admin / visual / interaction / langu
     已有大量 `$...$` 文章用 `npm run convert:math -- --write <目录>` 批量转换
     （默认 dry-run；脚本会跳过 frontmatter、代码块、行内代码，并用 `parseMDX` 验证结果）。
     全角标点本身可以正常解析；如果它在公式里，随公式一起走这三条路径就不会报错。
+16. **分页路由不要把目录命名成 `page`**：Next 16 会静默跳过
+    `posts/page/[pageNumber]` 的 `generateStaticParams`，导致 `/posts/page/2` 没有静态页。
+    现在公共 URL `/posts/page/N` 由 `next.config.ts` rewrite 到内部 `/posts/p/N`；
+    内部路由的 `generateStaticParams` **必须同步**（这里改为 build 时扫 content 文件计数），
+    async 版本同样会被静默跳过。`route-contract-smoke.mjs` 的 `toPublic` 负责把
+    `/posts/p/N` 映射回公共 URL，改路由时一起改。
 
 ---
 

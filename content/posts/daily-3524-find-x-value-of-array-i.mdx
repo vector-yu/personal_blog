@@ -1,0 +1,118 @@
+---
+title: "3524. Find X Value of Array I"
+date: 2026-09-22T00:00:00.000Z
+description: "LeetCode 每日一题：Find X Value of Array I"
+tags:
+  - "动态规划"
+series: "每日一题"
+featured: false
+draft: false
+---
+
+<ProblemMeta review="刚好是状态机dp 刚刚钻研过" difficulty="Medium" />
+
+[LeetCode 原题](https://leetcode.com/problems/find-x-value-of-array-i/)
+
+You are given an array of **positive** integers `nums`, and a **positive** integer `k`.
+
+You are allowed to perform an operation **once** on `nums`, where in each operation you can remove any **non-overlapping** prefix and suffix from `nums` such that `nums` remains **non-empty**.
+
+You need to find the **x-value** of `nums`, which is the number of ways to perform this operation so that the **product** of the remaining elements leaves a *remainder* of `x` when divided by `k`.
+
+Return an array `result` of size `k` where `result[x]` is the **x-value** of `nums` for `0 <= x <= k - 1`.
+
+A **prefix** of an array is a subarray that starts from the beginning of the array and extends to any point within it.
+
+A **suffix** of an array is a subarray that starts at any point within the array and extends to the end of the array.
+
+**Note** that the prefix and suffix to be chosen for the operation can be **empty**.
+
+**Constraints:**
+
+- `1 <= nums[i] <= 109`
+- `1 <= nums.length <= 105`
+- `1 <= k <= 5`
+
+## 思路：状态机dp
+
+### 读题后的第一感受
+
+首先先看数据规模，依旧是十万长度，排除了平方级别时间复杂度的可能。
+
+再一看，这题说的很复杂，前缀后缀删除，甚至能删空的。
+
+**实际上就是取一个非空的子区间而已**。
+
+接着，问的是乘积的余数的个数，根据模运算的性质，实际上就是先取模再算乘积。
+
+<Callout type="info" body="你还记得取模运算的性质吗？" />
+
+<Math formula="(a *b)\text{ mod } k = (a \text{ mod } k) * (b \text{ mod } k)" />
+
+因此题目里Nums[i]的取值范围形同虚设。我们索性先对nums里面每个数字取模，再继续讨论：
+
+```python
+nums = [num%k for num in nums]
+```
+
+你一定也看到了，k很小，小到都可以当作常数来看了。
+
+而且，余数，不就是0到k-1这有限的不超过5个的k个数字吗？
+
+余数的乘法再取余数，得到了新的余数，也在这个范围内。换言之，**余数之间的模运算是封闭的**，只用余数来定义状态，就能完成整个过程
+
+联想昨日刚刚反思过的[Weekly Contest 520 Q3](https://app.notion.com/p/Weekly-Contest-520-Q3-3e15e4c93a2980dcbed5f396434b781c?pvs=21) （该题利用了0与1在“加1模2”运算下的封闭），不难发现，这就是同一类型的题目换了一个马甲，笔者与AI探讨后发现，这一类题型叫做“状态机动态规划”，核心就在于“有限的状态”上
+
+### 写出dp的定义
+
+结合我们对于子区间类问题的状态定义的习惯（以某结尾的子区间…），我们可以大手一挥，直接写出dp的定义及其状态转移方程：
+
+- dp(i, j) 表示以第j个数字结尾的子区间模k余i的个数
+- i行的和就是所有模k余i的子区间的个数，我们要求的就是每一行的和构成的列表
+- Base case: dp(i, 0)=0，因为前0个数字没有任何子区间！
+- 状态转移方程：
+    - dp(nums[i], i+1) += 1，新的数字进入，可以自己单开一个起点
+    - dp((nums[i]*j)%k, i+1) += dp(j, i)，新的数字进入，也可以并入之前存在的子区间
+
+为何用加等于？以往我们写的都是dp(i,j)=一堆运算，但是取模运算，并没有一个通用的公式，来描述谁与谁的乘积模k后的余数具体是谁，**言外之意，余数从前往后算容易，从后往前推不可能**。
+
+因此，我们不如每算出一个部分，就把这一部分加上去，最后的结果就是我们想要的。我咨询AI，才发现无意中触及到了**“填表法（Pull DP）” 与 “刷表法（Push DP）”**的区别。
+
+总之，经过了很自然的推导，不难把上述内容翻译成代码：
+
+```python
+dp = [[0]*(n+1) for _ in range(k)]
+for i in range(n):
+    dp[nums[i]][i+1] += 1 
+    for j in range(k):
+        dp[(j*nums[i])%k][i+1] += dp[j][i]
+return [sum(l) for l in dp]
+```
+
+提交，通过，一气呵成。
+
+昨天研究过的内容今天就能实战演练。果然，思考过纠结过得来的知识，总会派上用场。
+
+## 代码
+
+```python
+class Solution:
+    def resultArray(self, nums: List[int], k: int) -> List[int]:
+        nums = [num%k for num in nums]
+        n = len(nums)
+        dp = [[0]*(n+1) for _ in range(k)]
+        for i in range(n):
+            dp[nums[i]][i+1] += 1 
+            for j in range(k):
+                dp[(j*nums[i])%k][i+1] += dp[j][i]
+        return [sum(l) for l in dp]
+```
+
+## 复杂度分析
+
+- 时间复杂度：O(k*n), 因为我们遍历了dp表的每一个位置，这占了大头；不过k很小，因此近似于线性的时间复杂度，符合此题的数据规模
+- 空间复杂度：O(k*n), 我们单开了一个n+1行k列的dp表
+
+## 相关练习
+
+参考[Weekly Contest 520 Q3](https://app.notion.com/p/Weekly-Contest-520-Q3-3e15e4c93a2980dcbed5f396434b781c?pvs=21) 即可

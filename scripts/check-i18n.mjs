@@ -9,7 +9,7 @@
  *
  * Usage: node --experimental-strip-types --no-warnings scripts/check-i18n.mjs [--strict]
  */
-import { existsSync, readdirSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { en } from '../src/i18n/messages/en.ts';
 import { zh } from '../src/i18n/messages/zh.ts';
@@ -40,6 +40,27 @@ function filesIn(dir) {
   return readdirSync(dir, { withFileTypes: true })
     .filter((entry) => entry.isFile() && /\.mdx?$/.test(entry.name))
     .map((entry) => entry.name);
+}
+
+/**
+ * These series are intentionally Chinese-only. Their posts still appear under
+ * /zh and are excluded from /en; the language switch lands on the English list
+ * when a translation is missing. Everything outside this allowlist still has
+ * to be paired.
+ */
+const CHINESE_ONLY_SERIES = new Set(['每日一题']);
+
+function seriesOf(file) {
+  const source = readFileSync(join('content/posts', file), 'utf8');
+  const frontmatter = /^---\r?\n([\s\S]*?)\r?\n---/.exec(source);
+  if (!frontmatter) return null;
+  const line = /^series:\s*(.+)$/m.exec(frontmatter[1]);
+  if (!line) return null;
+  return line[1].trim().replace(/^["']|["']$/g, '');
+}
+
+function isChineseOnly(file) {
+  return CHINESE_ONLY_SERIES.has(seriesOf(file));
 }
 
 function jsonIn(dir) {
@@ -86,19 +107,26 @@ try {
   const zhPosts = filesIn('content/posts').sort();
   const enPosts = filesIn('content/posts-en').sort();
   const postsMissing = zhPosts.filter((file) => !enPosts.includes(file));
+  const chineseOnlyPosts = postsMissing.filter(isChineseOnly);
+  const postsMissingTranslations = postsMissing.filter((file) => !isChineseOnly(file));
   const postsExtra = enPosts.filter((file) => !zhPosts.includes(file));
-  const postParity = postsMissing.length === 0 && postsExtra.length === 0;
+  const postParity = postsMissingTranslations.length === 0 && postsExtra.length === 0;
   check(
     'every Chinese post has an English counterpart with the same slug',
-    strict ? postParity : postsMissing.length === 0,
+    strict ? postParity : postsMissingTranslations.length === 0,
     [
-      postsMissing.length ? `missing: ${postsMissing.join(', ')}` : '',
+      postsMissingTranslations.length
+        ? `missing: ${postsMissingTranslations.join(', ')}`
+        : '',
       postsExtra.length ? `extra: ${postsExtra.join(', ')}` : '',
+      chineseOnlyPosts.length
+        ? `Chinese-only series: ${chineseOnlyPosts.length} post(s) (${[...CHINESE_ONLY_SERIES].join(', ')})`
+        : '',
     ]
       .filter(Boolean)
       .join('; ') || 'paired'
   );
-  if (!strict && postsMissing.length > 0) {
+  if (!strict && postsMissingTranslations.length > 0) {
     console.warn('  (translation coverage is reported as a warning without --strict)');
   }
 

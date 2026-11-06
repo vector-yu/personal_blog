@@ -1,0 +1,143 @@
+---
+title: "3886. Sum of Sortable Integers"
+date: 2026-10-20T00:00:00.000Z
+description: "LeetCode 每日一题：Sum of Sortable Integers"
+tags:
+  - "看图写话"
+series: "每日一题"
+featured: false
+draft: false
+---
+
+<ProblemMeta review="显式的枚举尝试就能解出 完全没有计算机或者数学上的简化方式 个人感觉应该是中档题" difficulty="Hard" />
+
+[LeetCode 原题](https://leetcode.com/problems/sum-of-sortable-integers/)
+
+You are given an integer array `nums` of length `n`.
+
+An integer `k` is called **sortable** if `k` **divides** `n` and you can sort `nums` in **non-decreasing** order by sequentially performing the following operations:
+
+- Partition `nums` into **consecutive subarrays** of length `k`.
+- **Cyclically rotate each subarray independently** any number of times to the left or to the right.
+
+Return an integer denoting the sum of all possible sortable integers `k`.
+
+**Constraints:**
+
+- `1 <= n == nums.length <= 105`
+- `1 <= nums[i] <= 105`
+
+## 思路
+
+这题是我有史以来遇到的第一道看图写话的困难题
+
+真的是看图写话，题里把判断方式说的很清楚了：
+
+- 找出所有因数
+- 依次尝试所有等分子数组是否为环形有序数组
+
+找出因数，很简单吧，笔者临时想出来这个方法
+
+```python
+n = len(nums)
+ks = set()
+for i in range(1, n):
+    if i in ks:
+        break
+    if n % i == 0:
+        ks.add(i)
+        ks.add(n//i)
+```
+
+当然，这个临时的方法最致命的一点是，对n=1的情形无效。当然笔者可以考虑把range中的n变成n+1，不过笔者更倾向于在开头直接把这种特殊情况排除掉：毕竟长度为1的数组必然有序，而1的唯一一个因数就是1
+
+```python
+if len(nums) == 1:
+	  return 1
+```
+
+然后就是依次尝试k，分段，判断每个片段是不是环形有序的，以及这些片段拼在一起是不是整体有序的。笔者在这里使用了相邻两数差的思想：
+
+- 相邻两数差全部大于等于0，表明数组非递减，已经符合要求了
+- 相邻两数差只有一个小于0，表明数组只有一处向下突变，通过旋转，把这处突变排挤到边缘，一定能凑出来一组有序的数字，符合要求
+- 其余情况，就表明数组有多处突变，无论如何排挤突变，总有突变在中间使得数组不单调，这种情况不符合要求
+
+此外，整体上各个数组也要有序：
+
+- 这要求当前片段的最小值要大于等于上一片段的最大值
+- 如果违反，则不符合要求
+
+因此可写出整个代码：
+
+```python
+res = 0
+for k in ks:
+    pre_max = 0
+    fail = False
+    for start in range(0, n, k):
+        cur = nums[start:start+k]
+        # 判断全局是否递增
+        if min(cur) < pre_max:
+            fail = True
+            break
+        pre_max = max(cur)
+        
+        # 判断内部是否环形递增
+        diff = sum([int(cur[i]-cur[i-1] < 0) for i in range(1, len(cur))] + [int(cur[0]-cur[-1] < 0)])
+        if diff > 1:
+            fail = True
+            break
+    if not fail:
+        res += k
+```
+
+注意由于环形数组首尾相接，首尾两项也是相邻的，需要额外补上他们的差
+
+## 代码
+
+```python
+class Solution:
+    def sortableIntegers(self, nums: list[int]) -> int:
+        if len(nums) == 1:
+            return 1
+        n = len(nums)
+        ks = set()
+        for i in range(1, n):
+            if i in ks:
+                break
+            if n % i == 0:
+                ks.add(i)
+                ks.add(n//i)
+        res = 0
+        for k in ks:
+            pre_max = 0
+            fail = False
+            for start in range(0, n, k):
+                cur = nums[start:start+k]
+                if min(cur) < pre_max:
+                    fail = True
+                    break
+                pre_max = max(cur)
+                diff = sum([int(cur[i]-cur[i-1] < 0) for i in range(1, len(cur))] + [int(cur[0]-cur[-1] < 0)])
+                if diff > 1:
+                    fail = True
+                    break
+            if not fail:
+                res += k
+        return res
+```
+
+## 复杂度
+
+- 时间复杂度：最开始查找因数的复杂度为根号n。接下来的关键在于讨论一个数字n正因数的个数。根据gemini给出的看不懂的分析：
+    
+    ![正因数个数随 n 的增长](/uploads/daily-problems/3886-divisor-growth.png)
+    
+    正因数的个数数量级为nᵋ。此外，对于每一个因数，我们都遍历了一整遍数组，又具有O(n)的复杂度。因此，整体的时间复杂度就是O(n¹ ⁺  ᵋ + sqrt(n)) = O(n¹ ⁺  ᵋ)
+    
+- 空间复杂度：同上分析，为O(nᵋ)
+- 在实际解题中，可使用如下上界
+    
+    ![正因数个数的常见上界](/uploads/daily-problems/3886-divisor-upper-bound.png)
+    
+- 或者记住<Math formula="10^9" />以内最多 <Math formula="1344" /> 个因数，<Math formula="10^{18}" />以内最多约 <Math formula="10^5" />个因数

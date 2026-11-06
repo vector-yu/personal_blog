@@ -97,6 +97,13 @@ const richTextField = {
         { name: 'display', type: 'boolean' },
       ],
     },
+    {
+      name: 'ProblemMeta',
+      fields: [
+        { name: 'review', type: 'string' },
+        { name: 'difficulty', type: 'string', options: ['Easy', 'Medium', 'Hard'] },
+      ],
+    },
   ],
 };
 

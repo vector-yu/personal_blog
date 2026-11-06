@@ -1,0 +1,82 @@
+---
+title: "3942. Minimum Operations to Sort a Permutation"
+date: 2026-10-22T00:00:00.000Z
+description: "LeetCode 每日一题：Minimum Operations to Sort a Permutation"
+tags:
+  - "数学题"
+  - "看图写话"
+series: "每日一题"
+featured: false
+draft: false
+---
+
+<ProblemMeta review="这几日全都是对数组操作得到有序数组的问题 更多的是数学题" difficulty="Medium" />
+
+[LeetCode 原题](https://leetcode.com/problems/minimum-operations-to-sort-a-permutation/)
+
+You are given an integer array `nums` of length `n`, where `nums` is a permutation of the integers from 0 to `n - 1`.
+
+You may perform **only** the following operations:
+
+- **Reverse** the entire array.
+- **Rotate Left by One**: Move the first element to the end of the array, and rest elements to left by one position.
+
+Return an integer denoting the **minimum** number of operations required to sort the array in **increasing** order. If it is **not possible** to sort the array using only the given operations, return -1.
+
+**Constraints:**
+
+- `1 <= n == nums.length <= 105`
+- `0 <= nums[i] <= n - 1`
+- `nums` is a permutation of integers from 0 to `n - 1`.
+
+## 思路：数学题
+
+反转和左旋一位两种操作，不变的是什么？数字的相对顺序
+
+也就是说，如果最终能得到有序的递增排列，那么把最开始的数组首位相接，它一定是顺时针或者逆时针递增的。反之，如果初始不是环形有序的，那么就不可能排列成有序的。
+
+因此，第一步就是给数组分类。笔者用了额外的空间来换取代码上的懒惰：
+
+```python
+n = len(nums)
+ordered_nums = list(range(n))
+start_idx = nums.index(0) # 找到环形数组起始节点
+if nums[start_idx:n]+nums[:start_idx] == ordered_nums:
+    pass # 顺时针有序
+elif nums[start_idx+1:]+nums[:start_idx+1] == ordered_nums[::-1]:
+    pass # 逆时针有序
+else:
+    return -1 # 无序
+```
+
+再来思考，反转+左旋*n+反转，这不就是进行了n次右旋吗？只不过，右旋的代价永远要多2。如果对一个逆时针的数组进行右旋操作，由于右旋后整体还要反转一次，这一次反转与右旋的最后一步反转相互抵消。因此这种情况下，右旋的代价只多了1
+
+而由于左旋右旋完全相反，为了总操作次数最小，我们只能全部左旋/全部右旋。
+
+对于有序环形数组，该如何操作使得它从头到尾递增呢？
+
+- 顺时针：0在n的右边。可以通过左旋把0左侧的数字全部移到右边，也可以通过右旋把0及0右边的数字全部移到左边，两次反转代价为2
+- 逆时针：0在n的左边。可以通过左旋把0及0左侧的数字全部移到右边，再翻转一次；或者把0右边的数字移动到左边，由于反转抵消，代价为1
+
+于是代码就写完了
+
+## 代码
+
+```python
+class Solution:
+    def minOperations(self, nums: List[int]) -> int:
+        n = len(nums)
+        ordered_nums = list(range(n))
+        start_idx = nums.index(0)
+        if nums[start_idx:n]+nums[:start_idx] == ordered_nums:
+            return min(start_idx, 2+n-start_idx)
+        elif nums[start_idx+1:]+nums[:start_idx+1] == ordered_nums[::-1]:
+            return min(start_idx+2, n-start_idx)
+        else:
+            return -1
+```
+
+## 复杂度
+
+- 时间：O(n)
+- 空间：O(n)，但是完全可以优化到O(1)

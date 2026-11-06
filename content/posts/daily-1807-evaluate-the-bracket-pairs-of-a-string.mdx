@@ -1,0 +1,113 @@
+---
+title: "1807. Evaluate the Bracket Pairs of a String"
+date: 2026-09-26T00:00:00.000Z
+description: "LeetCode 每日一题：Evaluate the Bracket Pairs of a String"
+tags:
+  - "哈希表"
+  - "看图写话"
+series: "每日一题"
+featured: false
+draft: false
+---
+
+<ProblemMeta review="唯一的难点就是没有难点" difficulty="Medium" />
+
+[LeetCode 原题](https://leetcode.com/problems/evaluate-the-bracket-pairs-of-a-string/)
+
+You are given a string `s` that contains some bracket pairs, with each pair containing a **non-empty** key.
+
+- For example, in the string `"(name)is(age)yearsold"`, there are **two** bracket pairs that contain the keys `"name"` and `"age"`.
+
+You know the values of a wide range of keys. This is represented by a 2D string array `knowledge` where each `knowledge[i] = [keyi, valuei]` indicates that key `keyi` has a value of `valuei`.
+
+You are tasked to evaluate **all** of the bracket pairs. When you evaluate a bracket pair that contains some key `keyi`, you will:
+
+- Replace `keyi` and the bracket pair with the key's corresponding `valuei`.
+- If you do not know the value of the key, you will replace `keyi` and the bracket pair with a question mark `"?"` (without the quotation marks).
+
+Each key will appear at most once in your `knowledge`. There will not be any nested brackets in `s`.
+
+Return *the resulting string after evaluating **all** of the bracket pairs.*
+
+**Constraints:**
+
+- `1 <= s.length <= 105`
+- `0 <= knowledge.length <= 105`
+- `knowledge[i].length == 2`
+- `1 <= keyi.length, valuei.length <= 10`
+- `s` consists of lowercase English letters and round brackets `'('` and `')'`.
+- Every open bracket `'('` in `s` will have a corresponding close bracket `')'`.
+- The key in each bracket pair of `s` will be non-empty.
+- There will not be any nested bracket pairs in `s`.
+- `keyi` and `valuei` consist of lowercase English letters.
+- Each `keyi` in `knowledge` is unique.
+
+## 思路：“看图写话”
+
+### 何为“看图写话”
+
+请允许笔者称这一类习题为“看图写话”，言外之意，读题，按步骤一步一步来，就能做出。这题本来应该是eazy难度，只不过可能因为多了一点点“弯弯绕”，就成了medium. 
+
+### 分析题干
+
+题目叽里呱啦说了一大堆，实际上就让我们干这两件事情：
+
+- 根据给定的替换关系，把括号内的词换成表里的词
+- 表里找不到的词，统一替换成‘？’
+
+而限制条件这么长，无非讲了两件事情：
+
+- 输入的数据合规且不会在细枝末节上刁难我们
+- 字符串的长度是十万级别，所以**千万不要尝试平方级别的复杂度算法！**
+
+那么要干的事情就这三个：
+
+- 确定括号里的词
+- 完成替换
+- 拼接成答案
+
+由于我们注定要遍历整个字符串，因此每一步的操作复杂度绝对要小于O(n)
+
+### 转换输入格式
+
+确定括号里的词很容易，因为输入是合法的，且没有嵌套括号，左括号出现时开始记录，右括号出现时结束记录，中间的部分就是要替换掉的。
+
+- 笔者使用了temp来记录中间的内容，而官方题解仅记录了起始位置，使用了切片。
+- 两者思路是一样的，无外乎是牺牲时间换取空间还是牺牲空间换取时间到区别
+
+然而，倘若我们要在茫茫辞海（可能是十万个！）中寻找对应的这个词，复杂度显然太大。这时就要想到，不妨换一种数据结构来记录
+
+想必你一定想到了字典或者哈希表。的确，题目里甚至都显式的用key, value字样来提示我们来。用key表示原始词，那么dict[key]就是value, O(1)复杂度的查找，正是我们想要的
+
+```python
+k = {s[0]:s[1] for s in knowledge}
+```
+
+最后一步，只需把转换后的结果拼到答案后面即可
+
+## 完整代码
+
+```python
+k = {s[0]:s[1] for s in knowledge}
+ans = ''
+temp = ''
+is_key = False
+for c in s:
+    if c == '(':
+        is_key = True
+    elif c ==')':
+        ans += k.get(temp, '?')
+        temp = ''
+        is_key = False
+    else:
+        if is_key:
+            temp += c
+        else:
+            ans += c
+return ans
+```
+
+## 复杂度
+
+- 时间复杂度：O(n)，我们完整遍历了一遍字符串
+- 空间复杂度：O(n)，我们用了额外空间来记录答案

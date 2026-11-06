@@ -1,0 +1,159 @@
+---
+title: "1658. Minimum Operations to Reduce X to Zero"
+date: 2026-09-24T00:00:00.000Z
+description: "LeetCode 每日一题：Minimum Operations to Reduce X to Zero"
+tags:
+  - "哈希表"
+  - "滑动窗口"
+series: "每日一题"
+featured: false
+draft: false
+---
+
+<ProblemMeta review="一题多解 巧妙的很" difficulty="Medium" />
+
+[LeetCode 原题](https://leetcode.com/problems/minimum-operations-to-reduce-x-to-zero/)
+
+You are given an integer array `nums` and an integer `x`. In one operation, you can either remove the leftmost or the rightmost element from the array `nums` and subtract its value from `x`. Note that this **modifies** the array for future operations.
+
+Return *the **minimum number** of operations to reduce* `x` *to **exactly*** `0` *if it is possible, otherwise, return* `-1`.
+
+**Constraints:**
+
+- `1 <= nums.length <= 105`
+- `1 <= nums[i] <= 104`
+- `1 <= x <= 109`
+
+## 思路1：滑动窗口
+
+稍微阅读一下题干就发现了，这题问的是区间和为sum(nums)-x的最大区间长度。更可喜的是，每一个数组还都是正数，那还说什么？滑动窗口启动！
+
+```python
+target = sum(nums) - x
+n = len(nums)
+left, right = 0, 0
+max_len = 0
+window = 0
+```
+
+滑动窗口，要想明白三件事情：
+
+1. 什么时候右侧扩大窗口？
+2. 什么时候左侧缩小窗口？
+3. 记录窗口内的什么数据？
+
+显然，这题搜寻的目标区间和是一定的，我们自然要记录窗口内的数字和。但凡区间内的和小于目标，就必然扩大窗口以增大和；但凡区间内的和大于目标，就必然缩小窗口以减小和；如果恰好相等，那就记录下窗口长度，与最大值比较，然后缩小窗口，让和变小，以获得继续向右探索的动力。
+
+```python
+while right < n:
+    window += nums[right]
+    right += 1
+    while window >= target:
+        if window == target:
+            max_len = max(max_len, right - left)
+        window -= nums[left]
+        left += 1
+while window >= target:
+    if window == target:
+        max_len = max(max_len, right - left)
+    window -= nums[left]
+    left += 1
+```
+
+然而在写代码之前(或者提交代码错误之后)，需要考虑一下边界条件：数组内每一个数都大于零，区间内又至少有一个元素，意味着我们不可能搜寻到一个和为负数或0的区间。然而，如果目标值为0，我们难道不是用了len(nums)步来把x减小到0吗？因此，在最开始，要对这些边界情况做出讨论
+
+```python
+if target < 0:
+    return -1 # 不可能凑出负数
+if target == 0:
+    return len(nums)
+```
+
+现在提交，全部通过！
+
+## 思路2：回溯
+
+如果单纯的从题干来理解，这题实际上就是在遍历一棵二叉树：选左边的数字还是选右边的数字
+
+如果用dfs(i, j,x)表示区间[i, j]内要凑出和x，那么dp(i+1, j, x+nums[i])就是遍历左节点，dp(i, j-1, x-nums[j])就是去遍历右节点，目标节点就是所有x==0的，我们更新当前最小的操作数即可
+
+```python
+min_oper = float('inf')
+n = len(nums)
+def dfs(i, j, x):
+    nonlocal min_oper
+    if x == 0:
+        min_oper = min(min_oper, n - j + i-1)
+        return
+    if i > j:
+        return
+    dfs(i+1, j, x-nums[i])
+    dfs(i, j-1, x-nums[j])
+dfs(0, n-1, x)
+return min_oper if min_oper != float('inf') else -1
+```
+
+但是这么做复杂度来到了O(2^n)指数级别，因为我们穷尽了这棵树上面的所有节点，而很大一部分是重复的。比如，先取一个左侧的数字，再取一个右侧的数字，和先取一个右侧的数字，再取一个左侧的数字是完全一样的。因此，我们可以引入visited数组来防止重复：
+
+```python
+min_oper = float('inf')
+n = len(nums)
+visited = [[False]*n for _ in range(n)]
+def dfs(i, j, x):
+    nonlocal min_oper
+    if x == 0:
+        min_oper = min(min_oper, n - j + i-1)
+        return
+    if i > j:
+        return
+    if visited[i][j]:
+        return
+    visited[i][j] = True
+    dfs(i+1, j, x-nums[i])
+    dfs(i, j-1, x-nums[j])
+dfs(0, n-1, x)
+return min_oper if min_oper != float('inf') else -1
+```
+
+这样复杂度降低到了O(n^2)级别（最坏的情况是左侧n/2个数字与右侧n/2个数字排列）
+
+但是这题数据量依旧是十万级别啊！这个方法走到头了
+
+## 思路3：前缀和+哈希表
+
+想要搜寻区间和为特定值的区间，就相当于去搜寻前缀和中差值为特定值的两个数。联想到“两数之和https://leetcode.com/problems/two-sum/description/”的美好记忆，以及虽然减法不满足交换律但前缀和强制要求后面的减前面的，我们同样可以使用哈希表记录每一个前缀和及其对应的索引，如果后面的位置的前缀和减去目标后刚好匹配上了，当前索引减去匹配上的索引就是区间的长度。 
+
+```python
+hash_table = {0:-1} # 防止一开始就匹配上
+target = sum(nums) - x
+max_len = float('-inf')
+cur_sum = 0
+for i, num in enumerate(nums):
+    cur_sum += num
+    
+    if cur_sum not in hash_table:
+        hash_table[cur_sum] = i # 先更新自己，因为允许自己匹配自己
+       
+    if cur_sum - target in hash_table:
+        max_len = max(i-hash_table[cur_sum-target], max_len)
+    
+return len(nums) - max_len if max_len != float('-inf') else -1
+```
+
+而且，我们要求的是最长区间，因此前缀和哈希表里，只需记录这个前缀和第一次出现的索引。
+
+这句话在此题中似乎是废话，但假设此题允许负数存在呢？（如325题https://leetcode.com/problems/maximum-size-subarray-sum-equals-k/description/）很显然，滑动窗口的思路完全失效，回溯算法勉强能用，而这个方法才真正通用
+
+## 复杂度分析
+
+- 滑动窗口
+    - 时间：O(n), 双指针遍历一遍数组
+    - 空间：O(1), 仅仅额外维护了有限个变量
+- 回溯算法
+    - 时间：O(n^2), 要穷尽几乎所有二元对（i, j）
+    - 空间：O(n^2), 要创建备忘录防止重复
+- 前缀和+哈希表
+    - 时间：O(n), 线性扫描一遍数组
+    - 空间：O(n), 额外维护了一个哈希表
+
+不难看出，这题全是正数的这一条件，将空间优化成了常数级别

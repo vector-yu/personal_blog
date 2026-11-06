@@ -1,0 +1,48 @@
+---
+title: "1385. Find the Distance Value Between Two Arrays"
+date: 2026-11-05T00:00:00.000Z
+description: "LeetCode 每日一题：Find the Distance Value Between Two Arrays"
+tags:
+  - "二分查找"
+  - "看图写话"
+series: "每日一题"
+featured: false
+draft: false
+---
+
+<ProblemMeta review="白给" difficulty="Easy" />
+
+[LeetCode 原题](https://leetcode.com/problems/find-the-distance-value-between-two-arrays/)
+
+Given two integer arrays `arr1` and `arr2`, and the integer `d`, *return the distance value between the two arrays*.
+
+The distance value is defined as the number of elements `arr1[i]` such that there is not any element `arr2[j]` where `|arr1[i]-arr2[j]| <= d`.
+
+**Constraints:**
+
+- `1 <= arr1.length, arr2.length <= 500`
+- `-1000 <= arr1[i], arr2[j] <= 1000`
+- `0<= d <= 100`
+
+## 思路：暴力枚举
+
+看了官方题解才知道，原来可以贪心+二分查找，找到arr2中，距离arr1某个数最近的数字，看这个距离是否小于等于d即可
+
+然而，这题区区500个数字，我暴力枚举怎么了？固然代码省了时间，但是浪费了我的时间啊（开玩笑）
+
+除非你给我<Math formula="10^5" />长度的数组，那笔者认栽，就得想巧方法了。
+
+```python
+class Solution:
+    def findTheDistanceValue(self, arr1: list[int], arr2: list[int], d: int) -> int:
+        res = 0
+        for num1 in arr1:
+            is_distance = True
+            for num2 in arr2:
+                if abs(num1-num2) <= d:
+                    is_distance = False
+                    break
+            if is_distance:
+                res += 1
+        return res
+```

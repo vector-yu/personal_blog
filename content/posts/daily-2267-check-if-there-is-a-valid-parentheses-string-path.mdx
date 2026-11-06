@@ -1,0 +1,75 @@
+---
+title: "2267. Check if There Is a Valid Parentheses String Path"
+date: 2026-09-29T00:00:00.000Z
+description: "LeetCode 每日一题：Check if There Is a Valid Parentheses String Path"
+tags:
+  - "BFS"
+  - "栈"
+series: "每日一题"
+featured: false
+draft: false
+---
+
+<ProblemMeta review="缝合怪，谁家括号是二维的" difficulty="Hard" />
+
+[LeetCode 原题](https://leetcode.com/problems/check-if-there-is-a-valid-parentheses-string-path/)
+
+A parentheses string is a **non-empty** string consisting only of `'('` and `')'`. It is **valid** if **any** of the following conditions is **true**:
+
+- It is `()`.
+- It can be written as `AB` (`A` concatenated with `B`), where `A` and `B` are valid parentheses strings.
+- It can be written as `(A)`, where `A` is a valid parentheses string.
+
+You are given an `m x n` matrix of parentheses `grid`. A **valid parentheses string path** in the grid is a path satisfying **all** of the following conditions:
+
+- The path starts from the upper left cell `(0, 0)`.
+- The path ends at the bottom-right cell `(m - 1, n - 1)`.
+- The path only ever moves **down** or **right**.
+- The resulting parentheses string formed by the path is **valid**.
+
+Return `true` *if there exists a **valid parentheses string path** in the grid.* Otherwise, return `false`.
+
+**Constraints:**
+
+- `m == grid.length`
+- `n == grid[i].length`
+- `1 <= m, n <= 100`
+- `grid[i][j]` is either `'('` or `')'`.
+
+## 思路1: BFS
+
+题目问的是“是否存在一条路径”，那么只要找到一条路径，就可以直接返回True。笔者为了达到在行进中直接剔除不合规的路径，使用了BFS。这样，最差的情况是m+n-1&lt;200个循环后，肯定能从头到尾走一遍。
+
+```python
+class Solution:
+    def hasValidPath(self, grid: list[list[str]]) -> bool:
+        m, n = len(grid), len(grid[0])
+        length = m+n-1
+        if length % 2 == 1 or grid[0][0] == ')' or grid[-1][-1] == '(':
+            return False # 头尾是必经之路，可以提前判断；字符串长度也不能是奇数
+        
+        q = deque([(0,0,0,0)]) # 行，列，左括号，右括号
+        while q:
+            q = deque(set(q)) # 狡猾的去重方法
+            size = len(q)
+            for _ in range(size):
+                row, col, left, right = q.popleft()
+                if row >= m or col >= n or right > left or left > length // 2:
+                    continue
+
+                if grid[row][col] == '(':
+                    q.append((row+1, col, left+1, right))
+                    q.append((row, col+1, left+1, right))
+                else:
+                    if row == m-1 and col == n-1 and left-right == 1:
+                        return True
+
+                    q.append((row+1, col, left, right+1))
+                    q.append((row, col+1, left, right+1))
+        return False
+
+```
+
+## 复杂度
+
+- BFS

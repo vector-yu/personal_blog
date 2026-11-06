@@ -1,0 +1,39 @@
+---
+title: "3727. Maximum Alternating Sum of Squares"
+date: 2026-10-13T00:00:00.000Z
+description: "LeetCode 每日一题：Maximum Alternating Sum of Squares"
+tags:
+  - "贪心"
+series: "每日一题"
+featured: false
+draft: false
+---
+
+<ProblemMeta review="平方和系列题目中最简单的一道" difficulty="Medium" />
+
+[LeetCode 原题](https://leetcode.com/problems/maximum-alternating-sum-of-squares/)
+
+You are given an integer array `nums`. You may **rearrange the elements** in any order.
+
+The **alternating score** of an array `arr` is defined as:
+
+- `score = arr[0]2 - arr[1]2 + arr[2]2 - arr[3]2 + ...`
+
+Return an integer denoting the **maximum possible alternating score** of `nums` after rearranging its elements.
+
+**Constraints:**
+
+- `1 <= nums.length <= 105`
+- `4 * 104 <= nums[i] <= 4 * 104`
+
+## 思路：贪心
+
+我们把绝对值小的数字放在偶数位，大的放在奇数位即可。言外之意，选择前n//2个最小的数的平方前面加负号。
+
+```python
+class Solution:
+    def maxAlternatingSum(self, nums: List[int]) -> int:
+        n = len(nums)
+        new_nums = sorted(nums, key=lambda x: abs(x))
+        return sum([num**2 for num in new_nums[n//2:]])-sum([num**2 for num in new_nums[:n//2]])
+```

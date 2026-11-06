@@ -161,6 +161,25 @@ const richTextTemplates: TinaTemplate[] = [
       },
     ],
   },
+  {
+    name: 'ProblemMeta',
+    label: '每日一题信息 (ProblemMeta)',
+    fields: [
+      {
+        name: 'review',
+        label: '一句话点评',
+        type: 'string',
+        required: true,
+      },
+      {
+        name: 'difficulty',
+        label: '难度',
+        type: 'string',
+        options: ['Easy', 'Medium', 'Hard'],
+        required: true,
+      },
+    ],
+  },
 ];
 
 const postFields: TinaField[] = [

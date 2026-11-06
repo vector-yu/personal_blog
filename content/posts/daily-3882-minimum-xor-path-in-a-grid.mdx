@@ -1,0 +1,62 @@
+---
+title: "3882. Minimum XOR Path in a Grid"
+date: 2026-10-28T00:00:00.000Z
+description: "LeetCode 每日一题：Minimum XOR Path in a Grid"
+tags:
+  - "动态规划"
+series: "每日一题"
+featured: false
+draft: false
+---
+
+<ProblemMeta review="中规中矩的动态规划题 不能贪心这一点为我敲响了警钟" difficulty="Medium" />
+
+[LeetCode 原题](https://leetcode.com/problems/minimum-xor-path-in-a-grid/)
+
+You are given a 2D integer array `grid` of size `m * n`.
+
+You start at the **top-left** cell `(0, 0)` and want to reach the **bottom-right** cell `(m - 1, n - 1)`.
+
+At each step, you **may** move either **right or down**.
+
+The **cost** of a path is defined as the **bitwise XOR** of all the values in the cells along that path, **including** the start and end cells.
+
+Return the **minimum** possible XOR value among all valid paths from `(0, 0)` to `(m - 1, n - 1)`.
+
+**Constraints:**
+
+- `1 <= m == grid.length <= 1000`
+- `1 <= n == grid[i].length <= 1000`
+- `m * n <= 1000`
+- `0 <= grid[i][j] <= 1023`
+
+## 思路：动态规划
+
+这题出的一般，刚看到XOR，我以为考察数学性质。结果呢？几乎没用上！
+
+倒是有一点值得注意：这里没法贪心，必须老实枚举。因为每一步都与最小的数字XOR，结果未必是最小的！这算是唯一用上的性质。
+
+因此，本题动态规划定义状态量，除了位置之外，还必须加入到此位置时，能达到的值。
+
+状态转移也很好写，从前往后推，每个单元格分别向下和向右给出
+
+当然，也可以像答案一样，右和下分开，这样就能省下一个维度，但是笔者没有优化
+
+## 代码
+
+```python
+class Solution:
+    def minCost(self, grid: list[list[int]]) -> int:
+        m, n = len(grid), len(grid[0])
+        dp = [[set() for _ in range(n)] for _ in range(m)]
+        dp[0][0].add(grid[0][0])
+        for i in range(m):
+            for j in range(n):
+                for x in dp[i][j]:
+                    if i != m-1:
+                        dp[i+1][j].add(x^grid[i+1][j])
+                    if j != n-1:
+                        dp[i][j+1].add(x^grid[i][j+1])
+
+        return min(dp[-1][-1])
+```
