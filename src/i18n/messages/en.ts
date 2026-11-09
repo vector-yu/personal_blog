@@ -193,15 +193,17 @@ export const en: Messages = {
     weekly: {
       summary: '{count} posts · {weeks} weeks',
       intro:
-        'One LeetCode problem a day, collected into {weeks} weekly chapters. Each week opens with its topics and difficulty mix, then the problems in order.',
+        'One LeetCode problem a day, grouped by ISO week into {weeks} chapters. Pick a week to see just that week’s problems.',
       indexTitle: 'Browse by week',
       indexMeta: '{weeks} weeks · {posts} problems',
-      weekCode: 'W{week}',
-      week: 'Week {week}',
+      weekNumber: 'Week {week}',
+      weekOfYear: 'Week {week} of {year}',
+      yearLabel: '{year}',
       weekMeta: '{count} problems · {days} days',
       problems: '{count} problems',
       topics: 'Topics',
       reviewQuote: '“{review}”',
+      noScript: 'JavaScript is disabled; all weeks are shown below, newest first.',
     },
   },
 

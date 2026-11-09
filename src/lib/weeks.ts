@@ -6,9 +6,9 @@
  * next week for visitors east of UTC and into the previous one for visitors west of it —
  * a static page cannot depend on the reader's timezone.
  *
- * Weeks start on Monday (ISO / Chinese calendar convention) and are numbered from 1 in
- * chronological order, not by ISO week number: this is a reading sequence, so the first
- * week of the series is "第 1 周" even though it happens to be ISO week 39.
+ * Weeks start on Monday and are labelled with their **ISO week number and week-year**,
+ * e.g. “2026 年第 39 周” / “Week 39 of 2026”. The ISO week-year is used because a week
+ * can straddle New Year: 2026-12-28 belongs to week 53 of 2026, not week 1 of 2027.
  *
  * Kept dependency-free (no `@/` imports) so `scripts/unit-weeks.mjs` can import it with
  * Node's type stripping, outside the Next bundler.
@@ -36,17 +36,19 @@ export type WeekGroup<T extends { date: string }> = {
   start: string;
   /** ISO date (YYYY-MM-DD) of the Sunday that closes the week. */
   end: string;
-  /** 1-based position within this series, in chronological order. */
-  index: number;
-  /** Posts in this week, oldest first. */
+  /** ISO week-year; may differ from the calendar year at New Year. */
+  weekYear: number;
+  /** ISO week number within `weekYear` (1–53). */
+  week: number;
+  /** Posts in this week, newest first. */
   posts: T[];
   /** Distinct calendar days that actually have a post (gaps are allowed). */
   days: number;
 };
 
-/** Stable anchor id for a week section. */
-export function weekAnchor(index: number): string {
-  return `week-${index}`;
+/** Stable key/id for a week, e.g. `2026-W39`. */
+export function weekKey(week: { weekYear: number; week: number }): string {
+  return `${week.weekYear}-W${String(week.week).padStart(2, '0')}`;
 }
 
 /** UTC midnight of the given date, or null when the value is not a valid date. */
@@ -68,11 +70,27 @@ function isoDay(date: Date): string {
 }
 
 /**
- * Group dated posts into Monday–Sunday weeks, oldest week first.
+ * ISO week-year and week number for a Monday.
+ *
+ * The ISO week that contains a given date is determined by that week's Thursday, so
+ * using Thursday avoids the New Year ambiguity. `ceil(dayOfYear / 7)` is then the week
+ * number within that Thursday's year.
+ */
+function isoWeekOf(monday: Date): { weekYear: number; week: number } {
+  const thursday = new Date(monday.getTime() + 3 * DAY_MS);
+  const weekYear = thursday.getUTCFullYear();
+  const dayOfYear = Math.floor(
+    (thursday.getTime() - Date.UTC(weekYear, 0, 1)) / DAY_MS
+  ) + 1;
+  return { weekYear, week: Math.ceil(dayOfYear / 7) };
+}
+
+/**
+ * Group dated posts into Monday–Sunday weeks, newest week first.
  *
  * Posts without a valid date are skipped. Input order is preserved for the caller
- * (the array is copied before sorting), and posts inside a week are sorted oldest first
- * so a week reads like a diary even though `getPosts` returns newest first.
+ * (the array is copied before sorting), and posts inside a week are sorted newest first
+ * so the newest problems appear first everywhere.
  */
 export function groupPostsByWeek<T extends { date: string }>(posts: readonly T[]): WeekGroup<T>[] {
   const groups = new Map<string, { start: Date; posts: T[] }>();
@@ -93,10 +111,10 @@ export function groupPostsByWeek<T extends { date: string }>(posts: readonly T[]
   }
 
   return [...groups.entries()]
-    .sort(([a], [b]) => a.localeCompare(b))
-    .map(([key, group], position) => {
+    .sort(([a], [b]) => b.localeCompare(a))
+    .map(([key, group]) => {
       const ordered = [...group.posts].sort(
-        (a, b) => (utcDay(a.date)?.getTime() ?? 0) - (utcDay(b.date)?.getTime() ?? 0)
+        (a, b) => (utcDay(b.date)?.getTime() ?? 0) - (utcDay(a.date)?.getTime() ?? 0)
       );
       const days = new Set(
         ordered.map((post) => {
@@ -104,11 +122,13 @@ export function groupPostsByWeek<T extends { date: string }>(posts: readonly T[]
           return day ? isoDay(day) : '';
         })
       ).size;
+      const { weekYear, week } = isoWeekOf(group.start);
 
       return {
         start: key,
         end: isoDay(new Date(group.start.getTime() + 6 * DAY_MS)),
-        index: position + 1,
+        weekYear,
+        week,
         posts: ordered,
         days,
       };

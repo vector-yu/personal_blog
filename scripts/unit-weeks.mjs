@@ -1,9 +1,9 @@
 /**
- * Unit tests for the Monday-based week grouping used by the 每日一题 series page.
+ * Unit tests for the ISO week grouping used by the 每日一题 series page.
  *
  * Usage: node --experimental-strip-types --no-warnings scripts/unit-weeks.mjs
  */
-import { groupPostsByWeek, isWeeklySeries, weekAnchor } from '../src/lib/weeks.ts';
+import { groupPostsByWeek, isWeeklySeries, weekKey } from '../src/lib/weeks.ts';
 
 const results = [];
 const check = (name, passed, detail = '') => {
@@ -24,21 +24,24 @@ const originalOrder = input.map((item) => item.title);
 const weeks = groupPostsByWeek(input);
 
 check('groups Sunday with the preceding Monday', weeks.length === 2, `weeks=${weeks.length}`);
-check('week 1 starts on Monday 2026-09-21', weeks[0]?.start === '2026-09-21', weeks[0]?.start);
-check('week 1 ends on Sunday 2026-09-27', weeks[0]?.end === '2026-09-27', weeks[0]?.end);
-check('week 1 is index 1', weeks[0]?.index === 1, String(weeks[0]?.index));
+check('newest week comes first', weeks[0]?.start === '2026-09-28', weeks[0]?.start);
+check('week starts on Monday 2026-09-28', weeks[0]?.start === '2026-09-28', weeks[0]?.start);
+check('week ends on Sunday 2026-10-04', weeks[0]?.end === '2026-10-04', weeks[0]?.end);
+check('newest week is ISO week 40 of 2026', weeks[0]?.week === 40, String(weeks[0]?.week));
+check('newest week has the ISO week-year 2026', weeks[0]?.weekYear === 2026, String(weeks[0]?.weekYear));
 check(
-  'week 1 posts are oldest first',
-  weeks[0]?.posts.map((item) => item.title).join(',') === 'Mon,Sun',
+  'posts inside a week are newest first',
+  weeks[0]?.posts.map((item) => item.title).join(',') === 'Thu,Mon next',
   weeks[0]?.posts.map((item) => item.title).join(',')
 );
-check('week 1 counts two distinct days', weeks[0]?.days === 2, String(weeks[0]?.days));
+check('week counts two distinct days', weeks[0]?.days === 2, String(weeks[0]?.days));
 
-check('week 2 starts on Monday 2026-09-28', weeks[1]?.start === '2026-09-28', weeks[1]?.start);
-check('week 2 ends on Sunday 2026-10-04', weeks[1]?.end === '2026-10-04', weeks[1]?.end);
+check('older week starts on Monday 2026-09-21', weeks[1]?.start === '2026-09-21', weeks[1]?.start);
+check('older week ends on Sunday 2026-09-27', weeks[1]?.end === '2026-09-27', weeks[1]?.end);
+check('older week is ISO week 39 of 2026', weeks[1]?.week === 39, String(weeks[1]?.week));
 check(
-  'week 2 posts are oldest first',
-  weeks[1]?.posts.map((item) => item.title).join(',') === 'Mon next,Thu',
+  'older week posts are newest first',
+  weeks[1]?.posts.map((item) => item.title).join(',') === 'Sun,Mon',
   weeks[1]?.posts.map((item) => item.title).join(',')
 );
 
@@ -57,8 +60,19 @@ check(
   yearBoundary.length === 1 &&
     yearBoundary[0].start === '2026-12-28' &&
     yearBoundary[0].end === '2027-01-03' &&
-    yearBoundary[0].posts.map((item) => item.title).join(',') === 'Old year,New year',
-  yearBoundary.map((week) => `${week.start}..${week.end}`).join(' / ')
+    yearBoundary[0].weekYear === 2026 &&
+    yearBoundary[0].week === 53 &&
+    yearBoundary[0].posts.map((item) => item.title).join(',') === 'New year,Old year',
+  yearBoundary.map((week) => `${week.start}..${week.end} (${week.weekYear}-W${week.week})`).join(' / ')
+);
+
+const newYearWeek = groupPostsByWeek([
+  post('2027-01-04T00:00:00.000Z', 'Week one'),
+]);
+check(
+  'the first Monday of 2027 is week 1 of 2027',
+  newYearWeek[0]?.weekYear === 2027 && newYearWeek[0]?.week === 1,
+  `${newYearWeek[0]?.weekYear}-W${newYearWeek[0]?.week}`
 );
 
 const missing = groupPostsByWeek([
@@ -86,7 +100,7 @@ check(
   `posts=${duplicated[0]?.posts.length}, days=${duplicated[0]?.days}`
 );
 
-check('week anchors are stable', weekAnchor(1) === 'week-1' && weekAnchor(7) === 'week-7');
+check('week keys are stable', weekKey(weeks[1]) === '2026-W39' && weekKey(weeks[0]) === '2026-W40');
 check(
   'weekly series names are recognized in both languages',
   isWeeklySeries('每日一题') && isWeeklySeries('Daily Problem') && !isWeeklySeries('Other')

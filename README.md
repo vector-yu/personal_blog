@@ -342,15 +342,18 @@ git diff -- "D:\notes\math"
 ### 系列页按周整合
 
 `/zh/series/每日一题` 与 `/en/series/Daily Problem` 不再平铺 44 张卡片，而是按
-**周一到周日** 分成 7 个章节：
+**ISO 周（周一到周日）** 整理成 7 个周次，并只显示当前选中的那一周：
 
-- 顶部「按周浏览 / Browse by week」索引可跳到任意一周（桌面 7 列；手机 3 列网格）；
-- 每周标题显示日期范围、题数、实际打卡天数；
+- 顶部「按周浏览 / Browse by week」是周次选择器，按时间从新到旧排列；
+- 周次用**绝对时间标号**：中文 `2026 年第 45 周`，英文 `Week 45 of 2026`；
+- 面板显示该周的日期范围、题数、实际打卡天数，题目按日期从新到旧排列；
 - 难度分布（Easy / Medium / Hard）和知识点计数由每篇文章的
   `<ProblemMeta review difficulty>` 与 `tags` 自动汇总；
-- 每道题保留原文章链接，并显示当天的一句话点评、知识点和难度。
+- 每道题保留原文章链接，并显示当天的一句话点评、知识点和难度；
+- 只有选中的周可见，**不会把 7 周内容上下堆叠**。所有周仍保留在静态 HTML 里；
+  关闭 JavaScript 时 `noscript` 会展开全部周次，避免空白页。
 
-分组逻辑在 `src/lib/weeks.ts`（纯函数，UTC 计算，周一为一周起点；
+分组逻辑在 `src/lib/weeks.ts`（纯函数，UTC 计算，周一为一周起点，ISO 周号/周年；
 中英系列名通过 `isWeeklySeries` 识别），`review` / `difficulty` 由 `src/lib/site.ts` 的
 `toPostSummaries` 从正文首个 `ProblemMeta` 节点提取。其他系列不走周视图，仍用原来的
 `PostCard` 列表。
