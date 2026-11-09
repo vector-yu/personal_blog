@@ -212,6 +212,11 @@ npm run smoke                      # http / admin / visual / interaction / langu
     内部路由的 `generateStaticParams` **必须同步**（这里改为 build 时扫 content 文件计数），
     async 版本同样会被静默跳过。`route-contract-smoke.mjs` 的 `toPublic` 负责把
     `/posts/p/N` 映射回公共 URL，改路由时一起改。
+17. **内容 push 后线上还是旧内容**：先怀疑 TinaCloud 内容索引，不是代码。
+    查 `https://content-v2.tinajs.io/db/<clientId>/status`（`X-API-KEY` 用 `TINA_TOKEN`）；
+    如果 `indexStatus.timestamp` 早于本次提交，说明索引没触发。
+    在 TinaCloud 项目配置页对 `main` 点 **Reindex**，等 `complete` 后到 Vercel 点 **Redeploy**。
+    只重复 push 不会修复；`npm run build:local` 用的是本地 API，所以本地永远正常。
 
 ---
 
