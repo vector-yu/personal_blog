@@ -1,0 +1,47 @@
+﻿---
+title: "32. Longest Valid Parentheses"
+date: 2026-10-03T00:00:00.000Z
+description: "LeetCode Daily Problem: Longest Valid Parentheses"
+tags:
+  - "Stack"
+series: "Daily Problem"
+featured: false
+draft: false
+---
+
+<ProblemMeta review="Wait — that's clever?" difficulty="Hard" />
+
+[Original problem on LeetCode](https://leetcode.com/problems/longest-valid-parentheses/)
+
+Given a string containing just the characters `'('` and `')'`, return *the length of the longest valid (well-formed) parentheses substring*.
+
+**Constraints:**
+
+- `0 <= s.length <= 3 * 10^4`
+- `s[i]` is `'('`, or `')'`.
+
+## Approach
+
+I had no idea. I sat there thinking for 40 minutes.
+
+```python
+class Solution:
+    def longestValidParentheses(self, s: str) -> int:
+        stack = [-1]
+        ans = 0
+        for i, c in enumerate(s):
+            if c == '(':
+                stack.append(i)
+            else:
+                stack.pop()
+                if not stack:
+                    stack.append(i)
+                else:
+                    ans = max(ans, i-stack[-1])
+        return ans
+```
+
+## Complexity
+
+- Time: O(n) — one pass over the string.
+- Space: O(n) — the stack of indices.

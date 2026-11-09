@@ -1,0 +1,67 @@
+﻿---
+title: "22. Generate Parentheses"
+date: 2026-10-02T00:00:00.000Z
+description: "LeetCode Daily Problem: Generate Parentheses"
+tags:
+  - "BFS"
+  - "DFS"
+series: "Daily Problem"
+featured: false
+draft: false
+---
+
+<ProblemMeta review="A wolf in sheep's clothing" difficulty="Medium" />
+
+[Original problem on LeetCode](https://leetcode.com/problems/generate-parentheses/)
+
+Given `n` pairs of parentheses, write a function to *generate all combinations of well-formed parentheses*.
+
+**Constraints:**
+
+- `1 <= n <= 8`
+
+## Approach: DFS / BFS
+
+Brackets again. During the week I was traveling, every problem was about brackets.
+
+You can think of generating a bracket string as walking a binary tree: the left edge means `(`, and the right edge means `)`.
+
+That reduces the problem to traversing a binary tree.
+
+There are two ways to traverse a tree: depth-first and breadth-first. This problem also needs to track how many left and right parentheses have been used, because only valid paths are allowed. That gives the two implementations below.
+
+```python
+# DFS
+ans = []
+def dfs(cur='', left=0, right=0):
+    if left == n and right == n:
+        ans.append(cur)
+        return
+    if 0 <= right < left:
+        dfs(cur+')',left, right+1)
+    if right <= left < n:
+        dfs(cur+'(', left+1, right)
+dfs()     
+return ans 
+```
+
+```python
+# BFS
+temp = deque([('',0,0)])
+ans = []
+while temp:
+    cur_str, left, right = temp.popleft()
+    if left == n and right == n:
+        ans.append(cur_str)
+    else:
+        if 0 <= right < left:
+            temp.append((cur_str+')',left, right+1))
+        if right <= left < n:
+            temp.append((cur_str+'(', left+1, right))
+return ans 
+```
+
+## Complexity
+
+- Time: O(4^n / sqrt(n)) — the nth Catalan number.
+- Space: O(n).

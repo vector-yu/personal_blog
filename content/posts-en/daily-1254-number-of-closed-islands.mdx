@@ -1,0 +1,72 @@
+---
+title: "1254. Number of Closed Islands"
+date: 2026-10-25T00:00:00.000Z
+description: "LeetCode Daily Problem: Number of Closed Islands"
+tags:
+  - "BFS"
+  - "DFS"
+series: "Daily Problem"
+featured: false
+draft: false
+---
+
+<ProblemMeta review="Seen it before" difficulty="Medium" />
+
+[Original problem on LeetCode](https://leetcode.com/problems/number-of-closed-islands/)
+
+Given a 2D `grid` consisting of `0s` (land) and `1s` (water).  An *island* is a maximal 4-directionally connected group of `0s` and a *closed island* is an island **totally** (all left, top, right, bottom) surrounded by `1s.`
+
+Return the number of *closed islands*.
+
+**Constraints:**
+
+- `1 <= grid.length, grid[0].length <= 100`
+- `0 <= grid[i][j] <=1`
+
+## Approach: Flood fill
+
+Start with a simpler problem: count the islands.
+
+For each land cell, flood-fill the entire connected land mass. The number of floods is the number of islands.
+
+How do we flood all connected land? BFS or DFS: if a neighbor is land, let the water flow there.
+
+Now we need land completely surrounded by water. In other words, discard any island touching the border. So flood-fill the border first, then flood-fill the interior.
+
+## Code
+
+```python
+class Solution:
+    def closedIsland(self, grid: list[list[int]]) -> int:
+        m, n = len(grid), len(grid[0])
+        def fill_land(x, y):
+            if x < 0 or x >= m or y < 0 or y >= n:
+                return
+            if grid[x][y] == 1:
+                return
+            grid[x][y] = 1
+            fill_land(x-1, y)
+            fill_land(x+1, y)
+            fill_land(x, y-1)
+            fill_land(x, y+1)
+        
+        res = 0
+        for i in range(m):
+            fill_land(i, 0)
+            fill_land(i, n-1)
+        for j in range(n):
+            fill_land(0, j)
+            fill_land(m-1, j)
+        for i in range(1, m-1):
+            for j in range(1, n-1):
+                if grid[i][j] == 0:
+                    res += 1
+                    fill_land(i, j)
+        return res
+
+```
+
+## Complexity
+
+- Time: O(mn) — every cell is visited once; flood fill touches four neighbors, so O(4mn).
+- Space: O(m+n) — the recursion depth is at most the distance from one corner of an island to another, bounded by m+n. If the input must be preserved, copy the grid, making it O(mn).

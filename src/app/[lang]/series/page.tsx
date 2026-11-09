@@ -7,6 +7,7 @@ import { buildMetadata } from '@/i18n/metadata';
 import { getLocale, messagesFor } from '@/i18n/server';
 import { getPosts } from '@/lib/posts';
 import { collectSeries, seriesPath } from '@/lib/taxonomy';
+import { isWeeklySeries } from '@/lib/weeks';
 
 export const revalidate = 60;
 
@@ -60,8 +61,9 @@ export default async function SeriesIndexPage() {
                   <h2 className="text-title group-hover:text-iris-text dark:group-hover:text-indigo-200">
                     {item.name}
                   </h2>
-                  <p className="mt-1 text-xs font-bold text-ink/45 dark:text-slate-500">
+                  <p className="mt-1 text-xs font-bold text-ink/60 dark:text-slate-300">
                     {formatMessage(messages.series.count, { count: item.count })}
+                    {isWeeklySeries(item.name) ? ` · ${messages.series.weeklyLabel}` : ''}
                   </p>
                 </div>
                 <span aria-hidden className="text-2xl text-ink/30 dark:text-slate-500">

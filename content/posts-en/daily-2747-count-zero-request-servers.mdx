@@ -1,0 +1,126 @@
+﻿---
+title: "2747. Count Zero Request Servers"
+date: 2026-11-06T00:00:00.000Z
+description: "LeetCode Daily Problem: Count Zero Request Servers"
+tags:
+  - "Sliding Window"
+series: "Daily Problem"
+featured: false
+draft: false
+---
+
+<ProblemMeta review="Sorting is the hard part to spot; once you see it, the rest is straightforward" difficulty="Medium" />
+
+[Original problem on LeetCode](https://leetcode.com/problems/count-zero-request-servers/)
+
+You are given an integer `n` denoting the total number of servers and a **2D** **0-indexed** integer array `logs`, where `logs[i] = [server_id, time]` denotes that the server with id `server_id` received a request at time `time`.
+
+You are also given an integer `x` and a **0-indexed** integer array `queries`.
+
+Return *a **0-indexed** integer array* `arr` *of length* `queries.length` *where* `arr[i]` *represents the number of servers that **did not receive** any requests during the time interval* `[queries[i] - x, queries[i]]`.
+
+Note that the time intervals are inclusive.
+
+**Constraints:**
+
+- `1 <= n <= 10^5`
+- `1 <= logs.length <= 10^5`
+- `1 <= queries.length <= 10^5`
+- `logs[i].length == 2`
+- `1 <= logs[i][0] <= n`
+- `1 <= logs[i][1] <= 10^6`
+- `1 <= x <= 10^5`
+- `x < queries[i] <= 10^6`
+
+## Approach: Sort + sliding window
+
+The brute force is easy to imagine: for each query window, count the servers with no request in that window. But the constraints imply up to <Math formula="10^{12}" /> operations, which is too slow. We probably need a `log` in the complexity.
+
+The key phrase is “count the data in a query time window”, which hints at a sliding window. Since the window slides over time, the logs must be sorted by time. We also query multiple windows, so the queries should be sorted too.
+
+That fixes the role of sorting. The sliding window itself is linear, so the complexity is O(L log L + Q log Q), which fits.
+
+One detail: preserve the original indices of `queries` so answers can be restored. The editorial uses a better method; this is just my first intuition.
+
+```python
+logs.sort(key=lambda x:x[-1])
+ordered_q = sorted(list(enumerate(queries)), key=lambda x:x[-1])
+```
+
+Now implement the window. I use a half-open interval, so both pointer updates happen after the window update.
+
+For a query time `q`, the window is `[q - x, q]`. We care about servers *not* in the window, so count the servers inside and subtract from `n`. A dictionary does the job: the number of keys with nonzero values is the number of active servers, and moving the window updates counts as servers enter and leave.
+
+The pointer conditions are:
+
+- while `right`'s time ≤ `q`, move `right` forward
+- while `left`'s time < `q - x`, move `left` forward
+
+Mind the inclusive/exclusive comparisons so the window is exactly `[q - x, q]`.
+
+After moving the pointers, the answer for `q` is known.
+
+```python
+left, right = 0, 0
+q_idx = 0
+ans = [0]*len(queries)
+server = {}
+while left < len(logs) and q_idx < len(queries):
+    while right < len(logs) and logs[right][-1] <= ordered_q[q_idx][-1]:
+        server[logs[right][0]] = server.get(logs[right][0], 0) + 1
+        right += 1
+    while left < len(logs) and logs[left][-1] < ordered_q[q_idx][-1] - x:
+        server[logs[left][0]] -= 1
+        if server[logs[left][0]] == 0:
+            server.pop(logs[left][0], None) # the editorial is cleaner: it keeps a separate nonzero counter
+        left += 1
+    ans[ordered_q[q_idx][0]] = n-len(server)
+    q_idx += 1
+```
+
+The loop can end in two ways:
+
+1. `left` reaches the end: no logs remain for the rest of the queries, so their answers are `n`.
+2. `q_idx` reaches the end: all queries are answered.
+
+Handle the first case by filling the remaining answers with `n`. The loop condition already excludes the second case.
+
+```python
+while q_idx < len(queries):
+    ans[ordered_q[q_idx][0]] = n
+    q_idx += 1
+```
+
+## Code
+
+```python
+class Solution:
+    def countServers(self, n: int, logs: List[List[int]], x: int, queries: List[int]) -> List[int]:
+        logs.sort(key=lambda x:x[-1])
+        ordered_q = sorted(list(enumerate(queries)), key=lambda x:x[-1])
+        left, right = 0, 0
+        q_idx = 0
+        ans = [0]*len(queries)
+        server = {}
+        while left < len(logs) and q_idx < len(queries):
+            while right < len(logs) and logs[right][-1] <= ordered_q[q_idx][-1]:
+                server[logs[right][0]] = server.get(logs[right][0], 0) + 1
+                right += 1
+            while left < len(logs) and logs[left][-1] < ordered_q[q_idx][-1] - x:
+                server[logs[left][0]] -= 1
+                if server[logs[left][0]] == 0:
+                    server.pop(logs[left][0], None)
+                left += 1
+            ans[ordered_q[q_idx][0]] = n-len(server)
+            q_idx += 1
+        while q_idx < len(queries):
+            ans[ordered_q[q_idx][0]] = n
+            q_idx += 1
+        return ans
+
+```
+
+## Complexity
+
+- Time: sorting dominates, <Math formula="O(L\log L+Q\log Q)" />.
+- Space: Timsort uses O(n); in the worst case all `n` servers are inside the window. The total is <Math formula="O(L+Q+n)" />.

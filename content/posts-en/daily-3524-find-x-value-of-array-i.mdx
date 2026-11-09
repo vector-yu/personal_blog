@@ -1,0 +1,118 @@
+﻿---
+title: "3524. Find X Value of Array I"
+date: 2026-09-22T00:00:00.000Z
+description: "LeetCode Daily Problem: Find X Value of Array I"
+tags:
+  - "Dynamic Programming"
+series: "Daily Problem"
+featured: false
+draft: false
+---
+
+<ProblemMeta review="Turned out to be state-machine DP — I had just studied it" difficulty="Medium" />
+
+[Original problem on LeetCode](https://leetcode.com/problems/find-x-value-of-array-i/)
+
+You are given an array of **positive** integers `nums`, and a **positive** integer `k`.
+
+You are allowed to perform an operation **once** on `nums`, where in each operation you can remove any **non-overlapping** prefix and suffix from `nums` such that `nums` remains **non-empty**.
+
+You need to find the **x-value** of `nums`, which is the number of ways to perform this operation so that the **product** of the remaining elements leaves a *remainder* of `x` when divided by `k`.
+
+Return an array `result` of size `k` where `result[x]` is the **x-value** of `nums` for `0 <= x <= k - 1`.
+
+A **prefix** of an array is a subarray that starts from the beginning of the array and extends to any point within it.
+
+A **suffix** of an array is a subarray that starts at any point within the array and extends to the end of the array.
+
+**Note** that the prefix and suffix to be chosen for the operation can be **empty**.
+
+**Constraints:**
+
+- `1 <= nums[i] <= 10^9`
+- `1 <= nums.length <= 10^5`
+- `1 <= k <= 5`
+
+## Approach: State-machine DP
+
+### First impressions
+
+Start with the data size: `n` is still up to 10^5, which rules out any quadratic solution.
+
+At first the statement sounds complicated — remove a prefix and a suffix, and either one may be empty.
+
+**In reality, we are just choosing one non-empty subarray.**
+
+The question then asks for counts of products by remainder. By the properties of modular arithmetic, we can take each number modulo `k` first and multiply after that.
+
+<Callout type="info" body="Do you remember the properties of modular arithmetic?" />
+
+<Math formula="(a *b)\text{ mod } k = (a \text{ mod } k) * (b \text{ mod } k)" />
+
+So the original range of `nums[i]` is irrelevant. Reduce every number modulo `k` first:
+
+```python
+nums = [num%k for num in nums]
+```
+
+You have probably noticed that `k` is tiny — small enough to treat as a constant.
+
+More importantly, the remainders are just the `k` values from `0` to `k - 1`, at most five of them.
+
+Multiplying two remainders and taking the remainder again stays within that same finite set. In other words, **modular arithmetic on remainders is closed**, so a remainder alone is enough to define a state.
+
+This recalled yesterday's [Weekly Contest 520 Q3](https://app.notion.com/p/Weekly-Contest-520-Q3-3e15e4c93a2980dcbed5f396434b781c?pvs=21), which exploited the closure of `{0, 1}` under “add 1, modulo 2”. This is the same type of problem in a different costume. After discussing it with AI, I learned that the pattern is called **state-machine dynamic programming**, and the key is a **finite state space**.
+
+### Defining the DP
+
+Following the usual convention for subarray problems (subarrays ending at some index), we can write the definition and transitions directly:
+
+- `dp[i][j]` is the number of subarrays ending at index `j` whose product is congruent to `i` modulo `k`.
+- The sum of row `i` is the total number of subarrays whose product is congruent to `i` modulo `k`; the answer is the list of row sums.
+- Base case: `dp[i][0] = 0`, because there are no subarrays among the first zero elements.
+- Transitions:
+  - `dp[nums[i]][i+1] += 1` — the new element starts a subarray by itself.
+  - `dp[(nums[i] * j) % k][i+1] += dp[j][i]` — the new element extends an existing subarray.
+
+Why `+=`? We usually write `dp[i][j] = ...`, but modular multiplication has no general inverse formula that says which previous remainder produces a given new remainder. **In other words, remainders are easy to compute forward but impossible to invert backward.**
+
+So instead of pulling values from previous states, we push each newly computed contribution forward. This is the difference between **pull DP** and **push DP**.
+
+With that, the code follows naturally:
+
+```python
+dp = [[0]*(n+1) for _ in range(k)]
+for i in range(n):
+    dp[nums[i]][i+1] += 1 
+    for j in range(k):
+        dp[(j*nums[i])%k][i+1] += dp[j][i]
+return [sum(l) for l in dp]
+```
+
+Submitted, accepted, first try.
+
+What I studied yesterday got put into practice today. Knowledge you have wrestled with does come back when it matters.
+
+## Code
+
+```python
+class Solution:
+    def resultArray(self, nums: List[int], k: int) -> List[int]:
+        nums = [num%k for num in nums]
+        n = len(nums)
+        dp = [[0]*(n+1) for _ in range(k)]
+        for i in range(n):
+            dp[nums[i]][i+1] += 1 
+            for j in range(k):
+                dp[(j*nums[i])%k][i+1] += dp[j][i]
+        return [sum(l) for l in dp]
+```
+
+## Complexity
+
+- Time: O(k * n). We visit every position of the DP table, which dominates the running time. Since `k` is small, this is effectively linear and fits the constraints.
+- Space: O(k * n) for the `(n + 1) × k` DP table.
+
+## Related practice
+
+See [Weekly Contest 520 Q3](https://app.notion.com/p/Weekly-Contest-520-Q3-3e15e4c93a2980dcbed5f396434b781c?pvs=21) for a related problem.

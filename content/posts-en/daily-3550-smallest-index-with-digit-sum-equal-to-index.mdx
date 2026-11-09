@@ -1,0 +1,41 @@
+﻿---
+title: "3550. Smallest Index With Digit Sum Equal to Index"
+date: 2026-09-25T00:00:00.000Z
+description: "LeetCode Daily Problem: Smallest Index With Digit Sum Equal to Index"
+tags:
+  - "Simulation"
+series: "Daily Problem"
+featured: false
+draft: false
+---
+
+<ProblemMeta review="Simple" difficulty="Easy" />
+
+[Original problem on LeetCode](https://leetcode.com/problems/smallest-index-with-digit-sum-equal-to-index/)
+
+You are given an integer array `nums`.
+
+Return the **smallest** index `i` such that the sum of the digits of `nums[i]` is equal to `i`.
+
+If no such index exists, return `-1`.
+
+**Constraints:**
+
+- `1 <= nums.length <= 100`
+- `0 <= nums[i] <= 1000`
+
+## Approach: Brute force
+
+Nothing subtle here — just translate the condition into code.
+
+```python
+for i, num in enumerate(nums):
+    if sum(map(int, str(num))) == i:
+        return i
+return -1
+```
+
+## Complexity
+
+- Time: O(n) — one pass over the array.
+- Space: O(1) — only a few variables are used.

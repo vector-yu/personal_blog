@@ -1,0 +1,82 @@
+﻿---
+title: "3942. Minimum Operations to Sort a Permutation"
+date: 2026-10-22T00:00:00.000Z
+description: "LeetCode Daily Problem: Minimum Operations to Sort a Permutation"
+tags:
+  - "Math"
+  - "Simulation"
+series: "Daily Problem"
+featured: false
+draft: false
+---
+
+<ProblemMeta review="These past few days have all been about sorting an array through operations — more math than algorithms" difficulty="Medium" />
+
+[Original problem on LeetCode](https://leetcode.com/problems/minimum-operations-to-sort-a-permutation/)
+
+You are given an integer array `nums` of length `n`, where `nums` is a permutation of the integers from 0 to `n - 1`.
+
+You may perform **only** the following operations:
+
+- **Reverse** the entire array.
+- **Rotate Left by One**: Move the first element to the end of the array, and rest elements to left by one position.
+
+Return an integer denoting the **minimum** number of operations required to sort the array in **increasing** order. If it is **not possible** to sort the array using only the given operations, return -1.
+
+**Constraints:**
+
+- `1 <= n == nums.length <= 10^5`
+- `0 <= nums[i] <= n - 1`
+- `nums` is a permutation of integers from 0 to `n - 1`.
+
+## Approach: Math
+
+Reverse and rotate-left-by-one: what stays invariant? The relative order of the numbers.
+
+If the final result is sorted ascending, then the original array, viewed as a circle, must be increasing clockwise or counterclockwise. Conversely, if it is not circularly sorted, sorting is impossible.
+
+So the first step is to classify the array. I traded extra space for lazier code:
+
+```python
+n = len(nums)
+ordered_nums = list(range(n))
+start_idx = nums.index(0) # find the start of the circular array
+if nums[start_idx:n]+nums[:start_idx] == ordered_nums:
+    pass # clockwise sorted
+elif nums[start_idx+1:]+nums[:start_idx+1] == ordered_nums[::-1]:
+    pass # counterclockwise sorted
+else:
+    return -1 # not circularly sorted
+```
+
+Now consider: reverse + n left rotations + reverse is just n right rotations, except the reversal adds 2 operations. If the array is counterclockwise and we right-rotate, the final reversal cancels the last reversal in the rotation sequence, so the extra cost is only 1.
+
+Since left and right rotations are opposites, the minimum is achieved by using only left rotations or only right rotations.
+
+For a circularly sorted array, how do we make it increasing from the start?
+
+- Clockwise: 0 is to the right of `n`. Either left-rotate the elements before 0 to the right, or right-rotate 0 and the elements after it to the left; two reversals cost 2.
+- Counterclockwise: 0 is to the left of `n`. Either left-rotate 0 and the elements before it to the right and flip once, or move the elements after 0 to the left; the reversal cancels, costing 1.
+
+That completes the code.
+
+## Code
+
+```python
+class Solution:
+    def minOperations(self, nums: List[int]) -> int:
+        n = len(nums)
+        ordered_nums = list(range(n))
+        start_idx = nums.index(0)
+        if nums[start_idx:n]+nums[:start_idx] == ordered_nums:
+            return min(start_idx, 2+n-start_idx)
+        elif nums[start_idx+1:]+nums[:start_idx+1] == ordered_nums[::-1]:
+            return min(start_idx+2, n-start_idx)
+        else:
+            return -1
+```
+
+## Complexity
+
+- Time: O(n).
+- Space: O(n), though it can be optimized to O(1).

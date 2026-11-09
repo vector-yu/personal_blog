@@ -1,0 +1,143 @@
+﻿---
+title: "3886. Sum of Sortable Integers"
+date: 2026-10-20T00:00:00.000Z
+description: "LeetCode Daily Problem: Sum of Sortable Integers"
+tags:
+  - "Simulation"
+series: "Daily Problem"
+featured: false
+draft: false
+---
+
+<ProblemMeta review="It can be solved by explicit enumeration — no real algorithmic or mathematical shortcut. Feels like a medium to me." difficulty="Hard" />
+
+[Original problem on LeetCode](https://leetcode.com/problems/sum-of-sortable-integers/)
+
+You are given an integer array `nums` of length `n`.
+
+An integer `k` is called **sortable** if `k` **divides** `n` and you can sort `nums` in **non-decreasing** order by sequentially performing the following operations:
+
+- Partition `nums` into **consecutive subarrays** of length `k`.
+- **Cyclically rotate each subarray independently** any number of times to the left or to the right.
+
+Return an integer denoting the sum of all possible sortable integers `k`.
+
+**Constraints:**
+
+- `1 <= n == nums.length <= 10^5`
+- `1 <= nums[i] <= 10^5`
+
+## Approach
+
+This is the first Hard problem I have seen that is pure straight simulation.
+
+It really is: the statement spells out the test.
+
+- Find all divisors of `n`.
+- For each divisor, check whether the equal-length chunks are circularly sorted.
+
+Finding the divisors is easy. I came up with this on the spot:
+
+```python
+n = len(nums)
+ks = set()
+for i in range(1, n):
+    if i in ks:
+        break
+    if n % i == 0:
+        ks.add(i)
+        ks.add(n//i)
+```
+
+The fatal flaw is that it fails for `n = 1`. I could change `range(1, n)` to `range(1, n + 1)`, but I prefer to special-case it: a length-1 array is always sorted, and its only divisor is 1.
+
+```python
+if len(nums) == 1:
+	  return 1
+```
+
+Then try each `k`: split the array and check whether each chunk is circularly sorted and whether the chunks together are globally sorted. I used the sign of adjacent differences:
+
+- All adjacent differences are ≥ 0: the array is already non-decreasing.
+- Exactly one negative difference: there is one descent. Rotating can push it to the edge, so a sorted rotation exists.
+- More than one negative difference: there are multiple descents, and no rotation can remove them all.
+
+The chunks must also be ordered globally:
+
+- The minimum of the current chunk must be at least the maximum of the previous chunk.
+- Otherwise the chunk fails.
+
+That gives:
+
+```python
+res = 0
+for k in ks:
+    pre_max = 0
+    fail = False
+    for start in range(0, n, k):
+        cur = nums[start:start+k]
+        # check global ordering
+        if min(cur) < pre_max:
+            fail = True
+            break
+        pre_max = max(cur)
+        
+        # check circular ordering within the chunk
+        diff = sum([int(cur[i]-cur[i-1] < 0) for i in range(1, len(cur))] + [int(cur[0]-cur[-1] < 0)])
+        if diff > 1:
+            fail = True
+            break
+    if not fail:
+        res += k
+```
+
+Because the chunk is circular, the first and last elements are also adjacent, so include their difference too.
+
+## Code
+
+```python
+class Solution:
+    def sortableIntegers(self, nums: list[int]) -> int:
+        if len(nums) == 1:
+            return 1
+        n = len(nums)
+        ks = set()
+        for i in range(1, n):
+            if i in ks:
+                break
+            if n % i == 0:
+                ks.add(i)
+                ks.add(n//i)
+        res = 0
+        for k in ks:
+            pre_max = 0
+            fail = False
+            for start in range(0, n, k):
+                cur = nums[start:start+k]
+                if min(cur) < pre_max:
+                    fail = True
+                    break
+                pre_max = max(cur)
+                diff = sum([int(cur[i]-cur[i-1] < 0) for i in range(1, len(cur))] + [int(cur[0]-cur[-1] < 0)])
+                if diff > 1:
+                    fail = True
+                    break
+            if not fail:
+                res += k
+        return res
+```
+
+## Complexity
+
+- Time: finding the divisors costs O(sqrt n). The key is the number of divisors. According to an analysis from Gemini that I still cannot fully follow:
+    
+    ![Number of divisors grows with n](/uploads/daily-problems/3886-divisor-growth.png)
+    
+    The number of divisors is on the order of n^ε. For each divisor we scan the whole array, which is O(n), so the total is O(n^(1+ε) + sqrt n) = O(n^(1+ε)).
+    
+- Space: O(n^ε) for the divisor set, by the same analysis.
+- In practice, these upper bounds are useful:
+    
+    ![Common upper bounds on the number of divisors](/uploads/daily-problems/3886-divisor-upper-bound.png)
+    
+- Or remember: numbers below <Math formula="10^9" /> have at most <Math formula="1344" /> divisors, and numbers below <Math formula="10^{18}" /> have at most about <Math formula="10^5" /> divisors.

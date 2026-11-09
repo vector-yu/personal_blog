@@ -92,7 +92,7 @@ URL 是语言的唯一来源：**同一路径永远返回同一语言**，不做
 - 首页 / 项目 / 随笔 / 阅读仍是**单文档 JSON 集合**，英文是同一目录下的 `*.en.json`；Tina 的 `match: '*'` 让两份文档都出现在编辑器里。
 - 标签、系列名是**内容**，中英可以不同；语言切换在标签/系列详情页会回到该语言的索引页，避免 404。
 - 英文文章缺失时：不出现在 `/en/posts`；直接访问 `/en/posts/<slug>` 若中文存在则回到 `/en/posts`，否则 404。必需页面（首页 / 关于 / Start here）缺失会让 `check:i18n --strict` 失败。
-- **例外：`每日一题` 系列是 Chinese-only**，在 `scripts/check-i18n.mjs` 的 `CHINESE_ONLY_SERIES` 里显式允许；新增其他系列不要照抄这个例外。
+- **`每日一题` 系列已补齐英文对照**：中文 `series: 每日一题`，英文 `series: Daily Problem`，44 篇同 slug 成对；`check:i18n --strict` 现在没有 Chinese-only allowlist。
 
 ### 新增/修改内容的流程
 
@@ -320,23 +320,44 @@ git diff -- "D:\notes\math"
 
 ---
 
-## 每日一题（Chinese-only series）
+## 每日一题（双语系列）
 
-`content/posts/daily-*.mdx` 是从 `notes/` 的 Notion 导出批量导入的 LeetCode 每日一题：
+`content/posts/daily-*.mdx` 是从 `notes/` 的 Notion 导出批量导入的 LeetCode 每日一题；
+`content/posts-en/daily-*.mdx` 是它们的英文对照，slug 相同：
 
 - **标题**：题号 + 题目名，例如 `20. Valid Parentheses`；
-- **日期**：取每篇开头的“日期”（年份按 2026）；
-- **标签**：取“知识点”列（如 `栈`、`动态规划`、`看图写话`）；
-- **系列**：`series: 每日一题`，自动生成 `/zh/series/每日一题`；
-- **开头卡片**：`<ProblemMeta review="..." difficulty="Easy|Medium|Hard" />`；
-- **原文链接**：正文开头的 `[LeetCode 原题](...)`；
+- **日期**：取每篇开头的“日期”（年份按 2026），中英一致；
+- **标签**：中文取“知识点”列（如 `栈`、`动态规划`、`看图写话`），英文统一译为
+  `Stack`、`Dynamic Programming`、`Simulation` 等；
+- **系列**：中文 `series: 每日一题`，英文 `series: Daily Problem`，分别生成
+  `/zh/series/每日一题` 与 `/en/series/Daily Problem`；
+- **开头卡片**：`<ProblemMeta review="..." difficulty="Easy|Medium|Hard" />`，点评翻译为英文；
+- **原文链接**：正文开头的 `[LeetCode 原题](...)` / `[Original problem on LeetCode](...)`；
 - **插图**：`public/uploads/daily-problems/`；其中 OI Wiki 的线段树图标注了来源。
 
-这个系列**故意只有中文**：44 篇没有英文对照，`check:i18n` 的 `CHINESE_ONLY_SERIES`
-允许它们缺席英文集合。/en 不展示这些文章，直接访问会 307 到 `/en/posts`。
-以后如果要翻译，给同 slug 补 `content/posts-en/daily-*.mdx` 即可，allowlist 可以再收紧。
+44 篇中英文章现在严格成对（`check:i18n --strict` 不再有 Chinese-only 例外）。
+翻译保留代码、公式、图片与 LeetCode 题面；中文口语化点评按英文习惯重写，
+并顺手修正了原文里的笔误（例如 `Eazy` 统一成 `Easy`、部分复杂度笔误）。
 
-批量导入脚本（原 `notes/` 不删除）：
+### 系列页按周整合
+
+`/zh/series/每日一题` 与 `/en/series/Daily Problem` 不再平铺 44 张卡片，而是按
+**周一到周日** 分成 7 个章节：
+
+- 顶部「按周浏览 / Browse by week」索引可跳到任意一周（桌面 7 列；手机 3 列网格）；
+- 每周标题显示日期范围、题数、实际打卡天数；
+- 难度分布（Easy / Medium / Hard）和知识点计数由每篇文章的
+  `<ProblemMeta review difficulty>` 与 `tags` 自动汇总；
+- 每道题保留原文章链接，并显示当天的一句话点评、知识点和难度。
+
+分组逻辑在 `src/lib/weeks.ts`（纯函数，UTC 计算，周一为一周起点；
+中英系列名通过 `isWeeklySeries` 识别），`review` / `difficulty` 由 `src/lib/site.ts` 的
+`toPostSummaries` 从正文首个 `ProblemMeta` 节点提取。其他系列不走周视图，仍用原来的
+`PostCard` 列表。
+
+`scripts/unit-weeks.mjs` 覆盖跨周、跨年、时区、缺失日期等情况，已接入 `npm run test:unit`。
+
+批量导入脚本（原 `notes/` 不删除；只导入中文，英文需同步维护）：
 
 ```bash
 node scripts/import-daily-problems.mjs          # dry-run

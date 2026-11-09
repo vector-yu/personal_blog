@@ -1,0 +1,57 @@
+﻿---
+title: "2913. Subarrays Distinct Element Sum of Squares I"
+date: 2026-10-15T00:00:00.000Z
+description: "LeetCode Daily Problem: Subarrays Distinct Element Sum of Squares I"
+tags:
+  - "Simulation"
+series: "Daily Problem"
+featured: false
+draft: false
+---
+
+<ProblemMeta review="If there is a sequel tomorrow, I will have to learn the optimal solution" difficulty="Easy" />
+
+[Original problem on LeetCode](https://leetcode.com/problems/subarrays-distinct-element-sum-of-squares-i/)
+
+You are given a **0-indexed** integer array `nums`.
+
+The **distinct count** of a subarray of `nums` is defined as:
+
+- Let `nums[i..j]` be a subarray of `nums` consisting of all the indices from `i` to `j` such that `0 <= i <= j < nums.length`. Then the number of distinct values in `nums[i..j]` is called the distinct count of `nums[i..j]`.
+
+Return *the sum of the **squares** of **distinct counts** of all subarrays of* `nums`.
+
+A subarray is a contiguous **non-empty** sequence of elements within an array.
+
+**Constraints:**
+
+- `1 <= nums.length <= 100`
+- `1 <= nums[i] <= 100`
+
+## Approach: Brute force
+
+There is certainly a better solution, and the editorial gives it: a BIT (Fenwick tree). I have not learned it, and the code has a long setup.
+
+Since this is an Easy problem with tiny constraints, brute force is the most economical choice. You can spend the saved time sleeping instead of studying an outrageous O(n log n) solution.
+
+If tomorrow brings a version II with the same statement but `n` up to 10^5, I will admit defeat and learn BIT.
+
+The answer is then obvious:
+
+```python
+class Solution:
+    def sumCounts(self, nums: List[int]) -> int:
+        n = len(nums)
+        ans = 0
+        for i in range(n):
+            cur = set()
+            for j in range(i, n):
+                cur.add(nums[j])
+                ans += len(cur)**2
+        return ans
+```
+
+## Complexity
+
+- Time: O(n²) — every subarray is enumerated.
+- Space: O(n) — the set of distinct values.

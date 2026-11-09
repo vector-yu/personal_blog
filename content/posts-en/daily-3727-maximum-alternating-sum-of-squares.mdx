@@ -1,0 +1,44 @@
+﻿---
+title: "3727. Maximum Alternating Sum of Squares"
+date: 2026-10-13T00:00:00.000Z
+description: "LeetCode Daily Problem: Maximum Alternating Sum of Squares"
+tags:
+  - "Greedy"
+series: "Daily Problem"
+featured: false
+draft: false
+---
+
+<ProblemMeta review="The easiest problem in the sum-of-squares series" difficulty="Medium" />
+
+[Original problem on LeetCode](https://leetcode.com/problems/maximum-alternating-sum-of-squares/)
+
+You are given an integer array `nums`. You may **rearrange the elements** in any order.
+
+The **alternating score** of an array `arr` is defined as:
+
+- `score = arr[0]^2 - arr[1]^2 + arr[2]^2 - arr[3]^2 + ...`
+
+Return an integer denoting the **maximum possible alternating score** of `nums` after rearranging its elements.
+
+**Constraints:**
+
+- `1 <= nums.length <= 10^5`
+- `4 * 10^4 <= nums[i] <= 4 * 10^4`
+
+## Approach: Greedy
+
+Put the numbers with smaller absolute values in even positions and the larger ones in odd positions. Equivalently, subtract the squares of the smallest `n // 2` values.
+
+```python
+class Solution:
+    def maxAlternatingSum(self, nums: List[int]) -> int:
+        n = len(nums)
+        new_nums = sorted(nums, key=lambda x: abs(x))
+        return sum([num**2 for num in new_nums[n//2:]])-sum([num**2 for num in new_nums[:n//2]])
+```
+
+## Complexity
+
+- Time: O(n log n) — sorting dominates.
+- Space: O(n) — the sorted copy.

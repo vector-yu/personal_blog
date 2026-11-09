@@ -1,0 +1,60 @@
+﻿---
+title: "3723. Maximize Sum of Squares of Digits"
+date: 2026-10-14T00:00:00.000Z
+description: "LeetCode Daily Problem: Maximize Sum of Squares of Digits"
+tags:
+  - "Greedy"
+series: "Daily Problem"
+featured: false
+draft: false
+---
+
+<ProblemMeta review="Thanks to the earlier problems, this one went unusually smoothly" difficulty="Medium" />
+
+[Original problem on LeetCode](https://leetcode.com/problems/maximize-sum-of-squares-of-digits/)
+
+You are given two **positive** integers `num` and `sum`.
+
+A positive integer `n` is **good** if it satisfies both of the following:
+
+- The number of digits in `n` is **exactly** `num`.
+- The sum of digits in `n` is **exactly** `sum`.
+
+The **score** of a **good** integer `n` is the sum of the squares of digits in `n`.
+
+Return a **string** denoting the **good** integer `n` that achieves the **maximum** **score**. If there are multiple possible integers, return the **maximum** one. If no such integer exists, return an empty string.
+
+**Constraints:**
+
+- `1 <= num <= 2 * 10^5`
+- `1 <= sum <= 2 * 10^6`
+
+## Approach: Greedy
+
+We have had several greedy sum-of-squares problems in a row, so let me summarize the pattern.
+
+When the sum is fixed, maximizing the sum of squares means making the digits as uneven as possible.
+
+Here each digit is between 0 and 9. We want as many 9s and 0s as possible. The only catch is that the total may not be a multiple of 9; in that case, reserve one position for the remainder modulo 9.
+
+That makes it simple. Remember the case where the remainder is zero.
+
+This construction is also complete: it never starts with 0 (the sum is at least 1), so the result is always a valid `num`-digit number.
+
+```python
+class Solution:
+    def maxSumOfSquares(self, num: int, total: int) -> str:
+        if 9*num < total:
+            return ''
+        nines = total // 9
+        other = str(total % 9) if total % 9 != 0 else ''
+        zeros = num - nines - len(other)
+        return '9'*nines + other + '0'*zeros
+        
+
+```
+
+## Complexity
+
+- Time: O(num) to build the output string.
+- Space: O(num) for the output; O(1) extra space.

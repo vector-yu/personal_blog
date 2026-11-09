@@ -112,7 +112,8 @@ URL 是语言的唯一来源，**不要**做 cookie-only 切换。所有页面�
 - **语言切换用 `<a>` 整页跳转**，不要用 `next/link`：`[lang]` 是根参数，必须让服务端重新输出 `<html lang>`。
 - **标签/系列详情页切换到另一语言时回索引页**（`switchLocalePath` 已处理），因为标签名是翻译内容，同路径不保证存在。
 - **英文文章缺失**：不出现在 `/en/posts`；`/en/posts/<slug>` 若中文存在则 redirect 到 `/en/posts`，否则 404。
-- **`每日一题` 是明确的 Chinese-only 系列**：`scripts/check-i18n.mjs` 的 `CHINESE_ONLY_SERIES` 允许这 44 篇没有英文对照；其他系列不要照抄这个例外。
+- **`每日一题` 是双语系列**：中文 `series: 每日一题`，英文 `series: Daily Problem`，44 篇同 slug 成对；`scripts/check-i18n.mjs` 已没有 Chinese-only allowlist，新增每日一题必须同时补英文。
+  中英两个系列页都走**按周整合**视图：`src/lib/weeks.ts` 的 `isWeeklySeries` 同时识别两种系列名，按周一为起点分周；`src/lib/site.ts` 从正文 `ProblemMeta` 提取 `review` / `difficulty`；其他系列仍是平铺卡片。
 - **英文内容与中文同 slug**：`content/posts/foo.mdx` ↔ `content/posts-en/foo.mdx`；`content/pages/bar.mdx` ↔ `content/pages-en/bar.mdx`；JSON 是 `home.json` ↔ `home.en.json`。
 - **MDX chrome** 的文案走 `LocaleProvider` / `useLocaleCopy()`；不要在每个 MDX 组件里另写一份中文。
 - 新增英文内容后跑 `npm run check:i18n -- --strict`；`build` / `build:local` 已内置。

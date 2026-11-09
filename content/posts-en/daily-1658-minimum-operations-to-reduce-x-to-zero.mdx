@@ -1,0 +1,159 @@
+﻿---
+title: "1658. Minimum Operations to Reduce X to Zero"
+date: 2026-09-24T00:00:00.000Z
+description: "LeetCode Daily Problem: Minimum Operations to Reduce X to Zero"
+tags:
+  - "Hash Table"
+  - "Sliding Window"
+series: "Daily Problem"
+featured: false
+draft: false
+---
+
+<ProblemMeta review="Several approaches, and a clever one" difficulty="Medium" />
+
+[Original problem on LeetCode](https://leetcode.com/problems/minimum-operations-to-reduce-x-to-zero/)
+
+You are given an integer array `nums` and an integer `x`. In one operation, you can either remove the leftmost or the rightmost element from the array `nums` and subtract its value from `x`. Note that this **modifies** the array for future operations.
+
+Return *the **minimum number** of operations to reduce* `x` *to **exactly*** `0` *if it is possible, otherwise, return* `-1`.
+
+**Constraints:**
+
+- `1 <= nums.length <= 10^5`
+- `1 <= nums[i] <= 10^4`
+- `1 <= x <= 10^9`
+
+## Approach 1: Sliding window
+
+A quick read reveals the real question: find the longest subarray whose sum is `sum(nums) - x`. Even better, every number is positive — so a sliding window is the obvious tool.
+
+```python
+target = sum(nums) - x
+n = len(nums)
+left, right = 0, 0
+max_len = 0
+window = 0
+```
+
+For a sliding window, be clear about three things:
+
+1. When does the right edge expand?
+2. When does the left edge shrink?
+3. What do we track inside the window?
+
+Here the target window sum is fixed, so we track the sum of the window. If the sum is below the target, expand to increase it. If it is above, shrink to decrease it. If it is exactly equal, record the window length, compare it with the maximum, then shrink so we can keep exploring to the right.
+
+```python
+while right < n:
+    window += nums[right]
+    right += 1
+    while window >= target:
+        if window == target:
+            max_len = max(max_len, right - left)
+        window -= nums[left]
+        left += 1
+while window >= target:
+    if window == target:
+        max_len = max(max_len, right - left)
+    window -= nums[left]
+    left += 1
+```
+
+Before writing code (or after a failed submission), consider the edge cases: every element is positive and the window must be non-empty, so a subarray sum can never be zero or negative. But if the target is zero, haven't we already reduced `x` to zero in `len(nums)` steps? Handle these cases up front:
+
+```python
+if target < 0:
+    return -1 # impossible to form a negative sum
+if target == 0:
+    return len(nums)
+```
+
+Submit — all tests pass.
+
+## Approach 2: Backtracking
+
+Read literally, the problem walks a binary tree: take the leftmost number or the rightmost number.
+
+Let `dfs(i, j, x)` mean that we need to make `x` from the subarray `[i, j]`. Then `dfs(i+1, j, x-nums[i])` explores the left branch, and `dfs(i, j-1, x-nums[j])` explores the right branch. Whenever `x == 0`, update the minimum number of operations.
+
+```python
+min_oper = float('inf')
+n = len(nums)
+def dfs(i, j, x):
+    nonlocal min_oper
+    if x == 0:
+        min_oper = min(min_oper, n - j + i-1)
+        return
+    if i > j:
+        return
+    dfs(i+1, j, x-nums[i])
+    dfs(i, j-1, x-nums[j])
+dfs(0, n-1, x)
+return min_oper if min_oper != float('inf') else -1
+```
+
+This is exponential, O(2^n), because we explore the whole tree and many states repeat. Taking left then right is exactly the same as taking right then left. Add a `visited` table to deduplicate:
+
+```python
+min_oper = float('inf')
+n = len(nums)
+visited = [[False]*n for _ in range(n)]
+def dfs(i, j, x):
+    nonlocal min_oper
+    if x == 0:
+        min_oper = min(min_oper, n - j + i-1)
+        return
+    if i > j:
+        return
+    if visited[i][j]:
+        return
+    visited[i][j] = True
+    dfs(i+1, j, x-nums[i])
+    dfs(i, j-1, x-nums[j])
+dfs(0, n-1, x)
+return min_oper if min_oper != float('inf') else -1
+```
+
+That reduces the complexity to O(n^2) in the worst case (roughly `n/2` left picks and `n/2` right picks).
+
+But `n` is still up to 10^5, so this approach is a dead end.
+
+## Approach 3: Prefix sums + hash table
+
+Finding a subarray with a given sum is equivalent to finding two prefix sums whose difference is that value. This recalls the familiar [Two Sum](https://leetcode.com/problems/two-sum/description/) pattern. Subtraction is not commutative, but prefix sums always subtract an earlier prefix from a later one. Store each prefix sum and its first index in a hash table; when a later prefix sum minus the target is already in the table, the distance between the two indices is the subarray length.
+
+```python
+hash_table = {0:-1} # handles a match starting at index 0
+target = sum(nums) - x
+max_len = float('-inf')
+cur_sum = 0
+for i, num in enumerate(nums):
+    cur_sum += num
+    
+    if cur_sum not in hash_table:
+        hash_table[cur_sum] = i # insert first: a prefix may match itself
+        
+    if cur_sum - target in hash_table:
+        max_len = max(i-hash_table[cur_sum-target], max_len)
+    
+return len(nums) - max_len if max_len != float('-inf') else -1
+```
+
+We want the longest subarray, so the table only needs the first occurrence of each prefix sum.
+
+That sounds obvious here, but suppose negative numbers were allowed (as in [problem 325](https://leetcode.com/problems/maximum-size-subarray-sum-equals-k/description/)). Then the sliding window breaks entirely, backtracking barely works, and this prefix-sum approach is the general solution.
+
+## Complexity
+
+- Sliding window
+  - Time: O(n) — two pointers scan the array once.
+  - Space: O(1) — only a constant number of variables.
+- Backtracking
+  - Time: O(n^2) — almost every pair `(i, j)` is explored.
+  - Space: O(n^2) — the memo table prevents repeated work.
+- Prefix sums + hash table
+  - Time: O(n) — one linear scan.
+  - Space: O(n) — one hash table.
+
+The all-positive constraint is what lets the sliding-window solution use constant extra space.

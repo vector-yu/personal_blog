@@ -1,0 +1,50 @@
+﻿---
+title: "3644. Maximum K to Sort a Permutation"
+date: 2026-10-23T00:00:00.000Z
+description: "LeetCode Daily Problem: Maximum K to Sort a Permutation"
+tags:
+  - "Bit Manipulation"
+  - "Math"
+series: "Daily Problem"
+featured: false
+draft: false
+---
+
+<ProblemMeta review="Leveled up my understanding of bit manipulation" difficulty="Medium" />
+
+[Original problem on LeetCode](https://leetcode.com/problems/maximum-k-to-sort-a-permutation/)
+
+You are given an integer array `nums` of length `n`, where `nums` is a **permutation** of the numbers in the range `[0..n - 1]`.
+
+You may swap elements at indices `i` and `j` **only if** `nums[i] AND nums[j] == k`, where `AND` denotes the bitwise AND operation and `k` is a **non-negative** integer.
+
+Return the **maximum** value of `k` such that the array can be sorted in **non-decreasing** order using any number of such swaps. If `nums` is already sorted, return 0.
+
+## Approach: Properties of bitwise operations
+
+To sort the array, we must swap the misplaced numbers. They may be swapped among themselves or with numbers already in the correct position. In any case, `k` equals the AND of all swaps, which equals the AND of all misplaced numbers and any other numbers used. So the AND of all misplaced numbers is an upper bound on `k`.
+
+Can we achieve equality? Ideally, we only need the AND of the other numbers used to equal `k`. Even if the number `k` is already in its correct position, we can still swap with it and use it as a hub:
+
+- Suppose we want to swap misplaced `a` and `b`, but `a AND b ≠ k`.
+- Since all misplaced numbers share exactly the 1 bits of `k`, `a AND k = b AND k = k`.
+- Then swap `a` with `k`, `b` with `k`, and `a` with `k`; the net effect is swapping `a` and `b`.
+- So equality is achievable.
+
+The maximum `k` is therefore the AND of all misplaced numbers.
+
+## Code
+
+```python
+class Solution:
+    def sortPermutation(self, nums: List[int]) -> int:
+        k = -1 # -1 is ...1111 1111 in two's complement, and -1 & a = a
+        for i, num in enumerate(nums):
+            if i != num:
+                k = k & num
+        return k if k != -1 else 0
+```
+
+## Complexity
+
+Time: O(n). Space: O(1).

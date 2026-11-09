@@ -173,6 +173,7 @@ export const zh = {
     summary: '{count} 个系列。适合按顺序读，或者从感兴趣的一篇跳进去。',
     emptySummary: '还没有系列。给文章填写「所属系列」后，这里会自动生成聚合页。',
     count: '{count} 篇文章',
+    weeklyLabel: '按周整理',
     empty: '还没有系列。在文章编辑页的「所属系列」里填写一个名字即可。',
     navAll: '全部文章',
     navTags: '标签',
@@ -182,11 +183,24 @@ export const zh = {
   seriesDetail: {
     metaTitle: '系列：{series}',
     metaDescription: '「{series}」系列的全部文章。',
+    weeklyMetaDescription: '「{series}」系列的全部文章，按周整理。',
     eyebrow: 'Series',
     count: '{count} 篇文章',
     allSeries: '全部系列',
     allPosts: '全部文章',
     tags: '标签',
+    weekly: {
+      summary: '{count} 篇文章 · {weeks} 周',
+      intro: '每天一道 LeetCode，按周整理成 {weeks} 个章节。每周先看知识点和难度分布，再逐题读下去。',
+      indexTitle: '按周浏览',
+      indexMeta: '{weeks} 周 · {posts} 题',
+      weekCode: 'W{week}',
+      week: '第 {week} 周',
+      weekMeta: '{count} 题 · {days} 天',
+      problems: '{count} 题',
+      topics: '知识点',
+      reviewQuote: '「{review}」',
+    },
   },
 
   projects: {

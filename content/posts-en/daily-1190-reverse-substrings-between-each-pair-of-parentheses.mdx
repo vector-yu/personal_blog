@@ -1,0 +1,57 @@
+﻿---
+title: "1190. Reverse Substrings Between Each Pair of Parentheses"
+date: 2026-09-27T00:00:00.000Z
+description: "LeetCode Daily Problem: Reverse Substrings Between Each Pair of Parentheses"
+tags:
+  - "Stack"
+series: "Daily Problem"
+featured: false
+draft: false
+---
+
+<ProblemMeta review="Fundamentals" difficulty="Medium" />
+
+[Original problem on LeetCode](https://leetcode.com/problems/reverse-substrings-between-each-pair-of-parentheses/)
+
+You are given a string `s` that consists of lower case English letters and brackets.
+
+Reverse the strings in each pair of matching parentheses, starting from the innermost one.
+
+Your result should **not** contain any brackets.
+
+**Constraints:**
+
+- `1 <= s.length <= 2000`
+- `s` only contains lower case English characters and parentheses.
+- It is guaranteed that all parentheses are balanced.
+
+## Approach
+
+I walked around all day and I am exhausted — please forgive me for posting just the code for now.
+
+This was written purely on instinct. There is room to optimize it, but I do not have the energy to think it through right now.
+
+```python
+class Solution:
+    def reverseParentheses(self, s: str) -> str:
+        temp = []
+        for c in s:
+            if c == '(':
+                temp.append('(')
+            elif c == ')':
+                if temp and temp[-1] != '(':
+                    cur = temp.pop()
+                    temp.pop()
+                    if temp and temp[-1] != '(':
+                        temp[-1] += cur[::-1]
+                    else:
+                        temp.append(cur[::-1])
+                else:
+                    temp.pop()
+            else:
+                if temp and temp[-1] != '(':
+                    temp[-1] += c
+                else:
+                    temp.append(c)
+        return ''.join(temp)
+```

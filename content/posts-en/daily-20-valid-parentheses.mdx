@@ -1,0 +1,55 @@
+﻿---
+title: "20. Valid Parentheses"
+date: 2026-10-01T00:00:00.000Z
+description: "LeetCode Daily Problem: Valid Parentheses"
+tags:
+  - "Stack"
+series: "Daily Problem"
+featured: false
+draft: false
+---
+
+<ProblemMeta review="Fundamentals" difficulty="Easy" />
+
+[Original problem on LeetCode](https://leetcode.com/problems/valid-parentheses/)
+
+Given a string `s` containing just the characters `'('`, `')'`, `'{'`, `'}'`, `'['` and `']'`, determine if the input string is valid.
+
+An input string is valid if:
+
+1. Open brackets must be closed by the same type of brackets.
+2. Open brackets must be closed in the correct order.
+3. Every close bracket has a corresponding open bracket of the same type.
+
+**Constraints:**
+
+- `1 <= s.length <= 10^4`
+- `s` consists of parentheses only `'()[]{}'`.
+
+## Approach: Stack
+
+Lately almost every problem has been about brackets, and brackets immediately suggest a stack. This one has three bracket types, so we need to check both direction and type.
+
+I remembered a trick I had worked out before: use a dictionary that maps each closing bracket to its opening counterpart.
+
+Then just write the code — it is an Easy problem, after all.
+
+```python
+class Solution:
+    def isValid(self, s: str) -> bool:
+        refer = {')':'(', ']':'[','}':'{'}
+        stack = []
+        for c in s:
+            if c in refer:
+                if stack and stack[-1] == refer[c]:
+                    stack.pop()
+                else:
+                    return False
+            else:
+                stack.append(c)
+        return len(stack) == 0
+```
+
+## Complexity
+
+- Time and space: O(n).

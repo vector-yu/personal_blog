@@ -1,0 +1,86 @@
+﻿---
+title: "3551. Minimum Swaps to Sort by Digit Sum"
+date: 2026-10-17T00:00:00.000Z
+description: "LeetCode Daily Problem: Minimum Swaps to Sort by Digit Sum"
+tags:
+  - "Graph"
+series: "Daily Problem"
+featured: false
+draft: false
+---
+
+<ProblemMeta review="Reminds me of a clever problem I once saw — wish I remembered the details" difficulty="Medium" />
+
+[Original problem on LeetCode](https://leetcode.com/problems/minimum-swaps-to-sort-by-digit-sum/)
+
+You are given an array `nums` of **distinct** positive integers. You need to sort the array in **increasing** order based on the sum of the digits of each number. If two numbers have the same digit sum, the **smaller** number appears first in the sorted order.
+
+Return the **minimum** number of swaps required to rearrange `nums` into this sorted order.
+
+A **swap** is defined as exchanging the values at two distinct positions in the array.
+
+**Constraints:**
+
+- `1 <= nums.length <= 10^5`
+- `1 <= nums[i] <= 10^9`
+- `nums` consists of **distinct** positive integers.
+
+## Approach: Cycle detection
+
+Sorting is easy; the real question is the minimum number of swaps.
+
+```python
+# the index order after sorting
+idx = sorted(list(range(n)), key=lambda i: (sum((int(i) for i in str(nums[i]))), nums[i]))
+```
+
+Suppose we find an index sitting in someone else's place. Why isn't it at home? Follow its home; maybe that home is occupied too... Eventually we must return to the original owner. If we move each misplaced index into place along the way, we can fix the cycle. But who takes the original owner's spot? The original owner, of course.
+
+The whole process is a closed cycle. The minimum number of swaps is to walk the cycle once, not back and forth. A cycle of length `L` needs `L - 1` swaps, because one index is forced to move.
+
+An index already in place is a cycle of length 1, needing 0 swaps.
+
+```python
+count = 0
+n = len(nums)
+visited = [False] * n
+for i, new_i in enumerate(idx):
+    if visited[i]:
+        continue
+    visited[i] = True
+    cur_idx, nxt_idx = i, new_i
+    while nxt_idx != i:
+        cur_idx = nxt_idx
+        nxt_idx = idx[cur_idx]
+        visited[cur_idx] = True
+        count += 1
+```
+
+Putting it together:
+
+```python
+class Solution:
+    def minSwaps(self, nums: List[int]) -> int:
+        count = 0
+        n = len(nums)
+        visited = [False] * n
+        idx = sorted(list(range(n)), key=lambda i: (sum((int(i) for i in str(nums[i]))), nums[i]))
+        for i, new_i in enumerate(idx):
+            if visited[i]:
+                continue
+            visited[i] = True
+            cur_idx, nxt_idx = i, new_i
+            while nxt_idx != i:
+                cur_idx = nxt_idx
+                nxt_idx = idx[cur_idx]
+                visited[cur_idx] = True
+                count += 1
+        return count
+```
+
+LeetCode's hint notes the answer is `n - number_of_cycles`. That is easy to see: the cycle lengths sum to `n`, and each cycle contributes `length - 1`, so the total is `n - number_of_cycles`.
+
+## Complexity
+
+- Time: O(n log n) — sorting dominates.
+- Space: O(n) — the index array and visited set.

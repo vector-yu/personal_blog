@@ -1,0 +1,65 @@
+﻿---
+title: "856. Score of Parentheses"
+date: 2026-10-05T00:00:00.000Z
+description: "LeetCode Daily Problem: Score of Parentheses"
+tags:
+  - "Stack"
+series: "Daily Problem"
+featured: false
+draft: false
+---
+
+<ProblemMeta review="Brackets and stacks are a match made in heaven" difficulty="Medium" />
+
+[Original problem on LeetCode](https://leetcode.com/problems/score-of-parentheses/)
+
+Given a balanced parentheses string `s`, return *the **score** of the string*.
+
+The **score** of a balanced parentheses string is based on the following rule:
+
+- `"()"` has score `1`.
+- `AB` has score `A + B`, where `A` and `B` are balanced parentheses strings.
+- `(A)` has score `2 * A`, where `A` is a balanced parentheses string.
+
+**Constraints:**
+
+- `2 <= s.length <= 50`
+- `s` consists of only `'('` and `')'`.
+- `s` is a balanced parentheses string.
+
+## Approach 1: Stack
+
+Bracket problems are genuinely fun. Every one this week has been easy, but each made me think for a while.
+
+I noticed that whatever the exact question, a stack is unavoidable for brackets. So I started designing a stack-based solution.
+
+Let me explain the code first:
+
+- On `(`, push a `0` marker for the opening bracket.
+- On `)`, there are several cases:
+    - the previous character was `(`, so the top of the stack is `0`
+    - the previous character was not `(`, but a completed score
+    - the `0` now does two jobs: it separates completed scores, and adding `0` to any number leaves that number unchanged, so we avoid popping and pushing again
+
+```python
+class Solution:
+    def scoreOfParentheses(self, s: str) -> int:
+        stack = []
+        for c in s:
+            if c == '(':
+                stack.append(0)
+            else:
+                if stack[-1] == 0:
+                    stack[-1] += 1
+                else:
+                    acc = 0
+                    while stack[-1] != 0:
+                        acc += stack.pop()
+                    stack[-1] += acc*2
+        return sum(stack)
+```
+
+## Complexity
+
+- Time: O(n) — one pass over the string.
+- Space: O(n) — the stack.

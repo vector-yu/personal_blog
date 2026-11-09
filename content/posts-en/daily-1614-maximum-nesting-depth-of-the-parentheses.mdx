@@ -1,0 +1,45 @@
+﻿---
+title: "1614. Maximum Nesting Depth of the Parentheses"
+date: 2026-09-28T00:00:00.000Z
+description: "LeetCode Daily Problem: Maximum Nesting Depth of the Parentheses"
+tags:
+  - "Stack"
+  - "Simulation"
+series: "Daily Problem"
+featured: false
+draft: false
+---
+
+<ProblemMeta review="Fundamentals" difficulty="Easy" />
+
+[Original problem on LeetCode](https://leetcode.com/problems/maximum-nesting-depth-of-the-parentheses/)
+
+Given a **valid parentheses string** `s`, return the **nesting depth** of **`s`. The nesting depth is the **maximum** number of nested parentheses.
+
+**Constraints:**
+
+- `1 <= s.length <= 100`
+- `s` consists of digits `0-9` and characters `'+'`, `'-'`, `'*'`, `'/'`, `'('`, and `')'`.
+- It is guaranteed that parentheses expression `s` is a VPS.
+
+## Approach
+
+This is almost too easy; here is the code.
+
+On second thought, let me explain the idea. It is like finding the maximum value in an array without `max()`: scan once and keep the largest value. Here, scan the parentheses and keep the maximum depth.
+
+```python
+class Solution:
+    def maxDepth(self, s: str) -> int:
+        cur = 0
+        max_num = 0
+        for c in s:
+            if c == '(':
+                cur += 1
+                max_num = max(max_num, cur)
+            elif c == ')':
+                cur -= 1
+        return max_num
+```
+
+Time complexity is O(n); space complexity is O(1).

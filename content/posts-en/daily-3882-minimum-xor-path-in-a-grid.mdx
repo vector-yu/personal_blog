@@ -1,0 +1,67 @@
+﻿---
+title: "3882. Minimum XOR Path in a Grid"
+date: 2026-10-28T00:00:00.000Z
+description: "LeetCode Daily Problem: Minimum XOR Path in a Grid"
+tags:
+  - "Dynamic Programming"
+series: "Daily Problem"
+featured: false
+draft: false
+---
+
+<ProblemMeta review="A standard DP problem; the fact that greedy fails was a wake-up call" difficulty="Medium" />
+
+[Original problem on LeetCode](https://leetcode.com/problems/minimum-xor-path-in-a-grid/)
+
+You are given a 2D integer array `grid` of size `m * n`.
+
+You start at the **top-left** cell `(0, 0)` and want to reach the **bottom-right** cell `(m - 1, n - 1)`.
+
+At each step, you **may** move either **right or down**.
+
+The **cost** of a path is defined as the **bitwise XOR** of all the values in the cells along that path, **including** the start and end cells.
+
+Return the **minimum** possible XOR value among all valid paths from `(0, 0)` to `(m - 1, n - 1)`.
+
+**Constraints:**
+
+- `1 <= m == grid.length <= 1000`
+- `1 <= n == grid[i].length <= 1000`
+- `m * n <= 1000`
+- `0 <= grid[i][j] <= 1023`
+
+## Approach: Dynamic programming
+
+This one is so-so. When I saw XOR, I expected a mathematical property. In the end, almost none was needed.
+
+One thing is worth noting: greedy does not work here; we must enumerate honestly. XORing each step with the smallest number does not guarantee the smallest result. That is the only property that matters.
+
+So the DP state must include not only the position but also every XOR value reachable at that position.
+
+The transition is easy: push each state down and right.
+
+The editorial separates the right and down transitions to save a dimension; I did not optimize.
+
+## Code
+
+```python
+class Solution:
+    def minCost(self, grid: list[list[int]]) -> int:
+        m, n = len(grid), len(grid[0])
+        dp = [[set() for _ in range(n)] for _ in range(m)]
+        dp[0][0].add(grid[0][0])
+        for i in range(m):
+            for j in range(n):
+                for x in dp[i][j]:
+                    if i != m-1:
+                        dp[i+1][j].add(x^grid[i+1][j])
+                    if j != n-1:
+                        dp[i][j+1].add(x^grid[i][j+1])
+
+        return min(dp[-1][-1])
+```
+
+## Complexity
+
+- Time: O(mn * 1024) — each cell can hold up to 1024 XOR values.
+- Space: O(mn * 1024) for the DP sets.

@@ -1,0 +1,113 @@
+﻿---
+title: "1807. Evaluate the Bracket Pairs of a String"
+date: 2026-09-26T00:00:00.000Z
+description: "LeetCode Daily Problem: Evaluate the Bracket Pairs of a String"
+tags:
+  - "Hash Table"
+  - "Simulation"
+series: "Daily Problem"
+featured: false
+draft: false
+---
+
+<ProblemMeta review="The only difficulty is that there is none" difficulty="Medium" />
+
+[Original problem on LeetCode](https://leetcode.com/problems/evaluate-the-bracket-pairs-of-a-string/)
+
+You are given a string `s` that contains some bracket pairs, with each pair containing a **non-empty** key.
+
+- For example, in the string `"(name)is(age)yearsold"`, there are **two** bracket pairs that contain the keys `"name"` and `"age"`.
+
+You know the values of a wide range of keys. This is represented by a 2D string array `knowledge` where each `knowledge[i] = [keyi, valuei]` indicates that key `keyi` has a value of `valuei`.
+
+You are tasked to evaluate **all** of the bracket pairs. When you evaluate a bracket pair that contains some key `keyi`, you will:
+
+- Replace `keyi` and the bracket pair with the key's corresponding `valuei`.
+- If you do not know the value of the key, you will replace `keyi` and the bracket pair with a question mark `"?"` (without the quotation marks).
+
+Each key will appear at most once in your `knowledge`. There will not be any nested brackets in `s`.
+
+Return *the resulting string after evaluating **all** of the bracket pairs.*
+
+**Constraints:**
+
+- `1 <= s.length <= 10^5`
+- `0 <= knowledge.length <= 10^5`
+- `knowledge[i].length == 2`
+- `1 <= keyi.length, valuei.length <= 10`
+- `s` consists of lowercase English letters and round brackets `'('` and `')'`.
+- Every open bracket `'('` in `s` will have a corresponding close bracket `')'`.
+- The key in each bracket pair of `s` will be non-empty.
+- There will not be any nested bracket pairs in `s`.
+- `keyi` and `valuei` consist of lowercase English letters.
+- Each `keyi` in `knowledge` is unique.
+
+## Approach: Straight simulation
+
+### What I mean by “straight simulation”
+
+I call this kind of problem “straight simulation”: read the statement, follow the steps, and you are done. It should be an Easy problem; a little extra bookkeeping is probably what pushed it to Medium.
+
+### Reading the statement
+
+The statement is verbose, but it really asks for two things:
+
+- Replace each key inside brackets with its value from the lookup table.
+- Replace any key that is not in the table with `?`.
+
+The long constraint list also says two things:
+
+- The input is valid and will not trip us up on edge cases.
+- The string length is up to 10^5, so **never try a quadratic algorithm**.
+
+That leaves three tasks:
+
+- identify the key inside each bracket pair
+- perform the replacement
+- build the answer
+
+We are going to scan the whole string anyway, so each step must cost less than O(n).
+
+### Convert the input
+
+Finding a key is easy because the input is valid and brackets are not nested. Start recording at `(`, stop at `)`, and the text in between is the key.
+
+- I used a `temp` string to hold the key; the official solution records the start index and slices. The trade-off is time versus space.
+- Both approaches are equivalent.
+
+Searching a list of up to 10^5 keys would be too slow. Use a different data structure.
+
+A dictionary or hash table, of course — the statement even uses `key` and `value` to hint at it. With the key as the dictionary key, `dict[key]` returns the value in O(1), which is exactly what we want.
+
+```python
+k = {s[0]:s[1] for s in knowledge}
+```
+
+The last step is simply to append each replacement to the answer.
+
+## Full code
+
+```python
+k = {s[0]:s[1] for s in knowledge}
+ans = ''
+temp = ''
+is_key = False
+for c in s:
+    if c == '(':
+        is_key = True
+    elif c ==')':
+        ans += k.get(temp, '?')
+        temp = ''
+        is_key = False
+    else:
+        if is_key:
+            temp += c
+        else:
+            ans += c
+return ans
+```
+
+## Complexity
+
+- Time: O(n) — we scan the string once.
+- Space: O(n) — extra space for the answer.

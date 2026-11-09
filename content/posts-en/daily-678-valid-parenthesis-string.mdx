@@ -1,0 +1,117 @@
+---
+title: "678. Valid Parenthesis String"
+date: 2026-10-04T00:00:00.000Z
+description: "LeetCode Daily Problem: Valid Parenthesis String"
+tags:
+  - "Dynamic Programming"
+  - "Greedy"
+series: "Daily Problem"
+featured: false
+draft: false
+---
+
+<ProblemMeta review="Greedy can do that?" difficulty="Medium" />
+
+[Original problem on LeetCode](https://leetcode.com/problems/valid-parenthesis-string/)
+
+Given a string `s` containing only three types of characters: `'('`, `')'` and `'*'`, return `true` *if* `s` *is **valid***.
+
+The following rules define a **valid** string:
+
+- Any left parenthesis `'('` must have a corresponding right parenthesis `')'`.
+- Any right parenthesis `')'` must have a corresponding left parenthesis `'('`.
+- Left parenthesis `'('` must go before the corresponding right parenthesis `')'`.
+- `'*'` could be treated as a single right parenthesis `')'` or a single left parenthesis `'('` or an empty string `""`.
+
+**Constraints:**
+
+- `1 <= s.length <= 100`
+- `s[i]` is `'('`, `')'` or `'*'`.
+
+## Approach 1: Dynamic programming
+
+I had no idea how to start. I barely managed it after reading the first hint. I should systematically work through this and yesterday's problems — the “find the longest valid VPS” family.
+
+```python
+class Solution:
+    def checkValidString(self, s: str) -> bool:
+        memo = [[None]*len(s) for _ in range(len(s))]
+        def dp(cur, diff):
+            if diff < 0:
+                return False
+            if cur == len(s):
+                return True if diff == 0 else False
+            if memo[cur][diff] == None:
+                if s[cur] == '(':
+                    memo[cur][diff] = dp(cur+1, diff+1)
+                elif s[cur] == ')':
+                    memo[cur][diff] = dp(cur+1, diff-1)
+                else:
+                    memo[cur][diff] = dp(cur+1, diff) or dp(cur+1, diff-1) or dp(cur+1, diff+1)
+            return memo[cur][diff]
+        return dp(0, 0)
+```
+
+## Approach 2: “Greedy”
+
+The idea is greedy: avoid using an asterisk whenever possible, because an asterisk has no side effects and can be left over.
+
+```python
+class Solution:
+    def checkValidString(self, s: str) -> bool:
+        p = []
+        star = []
+        for i, c in enumerate(s):
+            if c == '(':
+                p.append(i)
+            elif c == '*':
+                star.append(i)
+            else:
+                if p:
+                    p.pop()
+                elif star:
+                    star.pop()
+                else:
+                    return False
+        while p and star:
+            if p.pop() > star.pop(): 
+                # The asterisk acts as a closing bracket here, so compare from the back.
+                # Any remaining opening bracket must appear before the asterisk.
+                return False
+        return not p # only leftover asterisks are allowed
+```
+
+## Approach 3: Two-pass greedy
+
+This is another greedy formulation, and it scans the string in both directions:
+
+- First pass: treat every asterisk as an opening bracket. If the running balance never goes negative and ends non-negative, the string passes.
+- Second pass: treat every asterisk as a closing bracket. This is symmetric, but we scan from right to left because the closing bracket is now the reference.
+- If the balance goes negative at any point, the string is invalid.
+- If the balance never goes negative, is that sufficient? I had AI write a beautiful explanation, but I still need time to absorb it. Here is the code. Unless I meet a similar problem again, I may never think of this myself.
+
+```python
+class Solution:
+    def checkValidString(self, s: str) -> bool:
+        # Left to right: treat '*' as '(' and make sure the prefix can be balanced.
+        balance = 0
+        for ch in s:
+            if ch in '(*':
+                balance += 1
+            else:
+                balance -= 1
+            if balance < 0:
+                return False
+
+        # Right to left: treat '*' as ')' and make sure the suffix can be balanced.
+        balance = 0
+        for ch in reversed(s):
+            if ch in '*)':
+                balance += 1
+            else:
+                balance -= 1
+            if balance < 0:
+                return False
+
+        return True
+```

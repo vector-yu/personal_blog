@@ -1,0 +1,350 @@
+﻿---
+title: "3525. Find X Value of Array II"
+date: 2026-09-23T00:00:00.000Z
+description: "LeetCode Daily Problem: Find X Value of Array II"
+tags:
+  - "Segment Tree"
+series: "Daily Problem"
+featured: false
+draft: false
+---
+
+<ProblemMeta review="Painful — and what does this have to do with the previous problem?" difficulty="Hard" />
+
+[Original problem on LeetCode](https://leetcode.com/problems/find-x-value-of-array-ii/)
+
+You are given an array of **positive** integers `nums` and a **positive** integer `k`. You are also given a 2D array `queries`, where `queries[i] = [indexi, valuei, starti, xi]`.
+
+You are allowed to perform an operation **once** on `nums`, where you can remove any **suffix** from `nums` such that `nums` remains **non-empty**.
+
+The **x-value** of `nums` **for a given** `x` is defined as the number of ways to perform this operation so that the **product** of the remaining elements leaves a *remainder* of `x` **modulo** `k`.
+
+For each query in `queries` you need to determine the **x-value** of `nums` for `xi` after performing the following actions:
+
+- Update `nums[indexi]` to `valuei`. Only this step persists for the rest of the queries.
+- **Remove** the prefix `nums[0..(starti - 1)]` (where `nums[0..(-1)]` will be used to represent the **empty** prefix).
+
+Return an array `result` of size `queries.length` where `result[i]` is the answer for the `ith` query.
+
+A **prefix** of an array is a subarray that starts from the beginning of the array and extends to any point within it.
+
+A **suffix** of an array is a subarray that starts at any point within the array and extends to the end of the array.
+
+**Note** that the prefix and suffix to be chosen for the operation can be **empty**.
+
+**Note** that x-value has a *different* definition in this version.
+
+**Constraints:**
+
+- `1 <= nums[i] <= 10^9`
+- `1 <= nums.length <= 10^5`
+- `1 <= k <= 5`
+- `1 <= queries.length <= 2 * 10^4`
+- `queries[i] == [indexi, valuei, starti, xi]`
+- `0 <= indexi <= nums.length - 1`
+- `1 <= valuei <= 10^9`
+- `0 <= starti <= nums.length - 1`
+- `0 <= xi <= k - 1`
+
+## Approach: Segment tree
+
+### First impressions
+
+Apart from looking similar, this problem has almost nothing to do with yesterday's.
+
+Yesterday's problem asked for any subarray. To avoid O(n²) enumeration, we used modular arithmetic to reduce it to O(kn).
+
+Today's problem only asks for a prefix. For a single query, one pass from the start would be O(n) — that should be fine, right?
+
+But we have q queries, and q is large, so the total becomes O(qn), which is essentially quadratic.
+
+If the array were not modified between queries, we could precompute every possibility and answer each query in O(1). But this problem permanently updates the array before each query, so that approach does not work.
+
+The challenge is therefore to support each update and query in O(log n).
+
+### Segment tree
+
+[Segment tree basics — OI Wiki](https://oi-wiki.org/ds/seg/)
+
+LeetCode's hint pointed to this data structure. It took me four hours, combining the linked article with my own reasoning, to barely get the code working. Let me walk through my approach.
+
+A segment tree is a binary tree. Each node represents an interval and stores information about that interval. Sibling nodes cover disjoint intervals, and the union of a node's children is exactly the node's interval. Put simply: horizontally, it cuts the whole range into segments; vertically, it cuts an interval into two halves.
+
+To keep the tree as shallow as possible, split at the midpoint each time, giving a height of about ceil(log n).
+
+<Callout type="info">
+Segment tree diagram
+
+![Segment tree interval split](/uploads/daily-problems/segment-tree.svg)
+
+Source: [OI Wiki](https://oi-wiki.org/ds/seg/) (CC BY-SA)
+</Callout>
+
+Information stored in a segment tree must be associative: the value of an interval must be computable from its left and right halves — for example, range sum (`left + right`), range maximum (`max(left, right)`), and, in this problem, the counts of each remainder of the prefix product modulo k.
+
+To query an interval, delegate the task down the tree, splitting it between the children until a node exactly matches the requested interval; then merge the returned values. The result is the value for the whole interval. The worst case visits O(log n) levels, so as long as each node's work is O(1), both updates and queries are O(log n).
+
+So what else do we need in order to compute an interval's remainder counts, beyond the same counts for its left and right halves?
+
+We also need the product of the left half. A prefix taken from the right half must be multiplied by every element in the left half before it becomes a valid prefix of the whole interval. Besides the length-k remainder-count array, each node therefore needs the interval product (modulo k).
+
+### Defining a tree node
+
+A node needs left and right children, the interval bounds, the prefix-product modulo k counts, and the interval product modulo k. To avoid recomputing the split point during recursion, I also store `mid`.
+
+```python
+class TreeNode:
+    __slots__ = ('start', 'end', 'mid', 'left', 'right', 'pref', 'total') # speed up attribute access
+    def __init__(self, start, end, k):
+        self.start = start
+        self.end = end
+        self.mid = (start + end) // 2
+        self.left = None
+        self.right = None
+        self.pref = [0]*k
+        self.total = 0
+```
+
+### Building the tree
+
+Build the whole tree recursively, then merge the children in postorder to fill each node's fields.
+
+```python
+def build(start, end, k):
+    node = TreeNode(start, end, k)
+    if start == end:
+        node.pref[nums[start]%k] = 1 
+        node.total = nums[start]%k
+        return node
+    
+    node.left = build(start, node.mid, k)
+    node.right = build(node.mid+1, end, k)
+    merge(node) # how do we merge?
+    return node
+```
+
+Merging works as described above: the left child's prefix counts carry over directly; the right child's counts must be shifted by the left product.
+
+```python
+def merge(node):
+    left, right = node.left, node.right
+    node.total = (left.total*right.total)%k
+    for i in range(k):
+        node.pref[i] = left.pref[i] # copy directly
+    for i in range(k):
+        node.pref[(i*left.total)%k] += right.pref[i] # remainder i becomes (i * left.total) % k
+```
+
+### Updating a leaf
+
+Each query updates one number before asking. In the segment tree that means updating a leaf, which affects all of its ancestors. Recurse down to the leaf, then merge on the way back up in postorder.
+
+It is just binary search down the tree.
+
+I take `value % k` immediately; it makes no difference.
+
+```python
+def update(index, value, root):
+    nums[index] = value # not strictly necessary: the array is unused after the tree is built
+    def _update(start, end, node):
+        if end < index or start > index:
+            return
+        if start == end: # reached the leaf [index, index]
+            node.pref = [0]*k
+            node.pref[value] = 1
+            node.total = value
+            return
+ 
+        if index <= node.mid:
+            _update(start, node.mid, node.left)
+        else:
+            _update(node.mid+1, end, node.right)
+        merge(node)
+    _update(0, len(nums)-1, root)
+        
+```
+
+### Querying an interval
+
+At each node there are three cases for a query interval:
+
+- entirely inside the left child — recurse left
+- entirely inside the right child — recurse right
+- spans both children
+    - if the requested interval equals the current node's interval, we are done — return its stored value
+    - otherwise split at the midpoint, query both sides, and merge. Merging needs the left interval's product, so the query must return the product too.
+
+For convenience I combined all three cases into one recursive function; they are really the same logic.
+
+```python
+def find(start, end, node):
+    if start > end:
+        return [0]*k, 1
+    if node.start == start and node.end == end:
+        return list(node.pref), node.total
+    
+    left_pref, left_total = find(start, min(node.mid, end), node.left)
+    right_pref, right_total = find(max(node.mid+1, start), end, node.right)
+    pref = list(left_pref)
+    for i in range(k):
+        pref[(i*left_total)%k] += right_pref[i] 
+    return pref, (left_total*right_total) % k
+```
+
+### Wrapping it in a class
+
+With update and query working, we could wrap them in a class (optional; I did not do this when submitting).
+
+```python
+class SegmentTree:
+		def __init__(self, n, k):
+				def build(start, end, k):
+						pass
+				self.size = n
+				self.modulus = k
+				self.root = build(0, n-1, k)
+		
+		def merge(self, node):
+				pass		
+			
+		def update(self, index, value):
+				def _update(index, value, node=self.root):
+						pass
+				pass
+			
+		def find(self, start, end):
+				def _find(start, end, node=self.root):
+						pass
+				pass
+```
+
+### Handling multiple queries
+
+After building the tree and setting up the result list, the loop looks like this:
+
+```python
+root = build(0, len(nums)-1, k)
+res = []
+for index, value, start, x in queries:
+    value %= k # as mentioned above
+    ...
+    res.append(ans)
+return res
+```
+
+Now think about what goes inside the loop.
+
+The statement says: update first, then query. A query returns two things — the remainder counts for the queried interval and the interval product modulo k.
+
+What do we need? The entry at index `x` in those counts.
+
+That is all:
+
+```python
+for index, value, start, x in queries:
+    value %= k
+    
+    update(index, value, root) # update
+    pref, _ = find(start, len(nums)-1, root) # query the counts
+    ans = pref[x] # pick the answer
+    
+    res.append(ans)
+return res
+```
+
+That completes the problem.
+
+## Code
+
+```python
+class TreeNode:
+    __slots__ = ('start', 'end', 'mid', 'left', 'right', 'pref', 'total')
+    def __init__(self, start, end, k):
+        self.start = start
+        self.end = end
+        self.mid = (start + end) // 2
+        self.left = None
+        self.right = None
+        self.pref = [0]*k
+        self.total = 0
+
+class Solution:
+    def resultArray(self, nums: List[int], k: int, queries: List[List[int]]) -> List[int]:
+        def merge(node):
+            left, right = node.left, node.right
+            node.total = (left.total*right.total)%k
+            for i in range(k):
+                node.pref[i] = left.pref[i]
+            for i in range(k):
+                node.pref[(i*left.total)%k] += right.pref[i]
+        def build(start, end, k):
+            node = TreeNode(start, end, k)
+            if start == end:
+                node.pref[nums[start]%k] = 1
+                node.total = nums[start]%k
+                node.mid = start
+                return node
+            
+            mid = (start+end)//2
+            node.left = build(start, mid, k)
+            node.right = build(mid+1, end, k)
+            node.mid = mid
+            merge(node)
+            return node
+        
+        def update(index, value, root):
+            nums[index] = value
+            def _update(start, end, node):
+                if end < index or start > index:
+                    return
+                if start == end:
+                    node.pref = [0]*k
+                    node.pref[value] = 1
+                    node.total = value
+                    return
+                    
+                mid = (start+end)//2
+                if index <= mid:
+                    _update(start, mid, node.left)
+                else:
+                    _update(mid+1, end, node.right)
+                merge(node)
+
+            _update(0, len(nums)-1, root)
+        def find(start, end, node):
+            if start > end:
+                return [0]*k, 1
+            if node.start == start and node.end == end:
+                return list(node.pref), node.total
+            
+            left_pref, left_total = find(start, min(node.mid, end), node.left)
+            right_pref, right_total = find(max(node.mid+1, start), end, node.right)
+            pref = list(left_pref)
+            for i in range(k):
+                pref[(i*left_total)%k] += right_pref[i] 
+            return pref, (left_total*right_total) % k
+        root = build(0, len(nums)-1, k)
+        res = []
+        for index, value, start, x in queries:
+            value %= k
+            update(index, value, root)
+            pref, total = find(start, len(nums)-1, root)
+            res.append(pref[x])
+        return res
+
+```
+
+## Complexity
+
+- Time: O(qk log n). There are q queries; each visits O(log n) nodes, and each node operates on arrays of length k.
+- Space: O(kn). There are O(n) nodes, each holding arrays of length k.
+
+## Takeaways
+
+The hard part is implementing the segment tree. Once updates and queries are clear, you are 95% done.
+
+## Further thoughts
+
+- Could we solve this if the x-value definition matched yesterday's? Yes, but we would need extra information: the x-values of subarrays and of suffixes. Why? When merging left and right, each side's subarrays are still subarrays of the new interval, but a suffix of the left half combined with a prefix of the right half is also a subarray of the new interval, so those must be maintained too. The merge step changes; everything else stays the same.
+- [Problem 307](https://leetcode.com/problems/range-sum-query-mutable/description/) asks us to implement exactly these segment-tree update and query operations; the idea is the same.
+- [Problem 53](https://leetcode.com/problems/maximum-subarray/description/) can also be solved with a segment tree for the maximum subarray sum. Build the tree, then traverse it once to find the maximum.

@@ -1,0 +1,43 @@
+﻿---
+title: "453. Minimum Moves to Equal Array Elements"
+date: 2026-11-01T00:00:00.000Z
+description: "LeetCode Daily Problem: Minimum Moves to Equal Array Elements"
+tags:
+  - "Math"
+series: "Daily Problem"
+featured: false
+draft: false
+---
+
+<ProblemMeta review="Too easy" difficulty="Medium" />
+
+[Original problem on LeetCode](https://leetcode.com/problems/minimum-moves-to-equal-array-elements/)
+
+Given an integer array `nums` of size `n`, return *the minimum number of moves required to make all array elements equal*.
+
+In one move, you can increment `n - 1` elements of the array by `1`.
+
+**Constraints:**
+
+- `n == nums.length`
+- `1 <= nums.length <= 10^5`
+- `-10^9 <= nums[i] <= 10^9`
+- The answer is guaranteed to fit in a **32-bit** integer.
+
+## Approach: Math
+
+Incrementing `n - 1` elements by 1 is equivalent to decrementing the remaining element by 1. Yes, it is that simple.
+
+## Code
+
+```python
+class Solution:
+    def minMoves(self, nums: list[int]) -> int:
+        min_num = min(nums)
+        return sum((num-min_num for num in nums))
+```
+
+## Complexity
+
+- Time: O(n) — one pass.
+- Space: O(1).

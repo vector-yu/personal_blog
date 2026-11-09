@@ -1,0 +1,159 @@
+﻿---
+title: "301. Remove Invalid Parentheses"
+date: 2026-10-07T00:00:00.000Z
+description: "LeetCode Daily Problem: Remove Invalid Parentheses"
+tags:
+  - "DFS"
+  - "Backtracking"
+  - "Stack"
+series: "Daily Problem"
+featured: false
+draft: false
+---
+
+<ProblemMeta review="Yesterday's problem was the setup for today's" difficulty="Hard" />
+
+[Original problem on LeetCode](https://leetcode.com/problems/remove-invalid-parentheses/)
+
+Given a string `s` that contains parentheses and letters, remove the minimum number of invalid parentheses to make the input string valid.
+
+Return *a list of **unique strings** that are valid with the minimum number of removals*. You may return the answer in **any order**.
+
+**Constraints:**
+
+- `1 <= s.length <= 25`
+- `s` consists of lowercase English letters and parentheses `'('` and `')'`.
+- There will be at most `20` parentheses in `s`.
+
+## Approach: Backtracking
+
+Recursion is not hard to think of. At each position we can either keep or drop the parenthesis. The constraints are: the number of closing brackets used cannot exceed the number of opening brackets, and at the end the two counts must be equal. This enumerates every valid subsequence. Keep the longest ones (the fewest deletions), deduplicate, and that is the answer. It is a DFS over a binary tree of depth `n`, so the worst case is O(2^n) (for example, when every character is an opening bracket).
+
+But there are at most 20 parentheses, and 2^20 is just over a million. I did not try the most naive version, but it should pass. Still, we are doing a lot of unnecessary work.
+
+The key is pruning.
+
+### Pruning 1: Remove as few brackets as possible
+
+We can first compute how many opening and closing brackets must be removed. Removing exactly that many cuts down the search and directly targets the answer. The first half is the same as [921. Minimum Add to Make Parentheses Valid](https://leetcode.com/problems/minimum-add-to-make-parentheses-valid/). Problem 921 counts all unmatched brackets together; here we count unmatched opening and closing brackets separately, then eliminate them.
+
+```python
+removed_left, removed_right = 0, 0
+for c in s:
+    if c == '(':
+        removed_left += 1
+    elif c == ')':
+        if removed_left > 0:
+            removed_left -= 1
+        else:
+            removed_right += 1
+```
+
+The backtracking then needs two extra parameters for how many left and right brackets have been removed.
+
+```python
+ans = set()
+def dfs(cur='', idx=0, left=0, right=0, diff=0):
+    # The prefix must remain valid
+    if diff < 0:
+        return
+    # If the remaining length is smaller than the number still to delete, stop
+    if len(s) - idx < (removed_left - left) + (removed_right - right):
+        return 
+    if idx == len(s):
+        # Reaching the end means (1) the string is valid and (2) exactly the required brackets were removed
+        ans.add(cur)
+        return
+     
+    if s[idx] == '(':
+        if left < removed_left:
+            dfs(cur, idx+1, left+1, right, diff)
+        dfs(cur+'(', idx+1, left, right, diff+1)
+    
+    elif s[idx] == ')':
+        if right < removed_right:
+            dfs(cur, idx+1, left, right+1, diff)
+        dfs(cur+')', idx+1, left, right, diff-1)
+    
+    else:
+        dfs(cur+s[idx], idx+1, left, right, diff)
+```
+
+### Pruning 2: Consecutive identical brackets
+
+This is a common backtracking trick. Suppose a run has `m` identical brackets and you need to delete `k` of them. Deleting the first `k` and deleting any `k` are equivalent; without handling this we recount `C(k, m) - 1` times. Across multiple runs the counts multiply, producing duplicate answers and wasting time. So delete only from the front of each run.
+
+We add a `prev_kept` flag. If the previous bracket was kept, then dropping the current one has no advantage over dropping an earlier member of the run — and if even the earlier one was not dropped, dropping a later one cannot be the intended choice. So we skip that branch.
+
+The backtracking becomes:
+
+```python
+ans = [] # every produced result is unique, so a list is enough
+def dfs(cur='', idx=0, left=0, right=0, diff=0, prev_kept=False):
+    if diff < 0:
+        return
+    if len(s) - idx < (removed_left - left) + (removed_right - right):
+        return 
+    if idx == len(s):
+        ans.append(cur)
+        return
+    can_drop = True
+    if idx > 0 and s[idx] == s[idx-1] and prev_kept:
+        can_drop = False
+    if s[idx] == '(':
+        if can_drop and left < removed_left:
+            dfs(cur, idx+1, left+1, right, diff, False)
+        dfs(cur+'(', idx+1, left, right, diff+1, True)
+    elif s[idx] == ')':
+        if can_drop and right < removed_right:
+            dfs(cur, idx+1, left, right+1, diff, False)
+        dfs(cur+')', idx+1, left, right, diff-1, True)
+    else:
+        dfs(cur+s[idx], idx+1, left, right, diff, True)
+```
+
+## Code
+
+```python
+class Solution:
+    def removeInvalidParentheses(self, s: str) -> list[str]:
+        removed_left, removed_right = 0, 0
+        for c in s:
+            if c == '(':
+                removed_left += 1
+            elif c == ')':
+                if removed_left > 0:
+                    removed_left -= 1
+                else:
+                    removed_right += 1
+        ans = []
+        def dfs(cur='', idx=0, left=0, right=0, diff=0, prev_kept=False):
+            if diff < 0:
+                return
+            if len(s) - idx < (removed_left - left) + (removed_right - right):
+                return 
+            if idx == len(s):
+                ans.append(cur)
+                return
+            can_drop = True
+            if idx > 0 and s[idx] == s[idx-1] and prev_kept:
+                can_drop = False
+            if s[idx] == '(':
+                if can_drop and left < removed_left:
+                    dfs(cur, idx+1, left+1, right, diff, False)
+                dfs(cur+'(', idx+1, left, right, diff+1, True)
+            elif s[idx] == ')':
+                if can_drop and right < removed_right:
+                    dfs(cur, idx+1, left, right+1, diff, False)
+                dfs(cur+')', idx+1, left, right, diff-1, True)
+            else:
+                dfs(cur+s[idx], idx+1, left, right, diff, True)
+        
+        dfs()
+        return ans
+```
+
+## Complexity
+
+- Time: O(2^n) in the worst case, with pruning reducing the practical search space.
+- Space: O(n) for the recursion stack, plus the output.

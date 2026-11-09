@@ -1,0 +1,75 @@
+﻿---
+title: "3863. Minimum Operations to Sort a String"
+date: 2026-10-21T00:00:00.000Z
+description: "LeetCode Daily Problem: Minimum Operations to Sort a String"
+tags:
+  - "Math"
+series: "Daily Problem"
+featured: false
+draft: false
+---
+
+<ProblemMeta review="I did not see that coming — is this even an algorithms problem?" difficulty="Medium" />
+
+[Original problem on LeetCode](https://leetcode.com/problems/minimum-operations-to-sort-a-string/)
+
+You are given a string `s` consisting of lowercase English letters.
+
+In one operation, you can select any **substring** of `s` that is **not** the entire string and **sort** it in **non-descending alphabetical** order.
+
+Return the **minimum** number of operations required to make `s` sorted in **non-descending** order. If it is not possible, return -1.
+
+**Constraints:**
+
+- `1 <= s.length <= 10^5`
+- `s` consists of only lowercase English letters.
+
+## Approach: Case analysis
+
+I tried to simulate the process, failed, then looked at the four hints and realized case analysis alone solves it. Who would have thought?
+
+Following the editorial, track two anchors: the minimum and maximum values, which must end up at the start and end after sorting.
+
+Their original positions fall into four cases:
+
+<Figure src="/uploads/daily-problems/3863-anchor-distribution.jpg" alt="Four distributions of the two anchors" />
+
+The horizontal line represents one or more elements. The pattern is easy to see:
+
+- If the string is already sorted, the answer is 0.
+- If the minimum is at the start and the maximum is at the end, the answer is 1.
+- If one or both of the minimum and maximum are in the middle, the answer is 2.
+- If the maximum is at the start and the minimum is at the end, the answer is 3.
+
+Since we want the minimum, if a string matches several cases, choose the smallest answer.
+
+The figure does not show lengths 1 and 2, so:
+
+- Length 1 is always sorted: return 0.
+- Length 2 is either sorted (return 0) or unsortable (return -1).
+
+That completes the analysis; translate it into code.
+
+## Code
+
+```python
+class Solution:
+    def minOperations(self, s: str) -> int:
+        n = len(s)
+        mx, mn = max(s), min(s)
+        if all(a <= b for a, b in zip(s, s[1:])):
+            return 0
+        if n == 2:
+            return -1
+        if s[0] == mn or s[-1] == mx:
+            return 1
+        for i in range(1, n - 1):
+            if s[i] == mn or s[i] == mx:
+                return 2
+        return 3
+```
+
+## Complexity
+
+- Time: O(n) — the initial sorted check, `min`, and `max` each scan the string.
+- Space: O(1).

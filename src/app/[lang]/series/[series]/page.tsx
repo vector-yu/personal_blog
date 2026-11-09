@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { PostCard } from '@/components/posts/post-card';
+import { WeeklySeries } from '@/components/posts/weekly-series';
 import { SectionLink } from '@/components/site/section-link';
 import { localePath } from '@/i18n/config';
 import { formatMessage } from '@/i18n/format';
@@ -14,6 +15,7 @@ import {
   seriesPath,
   toPostListItem,
 } from '@/lib/taxonomy';
+import { groupPostsByWeek, isWeeklySeries } from '@/lib/weeks';
 
 type Params = { series: string };
 
@@ -37,7 +39,9 @@ export async function generateMetadata({
     locale,
     path: seriesPath(series),
     title: formatMessage(messages.seriesDetail.metaTitle, { series }),
-    description: formatMessage(messages.seriesDetail.metaDescription, { series }),
+    description: isWeeklySeries(series)
+      ? formatMessage(messages.seriesDetail.weeklyMetaDescription, { series })
+      : formatMessage(messages.seriesDetail.metaDescription, { series }),
     translated: false,
   });
 }
@@ -52,17 +56,31 @@ export default async function SeriesPage({ params }: { params: Promise<Params> }
   if (items.length === 0) notFound();
 
   const tags = collectTags(posts, locale).map((tag) => tag.name);
+  const weeks = isWeeklySeries(series) ? groupPostsByWeek(items) : [];
+  const weekly = weeks.length > 0;
+  const labels = messages.seriesDetail.weekly;
 
   return (
-    <main className="relative z-10 mx-auto w-full max-w-3xl px-4 py-14 sm:py-16">
+    <main
+      className={`relative z-10 mx-auto w-full px-4 py-14 sm:py-16 ${
+        weekly ? 'max-w-4xl' : 'max-w-3xl'
+      }`}
+    >
       <header className="animate-rise">
         <p className="text-[0.68rem] font-black tracking-[0.24em] text-ink/45 uppercase dark:text-slate-500">
           {messages.seriesDetail.eyebrow}
         </p>
         <h1 className="mt-3 text-headline">{series}</h1>
-        <p className="mt-4 text-sm font-bold text-ink/50 dark:text-slate-400">
-          {formatMessage(messages.seriesDetail.count, { count: items.length })}
+        <p className="mt-4 text-sm font-bold text-ink/60 dark:text-slate-300">
+          {weekly
+            ? formatMessage(labels.summary, { count: items.length, weeks: weeks.length })
+            : formatMessage(messages.seriesDetail.count, { count: items.length })}
         </p>
+        {weekly ? (
+          <p className="mt-4 max-w-xl leading-relaxed text-ink/65 dark:text-slate-300">
+            {formatMessage(labels.intro, { weeks: weeks.length })}
+          </p>
+        ) : null}
         <nav aria-label={messages.common.contentNav} className="mt-6 flex flex-wrap gap-2">
           <SectionLink href={localePath(locale, '/series')}>
             {messages.seriesDetail.allSeries}
@@ -76,13 +94,17 @@ export default async function SeriesPage({ params }: { params: Promise<Params> }
         </nav>
       </header>
 
-      <ul className="mt-10 space-y-5">
-        {items.map((post) => (
-          <li key={post.relativePath}>
-            <PostCard post={toPostListItem(post, locale)} tags={tags} />
-          </li>
-        ))}
-      </ul>
+      {weekly ? (
+        <WeeklySeries weeks={weeks} locale={locale} tags={tags} labels={labels} />
+      ) : (
+        <ul className="mt-10 space-y-5">
+          {items.map((post) => (
+            <li key={post.relativePath}>
+              <PostCard post={toPostListItem(post, locale)} tags={tags} />
+            </li>
+          ))}
+        </ul>
+      )}
     </main>
   );
 }

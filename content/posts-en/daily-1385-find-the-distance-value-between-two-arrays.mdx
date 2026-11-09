@@ -1,0 +1,53 @@
+﻿---
+title: "1385. Find the Distance Value Between Two Arrays"
+date: 2026-11-05T00:00:00.000Z
+description: "LeetCode Daily Problem: Find the Distance Value Between Two Arrays"
+tags:
+  - "Binary Search"
+  - "Simulation"
+series: "Daily Problem"
+featured: false
+draft: false
+---
+
+<ProblemMeta review="Freebie" difficulty="Easy" />
+
+[Original problem on LeetCode](https://leetcode.com/problems/find-the-distance-value-between-two-arrays/)
+
+Given two integer arrays `arr1` and `arr2`, and the integer `d`, *return the distance value between the two arrays*.
+
+The distance value is defined as the number of elements `arr1[i]` such that there is not any element `arr2[j]` where `|arr1[i]-arr2[j]| <= d`.
+
+**Constraints:**
+
+- `1 <= arr1.length, arr2.length <= 500`
+- `-1000 <= arr1[i], arr2[j] <= 1000`
+- `0<= d <= 100`
+
+## Approach: Brute force
+
+I only learned from the editorial that this can be solved greedily with binary search: find the closest value in `arr2` to each `arr1[i]` and check whether the distance exceeds `d`.
+
+But with only 500 numbers, why not brute force? It saves coding time at the cost of runtime — which is a joke, of course.
+
+Unless you give me an array of length <Math formula="10^5" />; then I will admit defeat and find the clever way.
+
+```python
+class Solution:
+    def findTheDistanceValue(self, arr1: list[int], arr2: list[int], d: int) -> int:
+        res = 0
+        for num1 in arr1:
+            is_distance = True
+            for num2 in arr2:
+                if abs(num1-num2) <= d:
+                    is_distance = False
+                    break
+            if is_distance:
+                res += 1
+        return res
+```
+
+## Complexity
+
+- Time: O(nm) — every pair is checked in the worst case.
+- Space: O(1).

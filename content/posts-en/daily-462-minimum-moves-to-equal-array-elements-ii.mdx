@@ -1,0 +1,73 @@
+﻿---
+title: "462. Minimum Moves to Equal Array Elements II"
+date: 2026-11-02T00:00:00.000Z
+description: "LeetCode Daily Problem: Minimum Moves to Equal Array Elements II"
+tags:
+  - "Binary Search"
+  - "Math"
+series: "Daily Problem"
+featured: false
+draft: false
+---
+
+<ProblemMeta review="“There is no such exercise!” “You're just scared.”" difficulty="Medium" />
+
+[Original problem on LeetCode](https://leetcode.com/problems/minimum-moves-to-equal-array-elements-ii/)
+
+Given an integer array `nums` of size `n`, return *the minimum number of moves required to make all array elements equal*.
+
+In one move, you can increment or decrement an element of the array by `1`.
+
+Test cases are designed so that the answer will fit in a **32-bit** integer
+
+**Constraints:**
+
+- `n == nums.length`
+- `1 <= nums.length <= 10^5`
+- `-10^9 <= nums[i] <= 10^9`
+
+## Approach 1: Binary search
+
+The sum of distances first decreases, then stays flat, then increases as the target grows. That V-shape means binary search applies.
+
+```python
+class Solution:
+    def minMoves2(self, nums: list[int]) -> int:
+        def oper_count(target):
+            return sum((abs(num-target) for num in nums))
+        left, right = min(nums), max(nums)
+        while left <= right:
+            mid = (left + right) // 2
+            cur_left, cur, cur_right = oper_count(mid-1), oper_count(mid) , oper_count(mid+1)
+            if cur_left > cur > cur_right:
+                left = mid + 1
+            elif cur_left < cur < cur_right:
+                right = mid - 1
+            else:
+                return cur
+```
+
+## Approach 2: Math
+
+I first tried the mean, and it was wrong. The **mean** minimizes the sum of squared distances, not the sum of absolute distances.
+
+Sort the numbers. Suppose the target is one of the middle values:
+
+- If there are more numbers on the left than on the right, moving the target right cannot increase the total.
+- If there are more numbers on the right than on the left, moving the target left cannot increase the total.
+
+The total is minimized when the counts on both sides are equal, because moving either way cannot decrease it.
+
+Hence the median.
+
+```python
+class Solution:
+    def minMoves2(self, nums: List[int]) -> int:
+        mid = sorted(nums)[len(nums) // 2]
+        return sum(abs(x - mid) for x in nums)
+```
+
+## Complexity
+
+- Binary search: O(n log(max - min)) time, O(1) space.
+- Math: O(n log n) time for sorting, O(n) space for the sorted copy.

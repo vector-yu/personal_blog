@@ -1,0 +1,31 @@
+﻿---
+title: "3498. Reverse Degree of a String"
+date: 2026-09-21T00:00:00.000Z
+description: "LeetCode Daily Problem: Reverse Degree of a String"
+tags:
+  - "Simulation"
+series: "Daily Problem"
+featured: false
+draft: false
+---
+
+<ProblemMeta review="Free points" difficulty="Easy" />
+
+[Original problem on LeetCode](https://leetcode.com/problems/reverse-degree-of-a-string/description/)
+
+## Approach: Iterate
+
+The statement already defines each character's degree. Just scan the string once and add up the degrees.
+
+## Code
+
+```python
+class Solution:
+    def reverseDegree(self, s: str) -> int:
+        return sum(((26 - (ord(c) - ord('a')))*(i+1) for i, c in enumerate(list(s))))
+```
+
+## Complexity
+
+- Time: O(n) — we traverse the string once.
+- Space: O(1) — no extra space is used.

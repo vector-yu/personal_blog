@@ -174,6 +174,7 @@ export const en: Messages = {
     summary: '{count} series. Read in order, or jump into whichever catches your eye.',
     emptySummary: 'No series yet. Set a series on a post and this page fills in.',
     count: '{count} posts',
+    weeklyLabel: 'Grouped by week',
     empty: 'No series yet. Set a series name on a post.',
     navAll: 'All posts',
     navTags: 'Tags',
@@ -183,11 +184,25 @@ export const en: Messages = {
   seriesDetail: {
     metaTitle: 'Series: {series}',
     metaDescription: 'Every post in the “{series}” series.',
+    weeklyMetaDescription: 'Every post in the “{series}” series, grouped by week.',
     eyebrow: 'Series',
     count: '{count} posts',
     allSeries: 'All series',
     allPosts: 'All posts',
     tags: 'Tags',
+    weekly: {
+      summary: '{count} posts · {weeks} weeks',
+      intro:
+        'One LeetCode problem a day, collected into {weeks} weekly chapters. Each week opens with its topics and difficulty mix, then the problems in order.',
+      indexTitle: 'Browse by week',
+      indexMeta: '{weeks} weeks · {posts} problems',
+      weekCode: 'W{week}',
+      week: 'Week {week}',
+      weekMeta: '{count} problems · {days} days',
+      problems: '{count} problems',
+      topics: 'Topics',
+      reviewQuote: '“{review}”',
+    },
   },
 
   projects: {

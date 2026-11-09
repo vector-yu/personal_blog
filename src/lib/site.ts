@@ -56,10 +56,50 @@ export function parseDate(value?: string | null): Date | null {
   return Number.isNaN(date.getTime()) ? null : date;
 }
 
+/**
+ * Compact month/day label for weekly overviews ("9月21日" / "Sep 21").
+ *
+ * The UTC timezone is required for the same reason as `formatDate`: dates are stored
+ * at UTC midnight and the label is rendered on the server.
+ */
+export function formatMonthDay(value?: string | null, locale: Locale = 'zh') {
+  const date = parseDate(value);
+  if (!date) return '';
+  return date.toLocaleDateString(locale === 'zh' ? 'zh-CN' : 'en', {
+    timeZone: 'UTC',
+    month: 'short',
+    day: 'numeric',
+  });
+}
+
+/** Short weekday label ("周一" / "Mon") for a post date. */
+export function formatWeekday(value?: string | null, locale: Locale = 'zh') {
+  const date = parseDate(value);
+  if (!date) return '';
+  return date.toLocaleDateString(locale === 'zh' ? 'zh-CN' : 'en', {
+    timeZone: 'UTC',
+    weekday: 'short',
+  });
+}
+
+/**
+ * Numeric month/day ("9/21") for the compact week index.
+ *
+ * The long form wraps inside a seven-column strip at desktop width; this stays on one
+ * line and is still unambiguous next to the full range in the week heading.
+ */
+export function formatNumericMonthDay(value?: string | null) {
+  const date = parseDate(value);
+  if (!date) return '';
+  return `${date.getUTCMonth() + 1}/${date.getUTCDate()}`;
+}
+
 /** Milliseconds since epoch for sorting; invalid/missing dates sort last. */
 function sortKey(value?: string | null): number {
   return parseDate(value)?.getTime() ?? Number.NEGATIVE_INFINITY;
 }
+
+export type ProblemDifficulty = 'Easy' | 'Medium' | 'Hard';
 
 export type PostSummary = {
   title: string;
@@ -68,6 +108,10 @@ export type PostSummary = {
   tags: (string | null)[] | null;
   series: string | null;
   featured: boolean;
+  /** One-line review from a top-of-post `<ProblemMeta>` card, when present. */
+  review: string | null;
+  /** Normalized difficulty from the same card; null for ordinary posts. */
+  difficulty: ProblemDifficulty | null;
   filename: string;
   /** Path within the collection, e.g. "hello-tinacms.mdx" or "2026/nested.mdx". */
   relativePath: string;
@@ -82,9 +126,54 @@ type PostEdge = {
     series?: string | null;
     featured?: boolean | null;
     draft: boolean | null;
+    /** MDX rich-text AST; used to read the optional ProblemMeta card. */
+    body?: unknown;
     _sys: { filename: string; relativePath: string };
   } | null;
 };
+
+type RichTextNode = {
+  type?: string;
+  name?: string;
+  props?: Record<string, unknown>;
+  children?: RichTextNode[];
+};
+
+function normalizeDifficulty(value: unknown): ProblemDifficulty | null {
+  if (typeof value !== 'string') return null;
+  const normalized = value.trim().toLowerCase();
+  // The imported Notion table spells it "Eazy" on a few rows.
+  if (normalized === 'easy' || normalized === 'eazy') return 'Easy';
+  if (normalized === 'medium') return 'Medium';
+  if (normalized === 'hard') return 'Hard';
+  return null;
+}
+
+/**
+ * Read the optional `<ProblemMeta review="…" difficulty="…" />` card from the MDX body.
+ *
+ * The card is intentionally a plain first-child node, so a shallow scan is enough and
+ * keeps this cheap for list pages (the generated connection query already ships `body`
+ * for every post). Anything unexpected degrades to null instead of breaking the list.
+ */
+function problemMetaFromBody(body: unknown): {
+  review: string | null;
+  difficulty: ProblemDifficulty | null;
+} {
+  const root = body as RichTextNode | null;
+  const children = Array.isArray(root?.children) ? root.children : [];
+
+  for (const child of children) {
+    if (child?.type !== 'mdxJsxFlowElement' || child.name !== 'ProblemMeta') continue;
+    const review = typeof child.props?.review === 'string' ? child.props.review.trim() : '';
+    return {
+      review: review || null,
+      difficulty: normalizeDifficulty(child.props?.difficulty),
+    };
+  }
+
+  return { review: null, difficulty: null };
+}
 
 /**
  * The single funnel for turning post edges into displayable summaries: drops null edges,
@@ -108,6 +197,7 @@ export function toPostSummaries(
       tags: node.tags,
       series: node.series?.trim() || null,
       featured: node.featured === true,
+      ...problemMetaFromBody(node.body),
       filename: node._sys.filename,
       relativePath: node._sys.relativePath,
     }))

@@ -1,0 +1,82 @@
+---
+title: "2333. Minimum Sum of Squared Difference"
+date: 2026-10-10T00:00:00.000Z
+description: "LeetCode Daily Problem: Minimum Sum of Squared Difference"
+tags:
+  - "Binary Search"
+  - "Hash Table"
+  - "Greedy"
+series: "Daily Problem"
+featured: false
+draft: false
+---
+
+<ProblemMeta review="A math problem, but binary search really surprised me — I still need more practice" difficulty="Medium" />
+
+[Original problem on LeetCode](https://leetcode.com/problems/minimum-sum-of-squared-difference/)
+
+You are given two positive **0-indexed** integer arrays `nums1` and `nums2`, both of length `n`.
+
+The **sum of squared difference** of arrays `nums1` and `nums2` is defined as the **sum** of `(nums1[i] - nums2[i])^2` for each `0 <= i < n`.
+
+You are also given two positive integers `k1` and `k2`. You can modify any of the elements of `nums1` by `+1` or `-1` at most `k1` times. Similarly, you can modify any of the elements of `nums2` by `+1` or `-1` at most `k2` times.
+
+Return *the minimum **sum of squared difference** after modifying array* `nums1` *at most* `k1` *times and modifying array* `nums2` *at most* `k2` *times*.
+
+**Note**: You are allowed to modify the array elements to become **negative** integers.
+
+**Constraints:**
+
+- `n == nums1.length == nums2.length`
+- `1 <= n <= 10^5`
+- `0 <= nums1[i], nums2[i] <= 10^5`
+- `0 <= k1, k2 <= 10^9`
+
+## Approach: Greedy
+
+Restated: given a non-negative array, perform at most `k1 + k2` decrement operations to minimize the sum of squares.
+
+Since squares grow faster for larger values, every decrement should target the current maximum. Repeating this leaves the smallest possible sum of squares.
+
+The question becomes: where is the “boundary” of these decrements? Which large values should we reduce, and what value do they all end up at? If we knew that in one shot, we could finish immediately.
+
+### Method 1: Hash table
+
+Finding the maximum is easy. This method decrements every occurrence of the current maximum once, repeating until the operations run out.
+
+We need fast lookup from a value to its count, hence a hash table.
+
+```python
+class Solution:
+    def minSumSquareDiff(self, nums1: list[int], nums2: list[int], k1: int, k2: int) -> int:
+        n = len(nums1)
+        nums = [abs(nums1[i]-nums2[i]) for i in range(n)]
+        if sum(nums) <= k1+k2:
+            return 0
+        nums_dict = {}
+        for num in nums:
+            nums_dict[num] = nums_dict.get(num, 0) + 1
+        ordered_keys = sorted(list(nums_dict.keys()))
+        ops = k1+k2
+        while ops > 0:
+            max_key = ordered_keys.pop()
+            max_num = nums_dict.pop(max_key)
+            if max_num <= ops:
+                nums_dict[max_key-1] = nums_dict.get(max_key-1, 0) + max_num
+                if ordered_keys and ordered_keys[-1] != max_key-1 or not ordered_keys:
+                    ordered_keys.append(max_key-1)
+                ops -= max_num
+            else:
+                nums_dict[max_key-1] = nums_dict.get(max_key-1, 0) + ops
+                nums_dict[max_key] = max_num - ops
+                break
+        return sum((k**2*v for k, v in nums_dict.items()))
+```
+
+### Method 2: Binary search
+
+Continue the same idea: assume every decrement level is applied to all values of that size, then distribute any remaining operations among the largest values. A better way is to binary-search the value that the “brute-force decrements” would bottom out at.
+
+Why does binary search apply? The number of operations needed decreases monotonically as the target value increases. Since it is monotone, binary search works. The target found this way is only the level for the majority; some operations may remain, and we distribute them among the largest values. Binary search guarantees that the remaining operations are fewer than the count of the current maximum.
+
+With the target level in hand, the remaining operations are simply peeled off the current maximum values, and the answer follows directly.

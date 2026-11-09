@@ -1,0 +1,66 @@
+﻿---
+title: "3619. Count Islands With Total Value Divisible by K"
+date: 2026-10-26T00:00:00.000Z
+description: "LeetCode Daily Problem: Count Islands With Total Value Divisible by K"
+tags:
+  - "BFS"
+  - "DFS"
+series: "Daily Problem"
+featured: false
+draft: false
+---
+
+<ProblemMeta review="Same old, new skin. We are in the island series now — I hope something fresh comes along." difficulty="Medium" />
+
+[Original problem on LeetCode](https://leetcode.com/problems/count-islands-with-total-value-divisible-by-k/)
+
+You are given an `m x n` matrix `grid` and a positive integer `k`. An **island** is a group of **positive** integers (representing land) that are **4-directionally** connected (horizontally or vertically).
+
+The **total value** of an island is the sum of the values of all cells in the island.
+
+Return the number of islands with a total value **divisible by** `k`.
+
+**Constraints:**
+
+- `m == grid.length`
+- `n == grid[i].length`
+- `1 <= m, n <= 1000`
+- `1 <= m * n <= 10^5`
+- `0 <= grid[i][j] <= 10^6`
+- `1 <= k <= 10^6`
+
+## Approach: Flood fill
+
+Same as yesterday's problem, except this time we sum each island's values. The flood fill just returns the current cell's value, and returns 0 for visited land, water, or out-of-bounds cells.
+
+DFS or BFS both work; I used DFS for convenience.
+
+## Code
+
+```python
+class Solution:
+    def countIslands(self, grid: List[List[int]], k: int) -> int:
+        m, n = len(grid), len(grid[0])
+        def fill_land(x,y):
+            if x < 0 or x >=m or y < 0 or y >= n:
+                return 0
+            if grid[x][y] == 0:
+                return 0
+            number = grid[x][y]
+            grid[x][y] = 0
+            return number + fill_land(x-1, y) + fill_land(x+1, y) + fill_land(x, y-1) + fill_land(x, y+1)
+        res = 0
+        for i in range(m):
+            for j in range(n):
+                if grid[i][j] != 0:
+                    if fill_land(i, j) % k == 0:
+                        res += 1
+        return res
+```
+
+## Complexity
+
+Same as yesterday:
+
+- Time: O(mn).
+- Space: O(m+n).

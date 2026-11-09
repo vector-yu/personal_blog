@@ -1,0 +1,120 @@
+﻿---
+title: "1541. Minimum Insertions to Balance a Parentheses String"
+date: 2026-10-09T00:00:00.000Z
+description: "LeetCode Daily Problem: Minimum Insertions to Balance a Parentheses String"
+tags:
+  - "Stack"
+  - "Greedy"
+series: "Daily Problem"
+featured: false
+draft: false
+---
+
+<ProblemMeta review="Lots of cases — needs careful thought" difficulty="Medium" />
+
+[Original problem on LeetCode](https://leetcode.com/problems/minimum-insertions-to-balance-a-parentheses-string/)
+
+Given a parentheses string `s` containing only the characters `'('` and `')'`. A parentheses string is **balanced** if:
+
+- Any left parenthesis `'('` must have a corresponding two consecutive right parenthesis `'))'`.
+- Left parenthesis `'('` must go before the corresponding two consecutive right parenthesis `'))'`.
+
+In other words, we treat `'('` as an opening parenthesis and `'))'` as a closing parenthesis.
+
+- For example, `"())"`, `"())(())))"` and `"(())())))"` are balanced, `")()"`, `"()))"` and `"(()))"` are not balanced.
+
+You can insert the characters `'('` and `')'` at any position of the string to balance it if needed.
+
+Return *the minimum number of insertions* needed to make `s` balanced.
+
+**Constraints:**
+
+- `1 <= s.length <= 10^5`
+- `s` consists of `'('` and `')'` only.
+
+## Approach: Stack + greedy
+
+The hard part is handling closing brackets. The greedy idea is to match as locally as possible.
+
+With one-to-one matching, a `)` had only two cases:
+
+1. The top of the stack is `(`, so the pair matches and we pop.
+2. The top is `)`, so the match fails.
+
+Now one `(` matches two consecutive `)`, so at every `)` we must look one character ahead.
+
+1. The top of the stack is `(`
+    1. The current and next characters are both `)`: the pair matches, pop, and continue after the next character.
+    2. The current character is `)` but the next is `(`: one `)` is missing. Add 1 to the answer, pretend it was inserted, pop, and continue at the next character.
+2. The stack is empty
+    1. A `)` cannot be pushed.
+    2. The current and next characters are both `)`: together they need one `(`. Add 1 to the answer and continue after the next character.
+    3. The current character is `)` and the next is `(`: the current `)` needs one `)` and one `(`. Add 2 to the answer and continue at the next character.
+
+Any opening brackets left in the stack need two `)` each, so add `2 * left_count`.
+
+Unlike one-to-one matching, one-to-two matching forces us to count insertions while scanning. With one-to-one matching, a failed match means exactly one insertion. Here a failed match has four shapes — `(`, `()`, `)`, `))` — needing 2, 1, 2, and 1 insertions respectively. The simple equation no longer holds, so we must recognize each case and count on the fly.
+
+```python
+class Solution:
+    def minInsertions(self, s: str) -> int:
+        left_count = 0
+        idx = 0
+        ans = 0
+        while idx < len(s):
+            if s[idx] == '(':
+                left_count += 1
+                idx += 1
+            else:
+                # A1: ()), valid
+                # A2: (), insert one
+                # B1: )), insert one
+                # B2: ), insert two
+                if left_count > 0: # A
+                    left_count -= 1
+                else: # B
+                    ans += 1
+                
+                if idx < len(s)-1 and s[idx+1] == ')': # 1
+                    idx += 2
+                else: # 2
+                    ans += 1
+                    idx += 1
+       
+        return left_count * 2 + ans
+```
+
+## Extension
+
+What about one-to-`n` matching? There are `2n` failure shapes:
+
+- `n` of them are one `(` followed by `k < n` closing brackets, needing `n - k` extra brackets.
+- The other `n` are `k ≤ n` closing brackets with no opening bracket, needing `n - k + 1` extra brackets.
+
+The code becomes:
+
+```python
+class Solution:
+    def minInsertions(self, s: str, n: int) -> int:
+        left_count = 0
+        idx = 0
+        ans = 0
+        while idx < len(s):
+            if s[idx] == '(':
+                left_count += 1
+                idx += 1
+            else:
+                if left_count > 0:
+                    left_count -= 1
+                else: 
+                    ans += 1 # add the missing opening bracket first
+                # Find the longest run of closing brackets, up to n
+                right_len = 1
+                while right_len + idx < len(s) and s[idx+right_len] == ')' and right_len < n:
+                    right_len += 1
+                ans += n - right_len
+                idx += right_len
+        return left_count * n + ans
+```
+
+What about `m`-to-`n` matching? That is left as an exercise.
