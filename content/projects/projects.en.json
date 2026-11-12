@@ -2,6 +2,22 @@
   "intro": "Personal Project History",
   "items": [
     {
+      "title": "Daily Problem",
+      "year": "2026",
+      "role": "Algorithm notes / Content design",
+      "summary": "44 LeetCode problems organized into switchable ISO-week views, with difficulty, topics, and one-line reviews in Chinese and English.",
+      "stack": [
+        "LeetCode",
+        "Algorithms",
+        "Next.js",
+        "TinaCMS"
+      ],
+      "image": "/uploads/daily-problem-cover.png",
+      "link": "/en/series/Daily%20Problem",
+      "repo": "",
+      "featured": true
+    },
+    {
       "title": "This Blog",
       "year": "2025",
       "role": "Design / Development",

@@ -2,6 +2,22 @@
   "intro": "个人项目历史",
   "items": [
     {
+      "title": "每日一题",
+      "year": "2026",
+      "role": "算法笔记 / 内容整理",
+      "summary": "44 道 LeetCode 每日一题，按 ISO 周整理成可切换的周视图；中英双语，带难度、知识点和一句话点评。",
+      "stack": [
+        "LeetCode",
+        "Algorithms",
+        "Next.js",
+        "TinaCMS"
+      ],
+      "image": "/uploads/daily-problem-cover.png",
+      "link": "/zh/series/%E6%AF%8F%E6%97%A5%E4%B8%80%E9%A2%98",
+      "repo": "",
+      "featured": true
+    },
+    {
       "title": "这个博客",
       "year": "2025",
       "role": "设计 / 开发",
