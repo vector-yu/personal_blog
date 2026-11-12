@@ -6,7 +6,7 @@ import { localePath } from '@/i18n/config';
 import { formatMessage } from '@/i18n/format';
 import { buildMetadata } from '@/i18n/metadata';
 import { getLocale, messagesFor } from '@/i18n/server';
-import { getPosts } from '@/lib/posts';
+import { getEditorialPosts } from '@/lib/posts';
 import {
   collectTags,
   decodeTagParam,
@@ -21,7 +21,7 @@ export const revalidate = 60;
 
 export async function generateStaticParams(): Promise<Params[]> {
   const locale = await getLocale();
-  const posts = await getPosts(locale);
+  const posts = await getEditorialPosts(locale);
   return collectTags(posts, locale).map((tag) => ({ tag: tag.name }));
 }
 
@@ -45,7 +45,7 @@ export async function generateMetadata({
 export default async function TagPage({ params }: { params: Promise<Params> }) {
   const locale = await getLocale();
   const messages = messagesFor(locale);
-  const posts = await getPosts(locale);
+  const posts = await getEditorialPosts(locale);
   const tag = decodeTagParam((await params).tag);
   const tagged = posts.filter((post) => postTags(post).includes(tag));
 

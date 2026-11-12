@@ -339,6 +339,18 @@ git diff -- "D:\notes\math"
 翻译保留代码、公式、图片与 LeetCode 题面；中文口语化点评按英文习惯重写，
 并顺手修正了原文里的笔误（例如 `Eazy` 统一成 `Easy`、部分复杂度笔误）。
 
+### 文章流与每日一题分开
+
+每日一题不进入普通文章流：
+
+- `/posts`、`/tags`、`/archive` 与主 RSS 使用 `getEditorialPosts`，只含普通文章；
+- 每日一题只通过 `/series/每日一题`、`/en/series/Daily Problem` 和单篇 URL 访问；
+- `/posts` 顶部保留一张每日一题入口卡，显示篇数/周数和最近一周；
+- sitemap 仍收录每日一题的单篇 URL（SEO），但 sitemap 的分页和标签只按普通文章生成；
+- 周刊页里的“知识点”改为纯展示标签，不再链到全局 `/tags`；
+- 普通文章页的上一篇/下一篇/相关阅读不会混入每日一题，反之亦然；
+- 新增每日一题仍然只需写中英两个同 slug 文件，见上一节。
+
 ### 系列页按周整合
 
 `/zh/series/每日一题` 与 `/en/series/Daily Problem` 不再平铺 44 张卡片，而是按

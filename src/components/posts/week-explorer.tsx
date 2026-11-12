@@ -14,12 +14,11 @@ export type WeekProblemView = {
   weekdayLabel: string;
   review: string | null;
   difficulty: ProblemDifficulty | null;
-  tags: { name: string; href: string }[];
+  tags: string[];
 };
 
 export type WeekTopicView = {
   name: string;
-  href: string;
   count: number;
   tone: string;
 };
@@ -141,16 +140,15 @@ function WeekPanel({ week, labels }: { week: WeekView; labels: Labels }) {
               {labels.topics}
             </span>
             {week.topics.map((topic) => (
-              <Link
+              <span
                 key={topic.name}
-                href={topic.href}
                 className={`inline-flex items-center gap-1 rounded-full border-2 px-2 py-0.5 text-[0.65rem] font-bold ${topic.tone}`}
               >
                 {topic.name}
                 <span className="font-mono text-[0.6rem] opacity-65 tabular-nums">
                   {topic.count}
                 </span>
-              </Link>
+              </span>
             ))}
           </div>
         ) : null}
@@ -193,14 +191,9 @@ function WeekPanel({ week, labels }: { week: WeekView; labels: Labels }) {
                   {problem.tags.length > 0 ? (
                     <p className="mt-1.5 text-[0.68rem] leading-relaxed font-bold text-ink/60 dark:text-slate-300">
                       {problem.tags.map((tag, index) => (
-                        <span key={tag.name}>
+                        <span key={tag}>
                           {index > 0 ? <span aria-hidden> · </span> : null}
-                          <Link
-                            href={tag.href}
-                            className="hover:text-iris-text dark:hover:text-indigo-200"
-                          >
-                            {tag.name}
-                          </Link>
+                          {tag}
                         </span>
                       ))}
                     </p>

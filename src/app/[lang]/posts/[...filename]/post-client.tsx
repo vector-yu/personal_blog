@@ -36,7 +36,7 @@ export type PostClientLabels = {
   tocTitle: string;
   tocSections: string;
   tocAria: string;
-  tagHrefPrefix: string;
+  tagHrefPrefix: string | null;
   seriesHrefPrefix: string;
   postsHref: string;
 };
@@ -189,15 +189,23 @@ export default function PostClient(props: {
               <span className="text-[0.65rem] font-black tracking-[0.16em] text-ink/40 uppercase dark:text-slate-500">
                 {labels.tags}
               </span>
-              {tags.map((tag) => (
-                <Link
-                  key={tag}
-                  href={`${labels.tagHrefPrefix}${encodeURIComponent(tag)}`}
-                  className={`rounded-full border-2 px-2.5 py-0.5 text-xs font-bold transition-transform duration-200 hover:-translate-y-0.5 motion-reduce:shadow-none motion-reduce:transition-none motion-reduce:hover:translate-y-0 dark:shadow-chalk-xs ${tagTone(tag, tags)}`}
-                >
-                  {tag}
-                </Link>
-              ))}
+              {tags.map((tag) => {
+                const className = `rounded-full border-2 px-2.5 py-0.5 text-xs font-bold transition-transform duration-200 hover:-translate-y-0.5 motion-reduce:shadow-none motion-reduce:transition-none motion-reduce:hover:translate-y-0 dark:shadow-chalk-xs ${tagTone(tag, tags)}`;
+
+                return labels.tagHrefPrefix ? (
+                  <Link
+                    key={tag}
+                    href={`${labels.tagHrefPrefix}${encodeURIComponent(tag)}`}
+                    className={className}
+                  >
+                    {tag}
+                  </Link>
+                ) : (
+                  <span key={tag} className={className}>
+                    {tag}
+                  </span>
+                );
+              })}
             </div>
           ) : null}
 

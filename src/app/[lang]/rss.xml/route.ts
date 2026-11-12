@@ -1,7 +1,7 @@
 import { htmlLang, isLocale, localePath, locales, type Locale } from '@/i18n/config';
 import { messagesFor } from '@/i18n/server';
 import { getHomeContent } from '@/lib/home';
-import { getPosts } from '@/lib/posts';
+import { getEditorialPosts } from '@/lib/posts';
 import { parseDate, postSlug, siteUrl } from '@/lib/site';
 
 export const revalidate = 60;
@@ -27,7 +27,7 @@ export async function GET(
   const locale: Locale = isLocale(lang) ? lang : 'zh';
   const messages = messagesFor(locale);
   const base = siteUrl();
-  const [posts, home] = await Promise.all([getPosts(locale), getHomeContent(locale)]);
+  const [posts, home] = await Promise.all([getEditorialPosts(locale), getHomeContent(locale)]);
   const title = home.siteName;
   const description = home.tagline || messages.common.siteDescription;
   const feedUrl = `${base}${localePath(locale, '/rss.xml')}`;

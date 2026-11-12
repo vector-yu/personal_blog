@@ -101,6 +101,10 @@ export const en: Messages = {
     noResults: 'No matching posts. Try another keyword.',
     noTagPosts: 'No posts under this tag yet.',
     viewAllTagged: 'See all posts tagged “{tag}”',
+    dailyEyebrow: 'Weekly series',
+    dailyTitle: 'Daily Problem',
+    dailySummary: '{count} posts · {weeks} weeks · latest: Week {week} of {year}',
+    dailyCta: 'Read by week',
   },
 
   pagination: {

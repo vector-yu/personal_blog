@@ -1,7 +1,7 @@
 import type { MetadataRoute } from 'next';
 import { localePath } from '@/i18n/config';
 import { getHomeContent } from '@/lib/home';
-import { getPosts } from '@/lib/posts';
+import { getEditorialPosts, getPosts } from '@/lib/posts';
 import { collectSeries, collectTags, seriesPath, tagPath } from '@/lib/taxonomy';
 import { pageCount, pagePath } from '@/lib/pagination';
 import { parseDate, postSlug, siteUrl } from '@/lib/site';
@@ -34,7 +34,12 @@ function languageAlternates(path: string) {
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const base = siteUrl();
-  const [zhPosts, enPosts] = await Promise.all([getPosts('zh'), getPosts('en')]);
+  const [zhPosts, enPosts, zhEditorial, enEditorial] = await Promise.all([
+    getPosts('zh'),
+    getPosts('en'),
+    getEditorialPosts('zh'),
+    getEditorialPosts('en'),
+  ]);
   const homes = {
     zh: await getHomeContent('zh'),
     en: await getHomeContent('en'),
@@ -45,7 +50,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const entries: MetadataRoute.Sitemap = [];
 
   for (const locale of ['zh', 'en'] as const) {
-    const posts = locale === 'zh' ? zhPosts : enPosts;
+    const allPosts = locale === 'zh' ? zhPosts : enPosts;
+    // Pagination and tag pages follow the editorial stream; daily-problem posts
+    // keep their own series hub and individual URLs, but should not create paged
+    // or tag-shaped entry points.
+    const editorials = locale === 'zh' ? zhEditorial : enEditorial;
     const otherSlugs = locale === 'zh' ? enSlugs : zhSlugs;
     // Hidden pages are not advertised to crawlers either.
     const paths = STATIC_PATHS.filter((path) => path !== '/reading' || homes[locale].showReading);
@@ -60,7 +69,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     }
 
     // Paged lists: page counts can differ between languages, so only self-alternate.
-    for (let page = 2; page <= pageCount(posts.length); page += 1) {
+    for (let page = 2; page <= pageCount(editorials.length); page += 1) {
       const path = pagePath(page, locale);
       entries.push({
         url: `${base}${path}`,
@@ -69,7 +78,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       });
     }
 
-    for (const tag of collectTags(posts, locale)) {
+    for (const tag of collectTags(editorials, locale)) {
       entries.push({
         url: `${base}${localePath(locale, tagPath(tag.name))}`,
         changeFrequency: 'weekly',
@@ -77,7 +86,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       });
     }
 
-    for (const item of collectSeries(posts, locale)) {
+    for (const item of collectSeries(allPosts, locale)) {
       entries.push({
         url: `${base}${localePath(locale, seriesPath(item.name))}`,
         changeFrequency: 'weekly',
@@ -85,7 +94,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       });
     }
 
-    for (const post of posts) {
+    for (const post of allPosts) {
       const slug = postSlug(post);
       const lastModified = parseDate(post.date);
       entries.push({

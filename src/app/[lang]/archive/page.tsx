@@ -5,7 +5,7 @@ import { localePath } from '@/i18n/config';
 import { formatMessage } from '@/i18n/format';
 import { buildMetadata } from '@/i18n/metadata';
 import { getLocale, messagesFor } from '@/i18n/server';
-import { getPosts } from '@/lib/posts';
+import { getEditorialPosts } from '@/lib/posts';
 import { groupByYear, postTags, tagPath } from '@/lib/taxonomy';
 import { formatDate, postSlug } from '@/lib/site';
 
@@ -25,7 +25,7 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function ArchivePage() {
   const locale = await getLocale();
   const messages = messagesFor(locale);
-  const posts = await getPosts(locale);
+  const posts = await getEditorialPosts(locale);
   const groups = groupByYear(posts, locale);
 
   return (

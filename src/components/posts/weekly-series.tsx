@@ -10,7 +10,7 @@ import {
   type PostSummary,
   type ProblemDifficulty,
 } from '@/lib/site';
-import { collectTags, postTags, tagPath } from '@/lib/taxonomy';
+import { collectTags, postTags } from '@/lib/taxonomy';
 import { weekKey, type WeekGroup } from '@/lib/weeks';
 
 type WeeklyLabels = Messages['seriesDetail']['weekly'];
@@ -56,7 +56,6 @@ export function WeeklySeries({
     topics: collectTags(week.posts, locale).map((tag) => ({
       name: tag.name,
       count: tag.count,
-      href: localePath(locale, tagPath(tag.name)),
       tone: tagTone(tag.name, tags),
     })),
     problems: week.posts.map((post) => ({
@@ -67,10 +66,7 @@ export function WeeklySeries({
       weekdayLabel: formatWeekday(post.date, locale),
       review: post.review,
       difficulty: post.difficulty,
-      tags: postTags(post).map((tag) => ({
-        name: tag,
-        href: localePath(locale, tagPath(tag)),
-      })),
+      tags: postTags(post),
     })),
   }));
 

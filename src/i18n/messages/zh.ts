@@ -100,6 +100,10 @@ export const zh = {
     noResults: '没有匹配的文章，换个关键词试试。',
     noTagPosts: '这个标签下还没有文章。',
     viewAllTagged: '查看「{tag}」的全部文章',
+    dailyEyebrow: '按周系列',
+    dailyTitle: '每日一题',
+    dailySummary: '{count} 篇 · {weeks} 周 · 最近：{year} 年第 {week} 周',
+    dailyCta: '按周阅读',
   },
 
   pagination: {

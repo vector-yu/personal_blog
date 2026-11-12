@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { EmptyBox } from '@/components/site/illustrations';
 import { SectionLink } from '@/components/site/section-link';
 import { PostList } from '@/components/posts/post-list';
@@ -5,6 +6,7 @@ import { Pagination } from '@/components/posts/pagination';
 import { localePath, type Locale } from '@/i18n/config';
 import { formatMessage } from '@/i18n/format';
 import type { Messages } from '@/i18n/messages';
+import type { DailyProblemSummary } from '@/lib/posts';
 import type { PostSummary } from '@/lib/site';
 import { collectTags, toPostListItem } from '@/lib/taxonomy';
 import { paginate } from '@/lib/pagination';
@@ -14,15 +16,26 @@ export function PostsIndex({
   page,
   locale,
   messages,
+  daily,
 }: {
   posts: PostSummary[];
   page: number;
   locale: Locale;
   messages: Messages;
+  daily?: DailyProblemSummary;
 }) {
   const items = paginate(posts, page).map((post) => toPostListItem(post, locale));
   const tags = collectTags(posts, locale).map((tag) => tag.name);
   const base = localePath(locale, '/posts');
+  const latestWeek =
+    daily?.latestWeek != null && daily.latestWeekYear != null
+      ? formatMessage(messages.posts.dailySummary, {
+          count: daily.count,
+          weeks: daily.weeks,
+          week: daily.latestWeek,
+          year: daily.latestWeekYear,
+        })
+      : null;
 
   return (
     <main className="relative z-10 mx-auto max-w-3xl px-4 py-14 sm:py-16">
@@ -60,6 +73,35 @@ export function PostsIndex({
           <SectionLink href={localePath(locale, '/rss.xml')}>RSS</SectionLink>
         </nav>
       </header>
+
+      {daily && daily.count > 0 ? (
+        <Link
+          href={daily.href}
+          className="group mt-10 flex flex-col gap-4 rounded-2xl border-[3px] border-ink/85 bg-white/60 p-5 shadow-brutal backdrop-blur-xl backdrop-saturate-125 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-brutal-iris motion-reduce:transition-none motion-reduce:hover:translate-y-0 sm:flex-row sm:items-center sm:justify-between dark:border-chalk/20 dark:bg-white/[0.04] dark:shadow-chalk dark:hover:shadow-chalk-lg"
+        >
+          <div className="flex min-w-0 items-start gap-4">
+            <span
+              aria-hidden
+              className="grid h-12 w-12 shrink-0 place-items-center rounded-xl border-2 border-ink bg-gradient-to-br from-sun via-blush to-iris font-mono text-xs font-black text-ink shadow-brutal-xs dark:border-chalk"
+            >
+              {daily.count}
+            </span>
+            <div className="min-w-0">
+              <p className="text-[0.62rem] font-black tracking-[0.2em] text-ink/45 uppercase dark:text-slate-400">
+                {messages.posts.dailyEyebrow}
+              </p>
+              <p className="mt-1 text-title">{messages.posts.dailyTitle}</p>
+              <p className="mt-1 text-sm leading-relaxed font-bold text-ink/60 dark:text-slate-300">
+                {latestWeek}
+              </p>
+            </div>
+          </div>
+          <span className="inline-flex shrink-0 items-center gap-2 self-start rounded-full border-2 border-ink/20 bg-white/60 px-3 py-1.5 text-xs font-bold text-ink/70 transition-colors group-hover:border-ink/60 group-hover:text-ink sm:self-auto dark:border-chalk/20 dark:bg-white/[0.05] dark:text-slate-300 dark:group-hover:border-chalk/50 dark:group-hover:text-white">
+            {messages.posts.dailyCta}
+            <span aria-hidden>→</span>
+          </span>
+        </Link>
+      ) : null}
 
       {posts.length === 0 ? (
         <div className="mt-10 flex animate-rise flex-col items-center gap-6 py-8 text-center">

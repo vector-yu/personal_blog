@@ -6,7 +6,7 @@ import { localePath } from '@/i18n/config';
 import { formatMessage } from '@/i18n/format';
 import { buildMetadata } from '@/i18n/metadata';
 import { getLocale, messagesFor } from '@/i18n/server';
-import { getPosts } from '@/lib/posts';
+import { getEditorialPosts } from '@/lib/posts';
 import { collectTags, tagPath } from '@/lib/taxonomy';
 
 export const revalidate = 60;
@@ -25,7 +25,7 @@ export async function generateMetadata(): Promise<Metadata> {
 export default async function TagsPage() {
   const locale = await getLocale();
   const messages = messagesFor(locale);
-  const posts = await getPosts(locale);
+  const posts = await getEditorialPosts(locale);
   const tags = collectTags(posts, locale);
   const names = tags.map((tag) => tag.name);
 

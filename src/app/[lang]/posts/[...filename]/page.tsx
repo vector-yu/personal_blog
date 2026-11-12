@@ -14,7 +14,8 @@ import {
   siteUrl,
   type PostSummary,
 } from '@/lib/site';
-import { postTags, tagPath } from '@/lib/taxonomy';
+import { postTags } from '@/lib/taxonomy';
+import { isWeeklySeries } from '@/lib/weeks';
 import { estimateReadingMinutes, extractHeadings } from '@/lib/toc';
 import type { PostEnQuery, PostQuery } from '@/tina/__generated__/types';
 
@@ -132,7 +133,11 @@ export default async function PostPage({ params }: { params: Promise<Params> }) 
 
   const slug = postSlug({ relativePath: post._sys.relativePath });
 
-  const [posts, home] = await Promise.all([getPosts(locale), getHomeContent(locale)]);
+  const isDaily = isWeeklySeries(post.series?.trim() || null);
+  const [allPosts, home] = await Promise.all([getPosts(locale), getHomeContent(locale)]);
+  // Keep the previous/next/related rail inside the same reading context: daily
+  // problems should not push readers into editorial posts (or vice versa).
+  const posts = allPosts.filter((entry) => isDaily === isWeeklySeries(entry.series));
 
   const index = posts.findIndex((entry) => postSlug(entry) === slug);
   const prev = index > 0 ? posts[index - 1] : null;
@@ -213,7 +218,7 @@ export default async function PostPage({ params }: { params: Promise<Params> }) 
           tocTitle: messages.toc.title,
           tocSections: messages.toc.sections,
           tocAria: messages.toc.aria,
-          tagHrefPrefix: `${localePath(locale, '/tags')}/`,
+          tagHrefPrefix: isDaily ? null : `${localePath(locale, '/tags')}/`,
           seriesHrefPrefix: `${localePath(locale, '/series')}/`,
           postsHref: localePath(locale, '/posts'),
         }}
